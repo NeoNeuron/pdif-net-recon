@@ -1,11 +1,9 @@
+#include "mkdir.h"
+
 void Read_parameters(long &seed, long &seed1)
 {
 	FILE *fp;
-	if ((fp = fopen("/home/shangj/Net_Model/NetModel_parameters.txt", "r")) == NULL)
-		fp = fopen("D:/code/Net_Model/NetModel_parameters.txt", "r");
-
-	if (fp == NULL)
-		fp = fopen("/home/zqtian/Net_Model/NetModel_parameters.txt", "r");
+	fp = fopen("/home/zqtian/Net_Model/NetModel_parameters.txt", "r");
 
 	if (fp == NULL)
 	{
@@ -62,6 +60,9 @@ void Read_parameters(long &seed, long &seed1)
 	else
 		strcat(file, "EI/N=");
 	sprintf(ch, "%d", N), strcat(file, ch), strcat(file, "/");
+
+	// initialize folder
+	_mkdir(file);
 }
 
 

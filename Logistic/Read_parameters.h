@@ -1,11 +1,9 @@
+#include "mkdir.h"
+
 void Read_parameters(long &seed, long &seed1)
 {
 	FILE *fp;
-	if ((fp = fopen("/home/shangj/Net_Model/NetModel_parameters.txt", "r")) == NULL)
-		fp = fopen("D:/code/Net_Model/NetModel_parameters.txt", "r");
-
-	if (fp == NULL)
-		fp = fopen("/home/zqtian/Net_Model/NetModel_parameters.txt", "r");
+	fp = fopen("NetModel_parameters.txt", "r");
 
 	if (fp == NULL)
 	{
@@ -61,6 +59,9 @@ void Read_parameters(long &seed, long &seed1)
 	else
 		strcat(file, "EI/N=");
 	sprintf(ch, "%d", N), strcat(file, ch), strcat(file, "/");
+
+	// initialize folder
+	_mkdir(file);
 }
 
 
@@ -90,10 +91,10 @@ void out_put_filename()
 	/*strcat(str, "RK4_"), strcat(str, "t="), sprintf(c, "%0.2f", T_step), strcat(str, c);*/
 
 	strcat(str, "p="), sprintf(c, "%0.2f", P_c), strcat(str, c);
-	strcat(str, "s="), sprintf(c, "%0.3f", S[0]), strcat(str, c);
+	strcat(str, "s="), sprintf(c, "%0.4f", S[0]), strcat(str, c);
 	if (NE && NI)
 	{
-		strcat(str, "s="), sprintf(c, "%0.3f", S[2]), strcat(str, c);
+		strcat(str, "s="), sprintf(c, "%0.4f", S[2]), strcat(str, c);
 	}
 	strcat(str, "f="), sprintf(c, "%0.3f", f), strcat(str, c);
 	strcat(str, "u="), sprintf(c, "%0.3f", Nu), strcat(str, c);
