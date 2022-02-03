@@ -28,7 +28,7 @@ void Check_update_conti_or_Poisson_input(int n, struct neuron &a, double t, doub
 				evolve_model_with_correct_timestep(n, a, t1, neu[n].Poisson_input_time[i] - t1);
 				t1 = neu[n].Poisson_input_time[i];
 				double x_start = a.x;
-				a.x += n < NE ? f[0] : f[1];
+				a.x += f[n];
 
 				if (a.if_fired == 0 && x_start < x_th && a.x >= x_th && t - a.last_fire_time >= T_ref)
 				{

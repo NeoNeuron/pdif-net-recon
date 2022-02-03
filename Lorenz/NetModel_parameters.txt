@@ -1,19 +1,21 @@
-NE:       			800
-NI: 				700
+NE:       			3
+NI: 				0
 seed: 				11 11
-T_Max(ms): 			350
-T_Step:				0.5
+T_Max(ms): 			1e6
+T_Step:				0.01
 S:				0.5 0.5 0.5 0.5
 I_CONST:			0
 Nu(KHz):			0.0	
-f(ex&in):			0.0
+full_version:       1
+f(ex&in):			0.0 0.0 0.0
+Connect_Matrix:		0 1 1 0 0 0 0 0 0
 P_c:				0.2
 random_S:			0   ////(0-none 1-uniform 2-gauss 3-exponential 4-lognormal)
 random_Nu:			0   ////(0-none 1-uniform 2-gauss 3-exponential 4-lognormal)
 Lyapunov:			0
-record_data(spike/v):		0 0	
+record_data(spike/v):		1 1	
 Record_v_from_to: 		0 1e8
-Record_path:			D:/code/Net_Model/data/
+Record_path:			./data/
 
 
 

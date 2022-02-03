@@ -3,7 +3,10 @@
 void Read_parameters(long &seed, long &seed1)
 {
 	FILE *fp;
-	fp = fopen("/home/zqtian/Net_Model/NetModel_parameters.txt", "r");
+	fp = fopen("NetModel_parameters.txt", "r");
+
+	if (fp == NULL)
+		fp = fopen("./Lorenz/NetModel_parameters.txt", "r");
 
 	if (fp == NULL)
 	{
@@ -24,8 +27,43 @@ void Read_parameters(long &seed, long &seed1)
 	fscanf(fp, "%s%lf%lf%lf%lf", ch, &S[0], &S[1], &S[2], &S[3]);
 	fscanf(fp, "%s%d", ch, &I_CONST);
 
-	fscanf(fp, "%s%lf%s%lf", ch, &Nu, ch, &f[0]);
-	f[1] = f[0];
+	// Nu
+	fscanf(fp, "%s%lf", ch, &Nu);
+	// full-version config toggle:
+	fscanf(fp, "%s%d", ch, &full_toggle);
+
+	// f
+	fscanf(fp, "%s", ch);
+	f = new double[N];
+	if (full_toggle) { // load f for all neurons.
+		for (int i=0; i<N; i++) {
+			fscanf(fp, "%lf", &f[i]);
+			printf("%f", f[i]);
+		}
+	} else { // load f for E and I types, for each type of neuron, f is identical.
+		fscanf(fp, "%lf", &f[0]);
+		printf("%f", f[0]);
+		for (int i=1; i<NE; i++)
+			f[i] = f[0];
+		fscanf(fp, "%lf", &f[NE]);
+		printf("%f", f[NE]);
+		for (int i=1; i<NI; i++)
+			f[i+NE] = f[NE];
+		while (fgetc(fp) != '\n');
+	}
+
+	if (full_toggle) {
+		// Create the read the connect_matrix
+		fscanf(fp, "%s", ch);
+		Connect_Matrix = new double *[N];
+		for (int i = 0; i < N; i++) {
+			Connect_Matrix[i] = new double[N];
+			for (int j = 0; j < N; j++)
+				fscanf(fp, "%lf", &Connect_Matrix[i][j]);
+		}
+	} else { // Connect_Matrix is randomly generated following specific distribution.
+		while (fgetc(fp) != '\n');
+	}
 
 	fscanf(fp, "%s%lf", ch, &P_c);
 	fscanf(fp, "%s%d", ch, &random_S);
