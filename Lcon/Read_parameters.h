@@ -1,11 +1,12 @@
+#include "mkdir.h"
+
 void Read_parameters(long &seed, long &seed1)
 {
 	FILE *fp;
-	if ((fp = fopen("/home/shangj/Lorenz/parameters_input.txt", "r")) == NULL)
-		fp = fopen("D:/code/Lorenz/parameters_input.txt", "r");
+	fp = fopen("NetModel_parameters.txt", "r");
 
 	if (fp == NULL)
-		fp = fopen("/home/zqtian/Lorenz/parameters_input.txt", "r");
+		fp = fopen("./Lcon/NetModel_parameters.txt", "r");
 
 	if (fp == NULL)
 	{
@@ -45,6 +46,22 @@ void Read_parameters(long &seed, long &seed1)
 	fscanf(fp, "%s%d", ch, &I_CONST);
 
 	fscanf(fp, "%s%lf%s%lf", ch, &Nu, ch, &f);
+	// full-version config toggle:
+	fscanf(fp, "%s%d", ch, &full_toggle);
+
+	if (full_toggle) {
+		// Create the read the connect_matrix
+		fscanf(fp, "%s", ch);
+		Connect_Matrix = new double *[N];
+		for (int i = 0; i < N; i++) {
+			Connect_Matrix[i] = new double[N];
+			for (int j = 0; j < N; j++)
+				fscanf(fp, "%lf", &Connect_Matrix[i][j]);
+		}
+	} else { // Connect_Matrix is randomly generated following specific distribution.
+		while (fgetc(fp) != '\n');
+	}
+
 	fscanf(fp,"%s%lf",ch, &P_c);
 	fscanf(fp, "%s%d", ch, &random_S);
 	if (random_S > 4 || random_S < 0)
@@ -78,6 +95,9 @@ void Read_parameters(long &seed, long &seed1)
 	else
 		strcat(file, "EI/N=");
 	sprintf(ch, "%d", N), strcat(file, ch), strcat(file, "/");
+
+	// initialize folder
+	_mkdir(file);
 
 }
 

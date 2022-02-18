@@ -43,6 +43,7 @@ double T_Max, T_step;         // Total time & time step
 double S[4];                  // Coupling strength (E->E,E->I,I->E,I->I) 
 int I_CONST;                  // electrode current constant  
 double I_const_input;         // constant input current
+int full_toggle;			// toggle for full-version config.
 double Nu, f;                // Feedforward Poisson rate and strength(E,I)
 int random_S, random_Nu;
 double P_c;                   // Connect probability 
