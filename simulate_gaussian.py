@@ -46,7 +46,7 @@ def sim_Gaussian(N:int=2,
     PATH = DATA_PATH + f"EE/N={N:d}/"
     if not os.path.isdir(PATH):
         os.mkdir(PATH)
-    fname_prefix = PATH + f"Gaussianp={p:.2f}s={s:.3f}tau={tau:.3f}ref={int(ref):d}"
+    fname_prefix = PATH + f"Gaussianp={p:.2f}s={s:.3f}tau={tau:.3f}ref={int(ref):d}th={threshold:.3f}l={T:.0e}"
     spk_fname = fname_prefix + "_spike_train.dat"
     vol_fname = fname_prefix + "_voltage.dat"
     # Generate Gaussian data
@@ -59,7 +59,7 @@ def sim_Gaussian(N:int=2,
         if N == 2:
             W = np.array([[0,1],[0,0]]).astype(float)
 
-        buff_size = 1e9  # requires arround 7.45 GiB RAM
+        buff_size = 1e8  # requires arround 0.745 GiB RAM
         buff_lines = int(buff_size/N)
         if Tn < buff_lines:
             tranges = [[0, Tn],]
@@ -97,11 +97,11 @@ def sim_Gaussian(N:int=2,
             spike_time[:,0] /= 1000.
             spike_time = force_refractory(spike_time, t_ref=ref)
             if start == 0:
-                save2bin(vol_fname, vol_out, 'wb')
+                # save2bin(vol_fname, vol_out, 'wb')
                 save2bin(spk_fname, spike_time, 'wb')
                 save2bin(PATH+f"connect_matrix-p={p:.3f}.dat", W.T)
             else:
-                save2bin(vol_fname, vol_out, 'ab')
+                # save2bin(vol_fname, vol_out, 'ab')
                 save2bin(spk_fname, spike_time, 'ab')
     return spk_fname, vol_fname
 # %%
