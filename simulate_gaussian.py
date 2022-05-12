@@ -8,7 +8,11 @@ from numba import njit
 DATA_PATH=REPO_PATH+'/Gaussian/data/'
 
 @njit
-def evolve_gauss(noise:np.ndarray, W:np.ndarray, x0:np.ndarray=None, tau:float=20., dt:float=1., rowvar=True):
+def evolve_gauss(noise:np.ndarray, W:np.ndarray, 
+        x0:np.ndarray=None, tau:float=20., dt:float=1., 
+        rowvar=True,
+    ):
+
     """Evolve Gaussian regression model.
 
     Args:
@@ -39,9 +43,29 @@ def evolve_gauss(noise:np.ndarray, W:np.ndarray, x0:np.ndarray=None, tau:float=2
     return signal
 
 def sim_Gaussian(N:int=2,
-    dt:float=1,p:float=0.1,s:float=0.1,tau:float=20.,
-    threshold:float=0.2, ref:float=2, T:float=1e7,
-    force_regen:bool=False, seed:int=None, **kwargs):
+        dt:float=1,p:float=0.1,s:float=0.1,tau:float=20.,
+        threshold:float=0.2, ref:float=2, T:float=1e7,
+        record_v:bool=False,
+        force_regen:bool=False, seed:int=None, **kwargs,
+    )->tuple:
+    """Simulate Gaussian regression process.
+
+    Args:
+        N (int, optional): number of nodes. Defaults to 2.
+        dt (float, optional): time step. Defaults to 1.
+        p (float, optional): network sparsity (Erdős–Rényi). Defaults to 0.1.
+        s (float, optional): coupling strength. Defaults to 0.1.
+        tau (float, optional): time constant of the system. Defaults to 20..
+        threshold (float, optional): threshold for pulse-output generation. Defaults to 0.2.
+        ref (float, optional): time of refractory period. Defaults to 2.
+        T (float, optional): whole stimulation period. Defaults to 1e7.
+        record_v (bool, optional): True for recording voltage. Defaults to False.
+        force_regen (bool, optional): force regenerate data even if corresponding data files already exit. Defaults to False.
+        seed (int, optional): random seed. Defaults to None.
+
+    Returns:
+        tuple: _description_
+    """
 
     PATH = DATA_PATH + f"EE/N={N:d}/"
     if not os.path.isdir(PATH):
@@ -97,11 +121,13 @@ def sim_Gaussian(N:int=2,
             spike_time[:,0] /= 1000.
             spike_time = force_refractory(spike_time, t_ref=ref)
             if start == 0:
-                # save2bin(vol_fname, vol_out, 'wb')
+                if record_v:
+                    save2bin(vol_fname, vol_out, 'wb')
                 save2bin(spk_fname, spike_time, 'wb')
                 save2bin(PATH+f"connect_matrix-p={p:.3f}.dat", W.T)
             else:
-                # save2bin(vol_fname, vol_out, 'ab')
+                if record_v:
+                    save2bin(vol_fname, vol_out, 'ab')
                 save2bin(spk_fname, spike_time, 'ab')
     return spk_fname, vol_fname
 # %%
