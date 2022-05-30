@@ -1,11 +1,10 @@
 # %%
 import numpy as np
-import os, sys
+import os
 REPO_PATH = os.path.dirname(__file__)
-sys.path.append(REPO_PATH+'/python_code_data/python_code')
-from utils import *
-from numba import njit
 DATA_PATH=REPO_PATH+'/Gaussian/data/'
+from causal4.utils import *
+from numba import njit
 
 @njit
 def evolve_gauss(noise:np.ndarray, W:np.ndarray, 
@@ -134,7 +133,7 @@ def sim_Gaussian(N:int=2,
 if __name__ == '__main__':
     # %%
     import matplotlib.pyplot as plt
-    from Causality import run
+    from causal4.Causality import run
     pm_dym = dict(
         dtype = 'Gaussian',
         N     = 100,
