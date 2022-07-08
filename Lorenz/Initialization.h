@@ -19,7 +19,7 @@ double Decide_S(int i, int j, long &seed, long &seed1)  // i-->j
 		return abs(sqrt(-2 * log(Random(seed)))*cos(2 * PI*Random(seed1))*s / 4 + s);
 	else if (random_S == 3)                     // Exponential E(s)
 		return -log(1 - Random(seed)) * s;
-	else		//// Log normal sigma=0.794 mu=log(s)-sigma^2/2.  Std/Mean=0.93  X~exp(mu+sigma*Z),Z~N(0,1)
+	else		// Log normal sigma=0.794 mu=log(s)-sigma^2/2.  Std/Mean=0.93  X~exp(mu+sigma*Z),Z~N(0,1)
 	{
 		double sig, mu;
 		sig = 0.794, mu = log(s) - sig * sig / 2;
@@ -78,7 +78,7 @@ void Create_connect_matrix(long& seed)
 		Connect_Matrix[0][1] = 1;
 		Connect_Matrix[1][2] = 1;
 
-		CS[0][1] = S[0];		 ///////scaling	
+		CS[0][1] = S[0];		 //scaling	
 		CS[1][2] = S[0];
 	}
 	else if (N == 4 || N == 5)

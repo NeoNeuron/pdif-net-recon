@@ -48,7 +48,7 @@ double Largest_Lyapunov(long &seed, double dt,double h)
 	int lyapunov_increment = int(1000/dt+0.1);
 
 	m = int(dt / h + 0.1);
-	max_step = int(T_Max / dt + 0.1);/////////////////
+	max_step = int(T_Max / dt + 0.1);
 
 
 	for (int i = 0; i < N; i++)
@@ -88,7 +88,7 @@ double Largest_Lyapunov(long &seed, double dt,double h)
 
 
 
-			////// to make sure that both reference and perturbed neuron are in or out of refractory period
+			// to make sure that both reference and perturbed neuron are in or out of refractory period
 			//int each_pare_in_fine_state = 1;     
 			//for (int i = 0; i < N; i++)
 			//{

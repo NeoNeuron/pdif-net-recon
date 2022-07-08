@@ -2,7 +2,7 @@ double Decide_S(int i, int j, long &seed, long &seed1)  // i-->j
 {
 	if (i < NE && j < NE)
 	{
-		double s = S[0];  /////////////////scaling
+		double s = S[0];  // scaling
 		if (random_S == 0)
 			return s;
 		else if (random_S == 1)						// uniform [0, 2s]
@@ -11,7 +11,7 @@ double Decide_S(int i, int j, long &seed, long &seed1)  // i-->j
 			return abs(sqrt(-2 * log(Random(seed)))*cos(2 * PI*Random(seed1))*s / 4 + s);
 		else if (random_S == 3)                     // Exponential E(s)
 			return -log(1 - Random(seed)) * s;
-		else		//// Log normal sigma=0.794 mu=log(s)-sigma^2/2.  Std/Mean=0.93  X~exp(mu+sigma*Z),Z~N(0,1)
+		else		// Log normal sigma=0.794 mu=log(s)-sigma^2/2.  Std/Mean=0.93  X~exp(mu+sigma*Z),Z~N(0,1)
 		{
 			double sig, mu;
 			sig = 0.794, mu = log(s) - sig * sig / 2;
@@ -21,7 +21,7 @@ double Decide_S(int i, int j, long &seed, long &seed1)  // i-->j
 	}
 	else if (i < NE && j >= NE)
 	{
-		double s = S[1];   //////////// scaling
+		double s = S[1];   // scaling
 		if (random_S == 0)
 			return s;
 		else if (random_S == 1)
@@ -40,7 +40,7 @@ double Decide_S(int i, int j, long &seed, long &seed1)  // i-->j
 	}
 	else if (i >= NE && j < NE)
 	{
-		double s = S[2];		//////////scaling
+		double s = S[2];		// scaling
 		if (random_S == 0)
 			return s;
 		else if (random_S == 1)
@@ -59,7 +59,7 @@ double Decide_S(int i, int j, long &seed, long &seed1)  // i-->j
 	}
 	else
 	{
-		double s = S[3];		///////////scaling
+		double s = S[3];		// scaling
 		if (random_S == 0)
 			return s;
 		else if (random_S == 1)

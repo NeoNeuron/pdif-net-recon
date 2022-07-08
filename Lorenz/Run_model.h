@@ -1,4 +1,4 @@
-/////////////// evolve for one single time step from t to t+dt
+// evolve for one single time step from t to t+dt
 void evolve_model_with_correct_timestep(int n, struct neuron &a, double t, double dt)
 {	
 	if (dt < 0)
@@ -12,8 +12,8 @@ void evolve_model_with_correct_timestep(int n, struct neuron &a, double t, doubl
 }
 
 
-/////////////// evolve from t to t+dt 
-///////////// there may be times nodes in [t,t+dt], from Poisson and Adaptive time nodes
+// evolve from t to t+dt 
+// there may be times nodes in [t,t+dt], from Poisson and Adaptive time nodes
 void Check_update_conti_or_Poisson_input(int n, struct neuron &a, double t, double dt)
 {
 	if (Nu < Epsilon)
@@ -104,7 +104,7 @@ void update_all_neu(struct neuron *a, struct neuron *a_old, double t, double t1)
 		a[id].wait_strength_I = 0;	
 
 
-		//// check fire 
+		// check fire 
 		if ( a[id].if_fired == 0 && x_start < x_th && a[id].x >= x_th && t - a[id].last_fire_time >= T_ref)
 		{
 			a[id].last_fire_time = t;
