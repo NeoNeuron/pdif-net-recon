@@ -1,13 +1,4 @@
 #define _CRT_SECURE_NO_WARNINGS
-#include <iostream>
-#include <stdio.h>
-#include <stdlib.h>
-#include <cmath>
-#include <ctime>
-#include <cstring>
-#include <malloc.h>
-#include <algorithm>
-#include <omp.h>
 
 using namespace std;
 #define PI (atan(1)*4)
@@ -33,8 +24,7 @@ double T_Max, T_step;         // Total time & time step
 double S[4];                  // Coupling strength (E->E,E->I,I->E,I->I) 
 int I_CONST;                  // electrode current constant  
 double I_const_input;         // constant input current
-double Nu, f;                // Feedforward Poisson rate and strength(E,I)
-int random_S, random_Nu;
+int random_S;
 double P_c;                   // Connect probability 
 int Lyapunov;                     // compute largest lyapunov exponnet
 int Power_spectrum = 0;				  // record v for power spectrum	
@@ -49,24 +39,19 @@ double **Connect_Matrix;         // Connect matrix
 double **CS;					 // Coupling strength matrix
 struct neuron
 {
-	double t, Nu;
+	double t;
 	double x;
 	double I_input;
 	double last_fire_time;
 	double fire_num;
 	int if_fired;
 
-	double *Poisson_input_time;
-	int Poisson_input_num;
 	long seed;
 	double wait_strength_E, wait_strength_I;
 	int state;     //1--neu,0--neu_old
 };
 struct neuron *neu, *neu_old;
 
-
-#define MIN(a,b)  ((a)<(b)?(a):(b))
-#define MAX(a,b)  ((a)>(b)?(a):(b))
 //-----------------------------------------------------------------------------
 //		Record firing time and voltage
 //-----------------------------------------------------------------------------

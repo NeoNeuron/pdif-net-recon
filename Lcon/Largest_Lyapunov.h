@@ -76,10 +76,6 @@ double Largest_Lyapunov(long &seed, double dt,double h)
 		{
 			for (int i = 0; i < m; i++)
 			{	
-				if (Nu > Epsilon)
-					for (int i = 0; i < N; i++)
-						Generate_Poisson_times(neu[i], t, h);
-
 				Update_RK4(N, neu, t, h);
 				Update_RK4(N, neu_per, t, h);
 				t += h;

@@ -1,56 +1,40 @@
 #include "mkdir.h"
 
-void Read_parameters(long &seed, long &seed1)
+void Read_parameters(po::variables_map& vm)
 {
-	FILE *fp;
-	fp = fopen("NetModel_parameters.txt", "r");
-
-	if (fp == NULL)
-	{
-		printf("Error in Read_parameters()! :: Cann't open parameters input file! \n");
-		getchar();// system("pause");
-		exit(1);
-	}
-
-
-
 	char ch[100];
-
-	fscanf(fp, "%s%d%s%d", ch, &NE, ch, &NI);
+	NE = vm["NE"].as<int>();
+	NI = vm["NI"].as<int>();
 	N = NE + NI;
-	fscanf(fp, "%s%ld%ld", ch, &seed, &seed1);
+	T_Max = vm["T_Max"].as<double>();
+	T_step = vm["T_step"].as<double>();
 
-	fscanf(fp, "%s%lf%s%lf", ch, &T_Max, ch, &T_step);
-	fscanf(fp, "%s%lf%lf%lf%lf", ch, &S[0], &S[1], &S[2], &S[3]);
-	fscanf(fp, "%s%d", ch, &I_CONST);
+    vector<double> s_buff;
+	str2vec(vm["S"].as<string>(), s_buff);
+	for (int i=0; i<4; i++)
+		S[i] = s_buff[i];
 
-	fscanf(fp, "%s%lf%s%lf", ch, &Nu, ch, &f);
+    I_CONST = vm["I_CONST"].as<double>();
 
-	fscanf(fp, "%s%lf", ch, &P_c);
-	fscanf(fp, "%s%d", ch, &random_S);
+    P_c = vm["P_c"].as<double>();
+    random_S = vm["random_S"].as<int>();
 	if (random_S > 4 || random_S < 0)
 	{
 		printf("Error random_S=%d\n", random_S);
 		getchar();
 		exit(0);
 	}
-	while (fgetc(fp) != '\n');
 
-	fscanf(fp, "%s%d", ch, &random_Nu);
-	if (random_Nu > 4 || random_Nu < 0)
-	{
-		printf("Error random_Nu=%d\n", random_Nu);
-		getchar();
-		exit(0);
-	}
-	while (fgetc(fp) != '\n');
+    Lyapunov = vm["Lyapunov"].as<int>();
+    record_data[0] = vm["record_spk"].as<int>();
+    record_data[1] = vm["record_v"].as<int>();
 
+    vector<double> xlim_buff;
+    str2vec(vm["record_vlim"].as<string>(), xlim_buff);
+    Record_x_start = xlim_buff[0];
+    Record_x_end   = xlim_buff[1];
 
-	fscanf(fp, "%s%d", ch, &Lyapunov);
-	fscanf(fp, "%s%d%d", ch, &record_data[0], &record_data[1]);
-	fscanf(fp, "%s%lf%lf", ch, &Record_x_start, &Record_x_end);
-	fscanf(fp, "%s%s", ch, file);
-	fclose(fp);
+    strcpy(file, vm["record_path"].as<string>().c_str());
 
 	if (N == NE)
 		strcat(file, "EE/N=");
@@ -67,7 +51,7 @@ void Read_parameters(long &seed, long &seed1)
 
 void out_put_filename()
 {
-	T_step = 1;
+	// T_step = 1;
 
 	char str[200] = "", c[10], str1[200];
 
@@ -96,8 +80,7 @@ void out_put_filename()
 	{
 		strcat(str, "s="), sprintf(c, "%0.4f", S[2]), strcat(str, c);
 	}
-	strcat(str, "f="), sprintf(c, "%0.3f", f), strcat(str, c);
-	strcat(str, "u="), sprintf(c, "%0.3f", Nu), strcat(str, c);
+	strcat(str, "f=0.000u=0.000");
 
 	printf("dt=%0.3f, T_Max=%0.2e\n", T_step, T_Max);
 

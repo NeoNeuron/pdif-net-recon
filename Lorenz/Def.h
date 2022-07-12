@@ -1,13 +1,4 @@
 #define _CRT_SECURE_NO_WARNINGS
-#include <iostream>
-#include <stdio.h>
-#include <stdlib.h>
-#include <cmath>
-#include <ctime>
-#include <cstring>
-#include <malloc.h>
-#include <algorithm>
-#include <omp.h>
 
 using namespace std;
 #define PI (atan(1)*4)
@@ -47,6 +38,7 @@ double I_const_input;         // constant input current
 int full_toggle;			// toggle for full-version config.
 double Nu;					  // Feedforward Poisson rate.
 double* f;                    // Feedforward Poisson strength(E,I).
+double fE, fI;                 // Homogeneous Feedforward Poisson strength(E,I).
 int random_S, random_Nu;
 double P_c;                   // Connect probability 
 int Lyapunov;                     // compute largest lyapunov exponnet
@@ -77,9 +69,6 @@ struct neuron
 };
 struct neuron *neu, *neu_old;
 
-
-#define MIN(a,b)  ((a)<(b)?(a):(b))
-#define MAX(a,b)  ((a)>(b)?(a):(b))
 //-----------------------------------------------------------------------------
 //		Record firing time and voltage
 //-----------------------------------------------------------------------------

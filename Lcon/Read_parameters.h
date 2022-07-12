@@ -1,27 +1,7 @@
 #include "mkdir.h"
 
-void Read_parameters(long &seed, long &seed1)
+void Read_parameters(po::variables_map& vm)
 {
-	FILE *fp;
-	fp = fopen("NetModel_parameters.txt", "r");
-
-	if (fp == NULL)
-		fp = fopen("./Lcon/NetModel_parameters.txt", "r");
-
-	if (fp == NULL)
-	{
-		printf("Error in Read_parameters()! :: Cann't open parameters input file! \n");
-		getchar();// system("pause");
-		exit(1);
-	}
-
-	if(fp == NULL)
-	{
-		printf("Error ! Cann't read parameters\n");
-		getchar();// system("pause");
-		exit(1);
-	}
-
 	char ch[100];
 
 	//fscanf(fp, "%s%s", ch, model);
@@ -38,55 +18,54 @@ void Read_parameters(long &seed, long &seed1)
 
 	strcpy(model, "L");
 
-	fscanf(fp,"%s%d%s%d",ch,&NE,ch,&NI);
-	N = NE+NI;	
-	fscanf(fp, "%s%ld%ld", ch, &seed, &seed1);
-	fscanf(fp,"%s%lf%s%lf",ch,&T_Max,ch,&T_step); 
-	fscanf(fp, "%s%lf%lf%lf%lf", ch, &S[0], &S[1], &S[2], &S[3]); 
-	fscanf(fp, "%s%d", ch, &I_CONST);
+	NE = vm["NE"].as<int>();
+	NI = vm["NI"].as<int>();
+	N = NE + NI;
+	T_Max = vm["T_Max"].as<double>();
+	T_step = vm["T_step"].as<double>();
 
-	fscanf(fp, "%s%lf%s%lf", ch, &Nu, ch, &f);
+    vector<double> s_buff;
+	str2vec(vm["S"].as<string>(), s_buff);
+	for (int i=0; i<4; i++)
+		S[i] = s_buff[i];
+
+    I_CONST = vm["I_CONST"].as<double>();
+
 	// full-version config toggle:
-	fscanf(fp, "%s%d", ch, &full_toggle);
+    full_toggle = vm["full_mode"].as<int>();
 
-	fscanf(fp, "%s", ch);
 	if (full_toggle) {
+		// Create the read the connect_matrix
+        vector<double> conn_buff;
+        str2vec(vm["conn_matrix"].as<string>(), conn_buff);
 		// Create the read the connect_matrix
 		Connect_Matrix = new double *[N];
 		for (int i = 0; i < N; i++) {
 			Connect_Matrix[i] = new double[N];
 			for (int j = 0; j < N; j++)
-				fscanf(fp, "%lf", &Connect_Matrix[i][j]);
+				Connect_Matrix[i][j] = conn_buff[i*N+j];
 		}
-	} else { // Connect_Matrix is randomly generated following specific distribution.
-		while (fgetc(fp) != '\n');
 	}
 
-	fscanf(fp,"%s%lf",ch, &P_c);
-	fscanf(fp, "%s%d", ch, &random_S);
+    P_c = vm["P_c"].as<double>();
+    random_S = vm["random_S"].as<int>();
 	if (random_S > 4 || random_S < 0)
 	{
 		printf("Error pm.pS=%d\n", random_S);
 		getchar();
 		exit(0);
 	}
-	while (fgetc(fp) != '\n');
 
+    Lyapunov = vm["Lyapunov"].as<int>();
+    record_data[0] = vm["record_spk"].as<int>();
+    record_data[1] = vm["record_v"].as<int>();
 
-	fscanf(fp, "%s%d", ch, &random_Nu); 
-	if (random_Nu > 4 || random_Nu < 0)
-	{
-		printf("Error random_Nu=%d\n", random_Nu);
-		getchar();
-		exit(0);
-	}
-	while (fgetc(fp) != '\n');
+    vector<double> xlim_buff;
+    str2vec(vm["record_vlim"].as<string>(), xlim_buff);
+    Record_x_start = xlim_buff[0];
+    Record_x_end   = xlim_buff[1];
 
-	fscanf(fp, "%s%d", ch, &Lyapunov); 
-	fscanf(fp, "%s%d%d",ch, &record_data[0], &record_data[1]);
-	fscanf(fp, "%s%lf%lf", ch, &Record_x_start, &Record_x_end);
-	fscanf(fp,"%s%s",ch,file);  
-	fclose(fp);
+    strcpy(file, vm["record_path"].as<string>().c_str());
 
 	if (N == NE)
 		strcat(file, "EE/N=");
@@ -130,8 +109,7 @@ void out_put_filename()
 
 	strcat(str, "p="), sprintf(c, "%0.2f", P_c), strcat(str, c);
 	strcat(str, "s="), sprintf(c, "%0.3f", S[0]), strcat(str, c);
-	strcat(str, "f="), sprintf(c, "%0.2f", f), strcat(str, c);
-	strcat(str, "u="), sprintf(c, "%0.2f", Nu), strcat(str, c);
+	strcat(str, "f=0.000u=0.000");
 
 	printf("dt=%0.3f, T_Max=%0.2e\n", T_step, T_Max);
 

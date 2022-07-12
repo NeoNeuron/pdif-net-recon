@@ -28,27 +28,6 @@ double Decide_S(int i, int j, long &seed, long &seed1)  // i-->j
 	}
 }
 
-double Decide_Nu(int i, long &seed, long &seed1)  // i-->j
-{
-	double s = Nu;
-	if (random_Nu == 0)
-		return s;
-	else if (random_Nu == 1)					 // uniform [0, 2s]
-		return Random(seed) * 2 * s;
-	else if (random_Nu == 2)					 // gauss N(s,(s/4)^2)
-		return abs(sqrt(-2 * log(Random(seed)))*cos(2 * PI*Random(seed1))*s / 4 + s);
-	else if (random_Nu == 3)                     // Exponential E(s)
-		return -log(1 - Random(seed)) * s;
-	else										 // Log normal, log(X)~N(mu,sigma^2)
-	{
-		double a = log(s);
-		double b = sqrt(-2 * log(Random(seed)))*cos(2 * PI*Random(seed1))*sqrt(-a / 2) + 1.25*a;
-		return exp(b);
-	}
-
-
-}
-
 void Create_connect_matrix(long& seed)
 {
 	Connect_Matrix = new double *[N];
@@ -156,7 +135,6 @@ void Initialization(long &seed0,long &seed2)
 	for (int i = 0; i < N; i++)
 	{
 		neu[i].t = 0;
-		neu[i].Nu = Decide_Nu(i, Seed, Seed1);
 
 		for (int i = 0; i < 500; i++)
 			Random(seed2);
@@ -166,11 +144,9 @@ void Initialization(long &seed0,long &seed2)
 		neu[i].fire_num = 0;
 		neu[i].last_fire_time = -1e5;
 		neu[i].if_fired = 0;
-		neu[i].Poisson_input_time = new double[int(T_step*Nu * 2) + 5];
 		for (int j = 0; j < 500; j++)
 			Random(seed2);
 		neu[i].seed = seed2;
-		neu[i].Poisson_input_num = -1;
 
 		neu[i].wait_strength_E = 0;
 		neu[i].wait_strength_I = 0;

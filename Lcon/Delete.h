@@ -4,7 +4,6 @@ void Delete()
 	{
 		delete[] Connect_Matrix[i];
 		delete[] CS[i];
-		delete[] neu[i].Poisson_input_time;
 	}
 	delete[] Connect_Matrix;
 	delete[] CS;
