@@ -52,7 +52,6 @@ int main(int argc, char **argv) {
 		("P_c",         po::value<double>()->default_value(0.25), "Erdos-Renyi connecting probability.")
 		("random_S",    po::value<int>()->default_value(0), "random mode of recurrent coupling strength (0-none 1-uniform 2-gauss 3-exponential 4-lognormal)")
 		("random_Nu",   po::value<int>()->default_value(0), "random mode of ffwd Poisson frequency (0-none 1-uniform 2-gauss 3-exponential 4-lognormal)")
-		("CP",          po::value<double>()->default_value(0), "Probability of correlated ffwd Poisson input.")
 		("Lyapunov",    po::value<int>()->default_value(0), "toggle to calculate Lyapunov exponent.")
 		("record_spk",  po::value<int>()->default_value(1), "toggle to record spike train.")
 		("record_v",    po::value<int>()->default_value(0), "toggle to record v.")
