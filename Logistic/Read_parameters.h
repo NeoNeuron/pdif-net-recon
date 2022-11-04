@@ -16,6 +16,21 @@ void Read_parameters(po::variables_map& vm)
 
     I_CONST = vm["I_CONST"].as<double>();
 
+	// full-version config toggle:
+    full_toggle = vm["full_mode"].as<int>();
+	// CS
+	if (full_toggle) {
+        vector<double> conn_buff;
+        str2vec(vm["conn_matrix"].as<string>(), conn_buff);
+		// Create the read the connect_matrix
+		Connect_Matrix = new double *[N];
+		for (int i = 0; i < N; i++) {
+			Connect_Matrix[i] = new double[N];
+			for (int j = 0; j < N; j++)
+				Connect_Matrix[i][j] = conn_buff[i*N+j];
+		}
+	}
+
     P_c = vm["P_c"].as<double>();
     random_S = vm["random_S"].as<int>();
 	if (random_S > 4 || random_S < 0)
@@ -75,10 +90,16 @@ void out_put_filename()
 	/*strcat(str, "RK4_"), strcat(str, "t="), sprintf(c, "%0.2f", T_step), strcat(str, c);*/
 
 	strcat(str, "p="), sprintf(c, "%0.2f", P_c), strcat(str, c);
-	strcat(str, "s="), sprintf(c, "%0.4f", S[0]), strcat(str, c);
+	if (S[0]<1e-3 && S[0]>1e-10)
+		strcat(str, "s="), sprintf(c, "%0.5f", S[0]), strcat(str, c);  
+	else
+		strcat(str, "s="), sprintf(c, "%0.3f", S[0]), strcat(str, c);
 	if (NE && NI)
 	{
-		strcat(str, "s="), sprintf(c, "%0.4f", S[2]), strcat(str, c);
+		if (S[2]<1e-3 && S[2]>1e-10)
+			strcat(str, "s="), sprintf(c, "%0.5f", S[2]), strcat(str, c);  
+		else
+			strcat(str, "s="), sprintf(c, "%0.3f", S[2]), strcat(str, c);
 	}
 	strcat(str, "f=0.000u=0.000");
 

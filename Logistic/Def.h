@@ -24,6 +24,7 @@ double T_Max, T_step;         // Total time & time step
 double S[4];                  // Coupling strength (E->E,E->I,I->E,I->I) 
 int I_CONST;                  // electrode current constant  
 double I_const_input;         // constant input current
+int full_toggle;			// toggle for full-version config.
 int random_S;
 double P_c;                   // Connect probability 
 int Lyapunov;                     // compute largest lyapunov exponnet
