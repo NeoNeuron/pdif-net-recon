@@ -248,7 +248,8 @@ void Run_model()
 {
 	num_threads_openmp = N >= 8 ? 8 : 4;
 
-	double t = 0, tt = 0, tt_fftw = 0, t_lib = 0, t_fp = 0;
+	double t = neu[0].t, tt_fftw = 0, t_lib = 0, t_fp = 0;
+	T_Max += neu[0].t;
 	double t_test = 0;
 
 	while (t < T_Max)
@@ -262,7 +263,6 @@ void Run_model()
 
 		if (record_data[1] && t > Record_x_start && t <= Record_x_end)
 		{
-			tt = t;
 			fwrite(&t, sizeof(double), 1, FP1);
 			for (int i = 0; i < N; i++)
 				fwrite(&neu[i].x, sizeof(double), 1, FP1);

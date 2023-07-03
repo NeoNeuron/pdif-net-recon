@@ -60,6 +60,8 @@ int main(int argc,char **argv)
         ("record_z",    po::value<int>()->default_value(0), "toggle to record z.")
         ("record_lim", po::value<string>()->default_value("0 1e8"), "time range to record node traces.")
         ("record_path", po::value<string>()->default_value("./data/"), "path to save data")
+        ("state_path",  po::value<string>()->default_value(""), "path to load init state of neurons.")
+        ("save_mode",   po::value<string>()->default_value("w"), "'a' for append, 'w' for write by overwrite original data file")
         ;
     // create variable map
     po::variables_map vm;
@@ -112,6 +114,8 @@ int main(int argc,char **argv)
         Run_model();
     t1 = clock();
 
+	// save neuronal states
+	SaveNeuronState();
 
     int total_fire_num[2] = { 0 };
     for (int i = 0; i < N; i++)

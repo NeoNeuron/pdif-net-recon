@@ -84,6 +84,14 @@ void Read_parameters(po::variables_map& vm)
     Record_x_end = xlim_buff[1];
 
     strcpy(file, vm["record_path"].as<string>().c_str());
+    strcpy(fi_neu_state, vm["state_path"].as<string>().c_str());
+    strcpy(save_mode, vm["save_mode"].as<string>().c_str());
+
+	// if no neu_state_file
+	if ((fi_neu_state == NULL || fi_neu_state[0] == '\0') && strcmp(save_mode, "w")) {
+		WARNING("WARNING: no fi_neu_state provided! Force save_mode to 'w'.\n");
+		strcpy(save_mode, "w");
+    }
 
 	if (N == NE)
 		strcat(file, "EE/N=");
@@ -140,25 +148,38 @@ void out_put_filename()
 
 	printf("dt=%0.3f, T_Max=%0.2e\n", T_step, T_Max);
 
+	// copy path to load neuron states
+	if (fi_neu_state != NULL && fi_neu_state[0] != '\0') {
+		char str_buff[200];
+		strcpy(str_buff, file), strcat(str_buff, fi_neu_state);
+		strcpy(fi_neu_state, str_buff);
+	}
+	// copy path to save neuron states
+	strcpy(str1, file), strcat(str1, str), strcat(str1, "_state.dat");
+	strcpy(fo_neu_state, str1);
+	// create FILE object to save spike train and voltage
+    char open_mode[3];
+    strcpy(open_mode, save_mode), strcat(open_mode, "b");
+
 	if (record_data[0])
 	{
 		strcpy(str1, file), strcat(str1, str), strcat(str1, "_spike_train.dat");
-		FP = fopen(str1, "wb");
+		FP = fopen(str1, open_mode);
 	}
 	if (record_data[1])
 	{
 		strcpy(str1, file), strcat(str1, str), strcat(str1, "_x.dat");
-		FP1 = fopen(str1, "wb");
+		FP1 = fopen(str1, open_mode);
 	}
 	if (record_data[2])
 	{
 		strcpy(str1, file), strcat(str1, str), strcat(str1, "_y.dat");
-		FP2 = fopen(str1, "wb");
+		FP2 = fopen(str1, open_mode);
 	}
 	if (record_data[3])
 	{
 		strcpy(str1, file), strcat(str1, str), strcat(str1, "_z.dat");
-		FP3 = fopen(str1, "wb");
+		FP3 = fopen(str1, open_mode);
 	}
 
 	if (record_data[0] || record_data[1] || record_data[2] || record_data[3])

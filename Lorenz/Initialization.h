@@ -176,39 +176,67 @@ void Initialization(long &seed0,long &seed2)
 		Random(Seed), Random(Seed1);
 	}
 
-	for (int i = 0; i < N; i++)
-	{
-		neu[i].t = 0;
-		neu[i].Nu = Decide_Nu(i, Seed, Seed1);
+	if (fi_neu_state != NULL && fi_neu_state[0] != '\0') {
+		FILE* fp_buff = fopen(fi_neu_state, "rb"); 
+		if(fp_buff == NULL) {
+			printf("Error in Initialization()! :: Cann't open neu_state file! \n");
+			getchar();// system("pause");
+			exit(1);
+		}
+		printf("loading neural states from file...\n");
+		for (int i=0; i < N; i++) {
+			fread(&neu[i], sizeof(struct neuron), 1, fp_buff);
+			neu[i].Poisson_input_time = new double[int(T_step * 100 * 2) + 5];
+			neu[i].Poisson_input_num = -1;
+			if (strcmp(save_mode, "w")==0) {
+				neu[i].t = 0;
+				neu[i].fire_num = 0;
+				neu[i].last_fire_time = -1e5;
+			}
+		}
+		fclose(fp_buff);
+	} else {
+		for (int i = 0; i < N; i++)
+		{
+			neu[i].t = 0;
+			neu[i].Nu = Decide_Nu(i, Seed, Seed1);
 
 
-		neu[i].x = (Random(seed2) - 0.5) * 10;
-		for (int i = 0; i < 500; i++)
-			Random(seed2);
-		neu[i].dx = 0;
-		neu[i].y = (Random(seed2) - 0.5) * 10;
-		for (int i = 0; i < 500; i++)
-			Random(seed2);
-		neu[i].z = (Random(seed2) - 0.5) * 10 + 15;
-		for (int i = 0; i < 500; i++)
-			Random(seed2);
+			neu[i].x = (Random(seed2) - 0.5) * 10;
+			for (int i = 0; i < 500; i++)
+				Random(seed2);
+			neu[i].dx = 0;
+			neu[i].y = (Random(seed2) - 0.5) * 10;
+			for (int i = 0; i < 500; i++)
+				Random(seed2);
+			neu[i].z = (Random(seed2) - 0.5) * 10 + 15;
+			for (int i = 0; i < 500; i++)
+				Random(seed2);
 
 
-		neu[i].I_input = 0;
-		neu[i].fire_num = 0;
-		neu[i].last_fire_time = -1e5;
-		neu[i].if_fired = 0;
-		neu[i].Poisson_input_time = new double[int(T_step*Nu * 2) + 5];
-		for (int j = 0; j < 500; j++)
-			Random(seed2);
-		neu[i].seed = seed2;
-		neu[i].Poisson_input_num = -1;
+			neu[i].I_input = 0;
+			neu[i].fire_num = 0;
+			neu[i].last_fire_time = -1e5;
+			neu[i].if_fired = 0;
+			neu[i].Poisson_input_time = new double[int(T_step*Nu * 2) + 5];
+			for (int j = 0; j < 500; j++)
+				Random(seed2);
+			neu[i].seed = seed2;
+			neu[i].Poisson_input_num = -1;
 
-		neu[i].wait_strength_E = 0;
-		neu[i].wait_strength_I = 0;
+			neu[i].wait_strength_E = 0;
+			neu[i].wait_strength_I = 0;
 
-		neu[i].state = 1;
-		neu_old[i].state = 0;
+			neu[i].state = 1;
+			neu_old[i].state = 0;
+		}
 	}
-	
+}
+
+void SaveNeuronState() {
+	FILE* fp_buff = fopen(fo_neu_state, "wb"); 
+	for (int i=0; i < N; i++){
+		fwrite(&neu[i], sizeof(struct neuron), 1, fp_buff); 
+	}
+	fclose(fp_buff);
 }

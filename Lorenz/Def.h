@@ -46,6 +46,9 @@ int Power_spectrum = 0;				  // record v for power spectrum
 int record_data[4];				// save data or not
 char file[200];				  // Record data path
 double Record_x_start, Record_x_end;
+char fi_neu_state[200];			// path to load neuron states
+char fo_neu_state[200];			// path to save neuron states
+char save_mode[2];
 
 //-----------------------------------------------------------------------------
 //		Netwrok Information
