@@ -260,13 +260,22 @@ void Run_model()
 		evolve_model_with_initial_timestep(neu, neu_old, t, T_step);
 		t += T_step;
 
-		if (record_data[1] && t > Record_x_start && t <= Record_x_end && t - tt >= 0.01)
+		if (record_data[1] && t > Record_x_start && t <= Record_x_end)
 		{
 			tt = t;
 			fwrite(&t, sizeof(double), 1, FP1);
 			for (int i = 0; i < N; i++)
 				fwrite(&neu[i].x, sizeof(double), 1, FP1);
-
+		}
+		if (record_data[2] && t > Record_x_start && t <= Record_x_end) {
+			fwrite(&t, sizeof(double), 1, FP2);
+			for (int i = 0; i < N; i++)
+				fwrite(&neu[i].y, sizeof(double), 1, FP2);
+		}
+		if (record_data[3] && t > Record_x_start && t <= Record_x_end) {
+			fwrite(&t, sizeof(double), 1, FP3);
+			for (int i = 0; i < N; i++)
+				fwrite(&neu[i].z, sizeof(double), 1, FP3);
 		}
 
 	}

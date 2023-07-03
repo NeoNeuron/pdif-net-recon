@@ -14,5 +14,9 @@ void Delete()
 		fclose(FP); 
 	if (record_data[1])
 		fclose(FP1);
+	if (record_data[2])
+		fclose(FP2);
+	if (record_data[3])
+		fclose(FP3);
 	
 }

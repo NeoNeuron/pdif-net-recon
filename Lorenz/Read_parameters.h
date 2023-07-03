@@ -74,10 +74,12 @@ void Read_parameters(po::variables_map& vm)
 
     Lyapunov = vm["Lyapunov"].as<int>();
     record_data[0] = vm["record_spk"].as<int>();
-    record_data[1] = vm["record_v"].as<int>();
+    record_data[1] = vm["record_x"].as<int>();
+    record_data[2] = vm["record_y"].as<int>();
+    record_data[3] = vm["record_z"].as<int>();
 
     vector<double> xlim_buff;
-    str2vec(vm["record_vlim"].as<string>(), xlim_buff);
+    str2vec(vm["record_lim"].as<string>(), xlim_buff);
     Record_x_start = xlim_buff[0];
     Record_x_end = xlim_buff[1];
 
@@ -145,11 +147,21 @@ void out_put_filename()
 	}
 	if (record_data[1])
 	{
-		strcpy(str1, file), strcat(str1, str), strcat(str1, "_voltage.dat");
+		strcpy(str1, file), strcat(str1, str), strcat(str1, "_x.dat");
 		FP1 = fopen(str1, "wb");
 	}
+	if (record_data[2])
+	{
+		strcpy(str1, file), strcat(str1, str), strcat(str1, "_y.dat");
+		FP2 = fopen(str1, "wb");
+	}
+	if (record_data[3])
+	{
+		strcpy(str1, file), strcat(str1, str), strcat(str1, "_z.dat");
+		FP3 = fopen(str1, "wb");
+	}
 
-	if (record_data[0] || record_data[1])
+	if (record_data[0] || record_data[1] || record_data[2] || record_data[3])
 	{
 		if (NE == N)
 			printf("file:NE=%d\\%s\n", N, str);
