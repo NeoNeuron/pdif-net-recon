@@ -58,7 +58,7 @@ void Create_connect_matrix(long& seed)
 	CS = new double *[N];
 	for (int i = 0; i < N; i++)
 		CS[i] = new double[N];
-	long seed1 = 15, seed2 = 43;
+	long seed1 = 15+seed, seed2 = 43+seed;
 
 	for (int i = 0; i < 1000; i++)
 	{
@@ -170,7 +170,7 @@ void Initialization(long &seed0,long &seed2)
 	neu = new struct neuron[N];
 	neu_old = new struct neuron[N];
 
-	long Seed = 11, Seed1 = 43;
+	long Seed = 11 + seed2, Seed1 = 43 + seed2;
 	for (int i = 0; i < 1000; i++)
 	{
 		Random(Seed), Random(Seed1);
