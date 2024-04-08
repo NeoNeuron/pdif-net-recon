@@ -14,7 +14,7 @@ plt.rcParams['axes.spines.top'] = False
 plt.rcParams['axes.spines.right'] = False
 
 from causal4.Causality import CausalityEstimator
-from causal4.utils import Gaussian, match_features, reconstruction_analysis
+from causal4.utils import Gaussian, match_features, reconstruction_analysis, optimal_delay_estimator
 from causal4.figrc import line_rc, c_inv, fig_path, data_path
 from pathlib import Path
 
@@ -25,6 +25,7 @@ key_map = {'TE': 'TE', 'MI': 'sum(MI)', 'CC': 'sum(CC2)', 'GC': 'GC'}
 for out_dir in Path('./visualcoding/').iterdir():
     if not out_dir.is_dir():
         continue
+    print(out_dir.stem)
     #%%
     # session_id = 746083955 #1047969464
     # out_dir = Path(f"./visualcoding/{session_id}/")
@@ -47,6 +48,7 @@ for out_dir in Path('./visualcoding/').iterdir():
     }
     stimulus_names = np.append(stimulus_names, list(stimulus_group.keys()))
     #%%
+    heter_delay_toggle = True
     # further data selection according to refractory periods
     t_ref = 5.0    # msecond
     gap_width = 250
@@ -57,19 +59,18 @@ for out_dir in Path('./visualcoding/').iterdir():
             + f"gap={int(gap):d}"
 
     # setup configurations
-    TGIC_cfg = dict(
-        order = (1,5),
-        dt = 1,
-        delay = 0,
-        suffix = 500,
-    )
+    order = (1,5)
+    dt = 1
+    delay = 0
+    suffix = 0
 
-    TGIC_prefix = f"K={TGIC_cfg['order'][0]:d}_{TGIC_cfg['order'][1]:d}" \
-                + f"bin={TGIC_cfg['dt']:.2f}" \
-                + f"delay={TGIC_cfg['delay']:.2f}"
+    if heter_delay_toggle:
+        TGIC_prefix = f"K={order[0]:d}_{order[1]:d}bin={dt:.2f}"
+    else:
+        TGIC_prefix = f"K={order[0]:d}_{order[1]:d}bin={dt:.2f}delay={delay:.2f}"
 
-    def long_fnaming(name, gap=gap_width, sfx=TGIC_cfg['suffix']):
-        return f"sfx={sfx:d}-{fnaming(name, gap):s}"
+    # def long_fnaming(name, gap=gap_width, sfx=TGIC_cfg['suffix']):
+    #     return f"sfx={sfx:d}-{fnaming(name, gap):s}"
 
     # %
     #! ====================
@@ -80,7 +81,7 @@ for out_dir in Path('./visualcoding/').iterdir():
     # fig_sfx = '_new3' 
     gap_vals = np.ones(len(stimulus_names_plot),dtype=int)*gap_width
     # gap_vals = [1, 250, 250, 250,]
-    sfx = np.ones(len(stimulus_names_plot), dtype=int)*TGIC_cfg['suffix']
+    sfx = np.ones(len(stimulus_names_plot), dtype=int)*suffix
     # sfx[-2] = 500
 
     hf = h5py.File(out_dir / 'metadata_firing_rate.h5','r')
@@ -94,16 +95,24 @@ for out_dir in Path('./visualcoding/').iterdir():
     pm = dict(
         spk_fname = fnaming(stimulus_names_plot[0], gap_vals[0]),
         N = n_unit,
-        order = TGIC_cfg['order'],
-        T = hf[fnaming(stimulus_names_plot[0])].attrs['T'] + TGIC_cfg['suffix']*1e3,
+        order = order,
+        T = hf[fnaming(stimulus_names_plot[0])].attrs['T'] + suffix*1e3,
         DT = 2e5,
-        dt = TGIC_cfg['dt'],
-        delay = TGIC_cfg['delay'],
+        dt = dt,
+        delay = delay,
         path = str(out_dir)+'/'
     )
     estimator = CausalityEstimator(**pm, n_thread=60)
     #%%
     # delays = np.arange(21)
+    # data = optimal_delay_estimator(estimator, delays)
+    # %%
+    # data = estimator.fetch_data()
+    # data = data[(data['pre_id'].isin(chosen_unit_set)) & (data['post_id'].isin(chosen_unit_set))].copy()
+    # data_matched = match_features(data, pm['N'])
+    # data_recon, data_fig = reconstruction_analysis(data_matched, nbins=60, hist_range=(-8,-2))
+    # reconstruction_illustration(data_fig);
+    # ReconstructionFigure(data_fig, False, False)
     # optimal_delay = estimator.get_optimal_delay(delays, mode=1)
     # print(optimal_delay)
     #%%
@@ -137,13 +146,16 @@ for out_dir in Path('./visualcoding/').iterdir():
     for stimulus_, gap_, axi in zip(stimulus_names_plot, gap_vals, ax.flatten()):
         # fetch causality data
         estimator.spk_fname = fnaming(stimulus_, gap_)
-        estimator.T = hf[fnaming(stimulus_)].attrs['T'] + TGIC_cfg['suffix']*1e3
+        estimator.T = hf[fnaming(stimulus_)].attrs['T'] + suffix*1e3
         # print(estimator.get_optimal_delay(delays, mode=1))
-        data = estimator.fetch_data(new_run=True)
+        if heter_delay_toggle:
+            data = optimal_delay_estimator(estimator, delays)
+        else:
+            data = estimator.fetch_data(new_run=True)
         data = data[(data['pre_id'].isin(chosen_unit_set)) & (data['post_id'].isin(chosen_unit_set))].copy()
         data_matched = match_features(data, N=n_unit)
         vrange=(-8,-2)
-        data_recon, data_fig = reconstruction_analysis(data_matched, nbins=60, hist_range=vrange, )#fit_p0=[0.4,-5.5,-4.0,1,1])
+        data_recon, data_fig = reconstruction_analysis(data_matched, nbins=60, hist_range=vrange, fit_p0=[0.5,-4.5,-3.2,1,1])
         data_fig = data_fig.dropna(axis=1, how='all')
         data_fig_all[stimulus_] = data_fig.copy()
         data_recon['stimulus'] = stimulus_
@@ -156,17 +168,19 @@ for out_dir in Path('./visualcoding/').iterdir():
         for key in ('CC', 'MI', 'GC', 'TE'):
             edges = data_fig['edges'][key]
             ax_hist.plot(edges, data_fig['hist'][key], **line_rc[key])
+            if 'log_norm_fit_pval' not in data_fig:
+                continue
             pval = data_fig['log_norm_fit_pval'][key]
-            if hasattr(pval, '__len__'):
-                gauss1 = Gaussian(edges, *pval[[1,3]]) * (1-pval[0])
-                gauss2 = Gaussian(edges, *pval[[2,4]]) * pval[0]
-                # print(pval[0])
-                ax_hist.plot(edges,gauss1, color=line_rc[key]['color'], ls='--')
-                ax_hist.plot(edges,gauss2, color=line_rc[key]['color'], ls='--')
-                ax_hist.axvline(data_fig['th_gauss'][key], color=line_rc[key]['color'], ls='--')
-                fpr, tpr = data_fig['roc_blind'][key]
-                axi.plot(fpr, tpr, color=line_rc[key]['color'], lw=line_rc[key]['lw']*2, label=line_rc[key]['label'])[0].set_clip_on(False)
-
+            if not hasattr(pval, '__len__'):
+                continue
+            gauss1 = Gaussian(edges, *pval[[1,3]]) * (1-pval[0])
+            gauss2 = Gaussian(edges, *pval[[2,4]]) * pval[0]
+            # print(pval[0])
+            ax_hist.plot(edges,gauss1, color=line_rc[key]['color'], ls='--')
+            ax_hist.plot(edges,gauss2, color=line_rc[key]['color'], ls='--')
+            ax_hist.axvline(data_fig['th_gauss'][key], color=line_rc[key]['color'], ls='--')
+            fpr, tpr = data_fig['roc_blind'][key]
+            axi.plot(fpr, tpr, color=line_rc[key]['color'], lw=line_rc[key]['lw']*2, label=line_rc[key]['label'])[0].set_clip_on(False)
             print(f"{key:s}: {data_fig['auc_gauss'][key]:.3f}", end='\t')
         ax_hist.spines['left'].set_visible(False)
         ax_hist.set_yticks([])
@@ -221,6 +235,8 @@ for out_dir in Path('./visualcoding/').iterdir():
             # axi.plot(bins[:-1], counts*pop_ratio, lw=6, color='#00C2A0', label=line_rc[key]['label'], zorder=1)
             inconsist_hist[stim][key] = counts*pop_ratio,
             # print(pop_ratio, counts.sum()*pop_ratio*(np.diff(bins)[0]))
+            if 'log_norm_fit_pval' not in data_fig_all[stim]:
+                continue
             popt = data_fig_all[stim]['log_norm_fit_pval'][key]
             if not hasattr(popt, '__len__'):
                 continue
@@ -349,8 +365,12 @@ for out_dir in Path('./visualcoding/').iterdir():
     plt.tight_layout()
     plt.savefig(out_dir/f"histogram_of_dp_Delta_p-{TGIC_prefix:s}.pdf")
 
-    data_recon.to_pickle(out_dir/f"reconstruction_data.pkl")
-    with open(out_dir/'allen_data.pkl', 'wb') as f:
+    if heter_delay_toggle:
+        fname_sfx = '_heterogeneous_delay'
+    else:
+        fname_sfx = ''
+    data_recon.to_pickle(out_dir/f"reconstruction_data{fname_sfx:s}.pkl")
+    with open(out_dir/f'allen_data{fname_sfx:s}.pkl', 'wb') as f:
         pickle.dump(data_fig_all, f)
 
 # %%
