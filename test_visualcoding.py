@@ -1,6 +1,7 @@
 #%%
 import pickle
 import h5py
+import yaml
 
 import numpy as np
 import pandas as pd
@@ -49,14 +50,12 @@ for out_dir in Path('./visualcoding/').iterdir():
     stimulus_names = np.append(stimulus_names, list(stimulus_group.keys()))
     #%%
     heter_delay_toggle = True
-    # further data selection according to refractory periods
+    # ! data selection configurationaccording to refractory periods
     t_ref = 5.0    # msecond
     gap_width = 250
 
     def fnaming(name, gap=gap_width):
-        return f"{name:s}_" \
-            + f"ref={int(t_ref):d}_" \
-            + f"gap={int(gap):d}"
+        return f"{name:s}_ref={t_ref:.0f}_gap={gap:.0f}"
 
     # setup configurations
     order = (1,5)
@@ -64,15 +63,10 @@ for out_dir in Path('./visualcoding/').iterdir():
     delay = 0
     suffix = 0
 
-    if heter_delay_toggle:
-        TGIC_prefix = f"K={order[0]:d}_{order[1]:d}bin={dt:.2f}"
-    else:
-        TGIC_prefix = f"K={order[0]:d}_{order[1]:d}bin={dt:.2f}delay={delay:.2f}"
+    fig_suffix = f"ref={t_ref:.0f}-gap={gap_width:.0f}-sfx={suffix:.0f}-K={order[0]:d}_{order[1]:d}-bin={dt:.2f}"
+    if not heter_delay_toggle:
+        fig_suffix += f"-delay={delay:.2f}"
 
-    # def long_fnaming(name, gap=gap_width, sfx=TGIC_cfg['suffix']):
-    #     return f"sfx={sfx:d}-{fnaming(name, gap):s}"
-
-    # %
     #! ====================
     #! Draw histogram of causal values for each stimuli
     #! ====================
@@ -81,7 +75,7 @@ for out_dir in Path('./visualcoding/').iterdir():
     # fig_sfx = '_new3' 
     gap_vals = np.ones(len(stimulus_names_plot),dtype=int)*gap_width
     # gap_vals = [1, 250, 250, 250,]
-    sfx = np.ones(len(stimulus_names_plot), dtype=int)*suffix
+    # sfx = np.ones(len(stimulus_names_plot), dtype=int)*suffix
     # sfx[-2] = 500
 
     hf = h5py.File(out_dir / 'metadata_firing_rate.h5','r')
@@ -97,7 +91,7 @@ for out_dir in Path('./visualcoding/').iterdir():
         N = n_unit,
         order = order,
         T = hf[fnaming(stimulus_names_plot[0])].attrs['T'] + suffix*1e3,
-        DT = 2e5,
+        DT = 2e4,
         dt = dt,
         delay = delay,
         path = str(out_dir)+'/'
@@ -134,6 +128,20 @@ for out_dir in Path('./visualcoding/').iterdir():
     # # sns.pointplot(data=data, x='delay', y='TE', errorbar='sd')
         
     #%%
+    # Load parameters from yaml file
+    fit_p0_default = [0.5, -5.5, -4.2, .1, .1]
+    fit_p0 = fit_p0_default
+    if (out_dir/'fig_p0.yml').exists():
+        with open(out_dir/'fig_p0.yml', 'r') as file:
+            parameters = yaml.safe_load(file)
+        if fig_suffix in parameters:
+            fit_p0 = parameters[fig_suffix]
+        else:
+            with open(out_dir/'fig_p0.yml', 'a') as file:
+                yaml.dump({fig_suffix: fit_p0_default}, file)
+    else:
+        with open(out_dir/'fig_p0.yml', 'w') as file:
+            yaml.dump({fig_suffix: fit_p0_default}, file)
 
     hf = h5py.File(out_dir / 'metadata_firing_rate.h5','r')
     new_N = int(np.sum(unit_rate_mask_union))
@@ -155,7 +163,7 @@ for out_dir in Path('./visualcoding/').iterdir():
         data = data[(data['pre_id'].isin(chosen_unit_set)) & (data['post_id'].isin(chosen_unit_set))].copy()
         data_matched = match_features(data, N=n_unit)
         vrange=(-8,-2)
-        data_recon, data_fig = reconstruction_analysis(data_matched, nbins=60, hist_range=vrange, fit_p0=[0.5,-4.5,-3.2,1,1])
+        data_recon, data_fig = reconstruction_analysis(data_matched, nbins=60, hist_range=vrange, fit_p0=fit_p0)
         data_fig = data_fig.dropna(axis=1, how='all')
         data_fig_all[stimulus_] = data_fig.copy()
         data_recon['stimulus'] = stimulus_
@@ -208,7 +216,7 @@ for out_dir in Path('./visualcoding/').iterdir():
     data_recon = pd.concat(data_recon_list)
 
     plt.tight_layout()
-    plt.savefig(out_dir/f"histogram_of_all_allen-{TGIC_prefix:s}.pdf")
+    plt.savefig(out_dir/f"hist-all-allen-{fig_suffix:s}.pdf")
     hf.close()
 
     #%%
@@ -262,7 +270,7 @@ for out_dir in Path('./visualcoding/').iterdir():
         [axi.set_xlabel(key, fontsize=30) for axi in ax];
 
         plt.tight_layout()
-        plt.savefig(out_dir/f"histogram_of_{key:s}_allen-{TGIC_prefix:s}.pdf")
+        plt.savefig(out_dir/f"hist-inconsist-{key:s}-{fig_suffix:s}.pdf")
 
     for key in data_fig_all.keys():
         data_fig_all[key] = data_fig_all[key].merge(
@@ -329,7 +337,7 @@ for out_dir in Path('./visualcoding/').iterdir():
             axins.imshow(arr_image)
             axins.axis('off')
 
-        plt.savefig(out_dir/f"allen_recon_rsa4_{key:s}-{TGIC_prefix:s}.pdf")
+        plt.savefig(out_dir/f"visualcoding-RSA4-{key:s}-{fig_suffix:s}.pdf")
         print(f"Minimum coincidence rate : {data.min():6.3f}")
         print(f"Maximum coincidence rate : {np.sort(np.unique(data))[-2]:6.3f}")
         print(data)
@@ -363,14 +371,10 @@ for out_dir in Path('./visualcoding/').iterdir():
     [axi.set_xlabel(r'$|\Delta p_m|$ values', fontsize=30) for axi in ax]
     ax[0].set_ylabel('probability density', fontsize=24)
     plt.tight_layout()
-    plt.savefig(out_dir/f"histogram_of_dp_Delta_p-{TGIC_prefix:s}.pdf")
+    plt.savefig(out_dir/f"hist-dp-{fig_suffix:s}.pdf")
 
-    if heter_delay_toggle:
-        fname_sfx = '_heterogeneous_delay'
-    else:
-        fname_sfx = ''
-    data_recon.to_pickle(out_dir/f"reconstruction_data{fname_sfx:s}.pkl")
-    with open(out_dir/f'allen_data{fname_sfx:s}.pkl', 'wb') as f:
+    data_recon.to_pickle(out_dir/f"reconstruction-data-{fig_suffix:s}.pkl")
+    with open(out_dir/f'allen-data-{fig_suffix:s}.pkl', 'wb') as f:
         pickle.dump(data_fig_all, f)
 
 # %%
