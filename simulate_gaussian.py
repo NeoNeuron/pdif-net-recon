@@ -1,51 +1,45 @@
 # %%
 import numpy as np
-import os
-REPO_PATH = os.path.dirname(__file__)
-DATA_PATH=REPO_PATH+'/Gaussian/data/'
 from causal4.utils import *
+from struct import unpack
 from numba import njit
+from pathlib import Path
+data_path = Path(__file__).parents[0]/'Gaussian/data/EE/'
 
 @njit
 def evolve_gauss(noise:np.ndarray, W:np.ndarray, 
-        x0:np.ndarray=None, tau:float=20., dt:float=1., 
-        rowvar=True,
+        x_init:np.ndarray=None, tau:float=20., dt:float=1., 
     ):
 
     """Evolve Gaussian regression model.
 
     Args:
-        noise (np.ndarray): Gausian white process that drives the dynamics.
+        noise (np.ndarray): (num_time_points, num_units), Gausian white process that drives the dynamics.
         W (np.ndarray): Connectivity matrix.
-        x0 (np.ndarray, optional): Initial state values. Default to None.
+        x_init (np.ndarray, optional): Initial state values. Default to None.
         tau (float, optional): Time constant of dynamics. Defaults to 20..
         dt (float, optional): Discretized time step. Defaults to 1..
-        rowvar (bool, optional): True for each row is a variable. Defaults to True.
 
     Returns:
-        np.ndarray: Trajectory of Gaussian process.
+        np.ndarray: (number_time_points, num_units), Trajectory of Gaussian process.
     """
-    if not rowvar:
-        noise = noise.T
-    signal = np.zeros(noise.shape)
-    if x0 is not None:
-        signal[0,:] = x0
-    T, _ = signal.shape
+    num_len, num_units = noise.shape
+    signal = np.zeros((num_len+1, num_units))
+    if x_init is not None:
+        signal[0,:] = x_init
     eta = 1-dt/tau
     sigma = dt/tau
     s_noise = 0.1
-    for i in range(T-1):
-        signal[i+1,:] = eta*signal[i,:] + sigma*(W@signal[i,:] + s_noise*noise[i+1,:])
+    for i in range(num_len):
+        signal[i+1,:] = eta*signal[i,:] + sigma*(W@signal[i,:] + s_noise*noise[i,:])
 
-    if not rowvar:
-        noise = noise.T
-    return signal
+    return signal[1:]
 
 def sim_Gaussian(N:int=2,
         dt:float=1,p:float=0.1,s:float=0.1,tau:float=20.,
         threshold:float=0.2, ref:float=2, T:float=1e7,
-        record_v:bool=False,
-        force_regen:bool=False, seed:int=None, **kwargs,
+        record_v:bool=True, force_regen:bool=False,
+        seed:int=None, **kwargs,
     )->tuple:
     """Simulate Gaussian regression process.
 
@@ -58,57 +52,69 @@ def sim_Gaussian(N:int=2,
         threshold (float, optional): threshold for pulse-output generation. Defaults to 0.2.
         ref (float, optional): time of refractory period. Defaults to 2.
         T (float, optional): whole stimulation period. Defaults to 1e7.
-        record_v (bool, optional): True for recording voltage. Defaults to False.
-        force_regen (bool, optional): force regenerate data even if corresponding data files already exit. Defaults to False.
+        record_v (bool, optional): True for recording voltage. Defaults to True.
+        force_regen (bool, optional): force regenerate pulse-output data 
+                even if corresponding data files already exit. Defaults to False.
         seed (int, optional): random seed. Defaults to None.
 
     Returns:
         tuple: _description_
     """
 
-    PATH = DATA_PATH + f"EE/N={N:d}/"
-    if not os.path.isdir(PATH):
-        os.mkdir(PATH)
-    fname_prefix = PATH + f"Gaussianp={p:.2f}s={s:.3f}tau={tau:.3f}ref={int(ref):d}th={threshold:.3f}l={T:.0e}"
-    spk_fname = fname_prefix + "_spike_train.dat"
-    vol_fname = fname_prefix + "_voltage.dat"
+    PATH = data_path / f"N={N:d}"
+    PATH.mkdir(exist_ok=True, parents=True)
+    vol_fname = PATH / f"Gaussianp={p:.2f}s={s:.3f}tau={tau:.0f}ref={int(ref):d}l={T:.0e}_voltage.dat"
+    spk_fname = PATH / f"Gaussianp={p:.2f}s={s:.3f}tau={tau:.0f}ref={int(ref):d}th={threshold:.3f}l={T:.0e}_spike_train.dat"
     # Generate Gaussian data
     Tn = np.ceil(T/dt).astype(int)
     if seed is not None:
         np.random.seed(seed)
-    if force_regen or not os.path.isfile(spk_fname):
-        W = (np.random.rand(N,N)<p).astype(float)
-        W[np.eye(N,dtype=bool)] = 0.0
-        if N == 2:
-            W = np.array([[0,1],[0,0]]).astype(float)
-
-        buff_size = 1e8  # requires arround 0.745 GiB RAM
+    if force_regen or not spk_fname.exists():
+        buff_size = 1e8  # number of measurements in buffer, requires arround 0.745 GiB RAM
         buff_lines = int(buff_size/N)
         if Tn < buff_lines:
             tranges = [[0, Tn],]
         else:
             period_time = buff_lines*dt
             if Tn%buff_lines == 0:
-                n_iters = int(Tn//buff_lines)
+                n_iters = int(Tn // buff_lines)
             else:
-                n_iters = int(Tn//buff_lines) + 1
+                n_iters = int(Tn // buff_lines) + 1
             tranges = np.vstack((np.arange(n_iters)*period_time, np.ones(n_iters)*buff_lines)).T
             tranges[-1,1] = Tn - (n_iters-1)*buff_lines
         print(tranges)
 
-        x0 = np.zeros(N)
-        # noise = np.random.randn(Tn, N)
-        # noise_flag = 0
-        for start, period in tranges:
-            noise = np.random.randn(int(period), N)
-            x = evolve_gauss(noise, W*s, x0, tau, dt)
-            # x = evolve_gauss(noise[noise_flag:noise_flag+int(period), :], W*s, x0, tau, dt)
-            # noise_flag += int(period)
-            # print(x.shape)
-            x0 = x[-1, :].copy()
+        if not vol_fname.exists():
+            W = (np.random.rand(N,N)<p).astype(float)
+            W[np.eye(N,dtype=bool)] = 0.0
+            if N == 2:
+                W = np.array([[0,1],[0,0]]).astype(float)
+            x0 = np.zeros(N)
+            gen_voltage_flag = True
+        else:
+            vol_file = open(vol_fname, 'rb')
+            gen_voltage_flag = False
 
-            time = np.arange(int(period), dtype=float)*dt + start
-            vol_out = np.vstack((time, x.T)).T
+        for start, period in tranges:
+            if gen_voltage_flag:
+                noise = np.random.randn(int(period), N)
+                x = evolve_gauss(noise, W*s, x0, tau, dt)
+                x0 = x[-1, :].copy()
+                time = np.arange(int(period), dtype=float)*dt + start
+                vol_out = np.vstack((time, x.T)).T
+                if start == 0:
+                    if record_v:
+                        save2bin(vol_fname, vol_out, 'wb')
+                    save2bin(PATH/f"connect_matrix-p={p:.3f}.dat", W.T)
+                else:
+                    if record_v:
+                        save2bin(vol_fname, vol_out, 'ab')
+            else:
+                vol_out = unpack('d'*(N+1)*int(period), vol_file.read(8*(N+1)*int(period)))
+                vol_out = np.asarray(vol_out).reshape(-1,N+1)
+                time = vol_out[:,0]
+                x = vol_out[:,1:]
+
             spike_mask = (np.diff(x>threshold, axis=0) == 1)
             spike_time = [time[:-1][spike_mask[:,i]] for i in range(N)]
             spike_time = np.array([
@@ -120,20 +126,17 @@ def sim_Gaussian(N:int=2,
             spike_time[:,0] /= 1000.
             spike_time = force_refractory(spike_time, t_ref=ref)
             if start == 0:
-                if record_v:
-                    save2bin(vol_fname, vol_out, 'wb')
                 save2bin(spk_fname, spike_time, 'wb')
-                save2bin(PATH+f"connect_matrix-p={p:.3f}.dat", W.T)
             else:
-                if record_v:
-                    save2bin(vol_fname, vol_out, 'ab')
                 save2bin(spk_fname, spike_time, 'ab')
+        if not gen_voltage_flag:
+            vol_file.close()
     return spk_fname, vol_fname
 # %%
 if __name__ == '__main__':
     # %%
     import matplotlib.pyplot as plt
-    from causal4.Causality import run
+    from causal4.Causality import CausalityEstimator
     pm_dym = dict(
         dtype = 'Gaussian',
         N     = 100,
@@ -147,33 +150,25 @@ if __name__ == '__main__':
     N = pm_dym['N']
     T = 1e8
     # %%
-    spk_fname, vol_fname = sim_Gaussian(T=T, **pm_dym, force_regen=True, seed=100)
-    # %%
-    vol_data = np.fromfile(vol_fname, dtype=float).reshape(-1,pm_dym['N']+1)
-    spk_data = np.fromfile(spk_fname, dtype=float).reshape(-1,2)
-    fig, ax = plt.subplots(2,1,figsize=(12,5), sharex=True)
-    xmax = 10000
-    ax[0].plot(vol_data[:xmax, 0], vol_data[:xmax, 90], label='1')
-    ax[0].plot(vol_data[:xmax, 0], vol_data[:xmax, 2], label='2')
-    ax[0].axhline(pm_dym['threshold'], ls='--', color='r')
-    ax[1].plot(spk_data[:, 0], spk_data[:, 1], '|')
-    ax[1].set_xlim(xmax-100,xmax)
-    print(f"mean firing rate is {spk_data.shape[0]/spk_data[-1,0]/vol_data.shape[1]*1000.:f}")
-    plt.savefig('test_gaussian1111.png')
+    spk_fname, vol_fname = sim_Gaussian(T=T, **pm_dym, force_regen=False, seed=100)
     # %%
     pm_causal = dict(
-        Ne          = pm_dym['N'],
-        Ni          = 0,
+        N           = pm_dym['N'],
         T           = T,  # ms,
-        DT          = 2e4,  # ms,
-        auto_T_max  = 0,
-        bin         = 1,   #  ms,
+        DT          = 1e5,  # ms,
+        dt          = 1,   #  ms,
         order       = (1,1), # x, y,
         delay       = 16,   # ms,
-        fname       = spk_fname.split('/')[-1].replace('_spike_train.dat', ''),
-        con_mat     = f"connect_matrix-p={pm_dym['p']:.3f}.dat",
-        path_input  = DATA_PATH,
-        path_output = DATA_PATH,
+        spk_fname   = spk_fname.stem.rstrip('_spike_train'),
+        conn_file   = f"connect_matrix-p={pm_dym['p']:.3f}.dat",
+        path        = data_path/f"N={pm_dym['N']:d}/",
     )
 
-    run(False, **pm_causal)
+    estimator = CausalityEstimator(**pm_causal, n_thread=60)
+    data = estimator.fetch_data(new_run=True)
+    # %%
+    from causal4.utils import match_features, reconstruction_analysis
+    data = match_features(data, N=pm_causal['N'], conn_file=pm_causal['path']/pm_causal['conn_file'])
+    #%%
+    from seaborn import histplot
+    histplot(data, x='log-TE', hue='connection')
