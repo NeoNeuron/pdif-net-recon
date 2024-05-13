@@ -57,7 +57,7 @@ int main(int argc,char **argv) {
     ("CP",          po::value<double>()->default_value(0), "Probability of correlated ffwd Poisson input.")
     ("Lyapunov",    po::value<int>()->default_value(0), "toggle to calculate Lyapunov exponent.")
     ("record_spk",  po::value<int>()->default_value(1), "toggle to record spike train.")
-    ("record_v",    po::value<int>()->default_value(0), "toggle to record v.")
+    ("record_v",    po::value<int>()->default_value(0), "toggle to record v after each T_step.")
     ("record_vlim", po::value<string>()->default_value("0 1e8"), "time range to record voltage trace.")
     ("record_path", po::value<string>()->default_value("./data/"), "path to save data")
     ("state_path",  po::value<string>()->default_value(""), "path to load init state of neurons.")
@@ -116,7 +116,7 @@ int main(int argc,char **argv) {
 
 	mean_fire_rate = (total_fire_num[0] + total_fire_num[1]) / T_Max_current_run * 1000 / N; //(Hz)
 	printf("mean rate (Hz) = %0.2f ", mean_fire_rate);
-	printf("(E : %.3f, I : %.3f)\n", total_fire_num[0] / T_Max * 1000 / NE, total_fire_num[1] / T_Max * 1000 / NI);
+	printf("(E : %.3f, I : %.3f)\n", total_fire_num[0] / T_Max_current_run * 1000 / NE, total_fire_num[1] / T_Max_current_run * 1000 / NI);
 
 	t1 = clock();
 	printf("Total time = %0.3fs \n\n", double(t1 - t0) / CLOCKS_PER_SEC);

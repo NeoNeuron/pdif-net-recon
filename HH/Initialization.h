@@ -414,6 +414,7 @@ void Initialization(std::mt19937 &rng_conn, std::mt19937 &rng_dym)
 		printf("loading neural states from file...\n");
 		for (int i=0; i < N; i++) {
 			fread(&neu[i], sizeof(struct neuron), 1, fp_buff);
+			neu[i].Nu = Decide_Nu(i,rng_dym);
 			neu[i].Poisson_input_time = new double[int(T_step * 100 * 2) + 5];
 			neu[i].Poisson_input_num = -1;
 			if (strcmp(save_mode, "w")==0) {
