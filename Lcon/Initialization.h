@@ -100,7 +100,7 @@ void Assign_CS()
 
 void Record_connect_matrix()
 {
-	if (record_data[0] || record_data[1])
+	if (record_data[0] || record_data[1] || record_data[2] || record_data[3])
 	{
 		FILE *fp;
 		char str[200], ch[10], c[10];
@@ -133,7 +133,7 @@ void Record_connect_matrix()
 	}
 
 
-	if (record_data[0] || record_data[1])
+	if (record_data[0] || record_data[1] || record_data[2] || record_data[3])
 	{
 		FILE *fp;
 		char str[200], ch[10];

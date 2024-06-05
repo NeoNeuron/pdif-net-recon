@@ -24,10 +24,22 @@ void Run_model()
 
 		if (record_data[1] && t > Record_x_start && t <= Record_x_end && t - tt >= 0.01-1e-4)
 		{
-			tt = t;
-			fwrite(&t, sizeof(double), 1, FP1);
+			fwrite(&t, sizeof(double), 1, FPx);
 			for (int i = 0; i < N; i++)
-				fwrite(&neu[i].x, sizeof(double), 1, FP1);
+				fwrite(&neu[i].x, sizeof(double), 1, FPx);
 		}
+		if (record_data[2] && t > Record_x_start && t <= Record_x_end && t - tt >= 0.01-1e-4)
+		{
+			fwrite(&t, sizeof(double), 1, FPy);
+			for (int i = 0; i < N; i++)
+				fwrite(&neu[i].y, sizeof(double), 1, FPy);
+		}
+		if (record_data[3] && t > Record_x_start && t <= Record_x_end && t - tt >= 0.01-1e-4)
+		{
+			fwrite(&t, sizeof(double), 1, FPz);
+			for (int i = 0; i < N; i++)
+				fwrite(&neu[i].z, sizeof(double), 1, FPz);
+		}
+		tt = t;
 	}
 }

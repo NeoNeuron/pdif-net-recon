@@ -12,7 +12,9 @@ void Delete()
 	if (record_data[0])
 		fclose(FP); 
 	if (record_data[1])
-		fclose(FP1);
+		fclose(FPx);
+		fclose(FPy);
+		fclose(FPz);
 	
 	delete[] x_start;
 	delete[] dx_start;

@@ -48,8 +48,10 @@ int main(int argc,char **argv)
 		("random_S",    po::value<int>()->default_value(0), "random mode of recurrent coupling strength (0-none 1-uniform 2-gauss 3-exponential 4-lognormal)")
 		("Lyapunov",    po::value<int>()->default_value(0), "toggle to calculate Lyapunov exponent.")
 		("record_spk",  po::value<int>()->default_value(1), "toggle to record spike train.")
-		("record_v",    po::value<int>()->default_value(0), "toggle to record v.")
-		("record_vlim", po::value<string>()->default_value("0 1e8"), "time range to record voltage trace.")
+		("record_x",    po::value<int>()->default_value(0), "toggle to record x.")
+		("record_y",    po::value<int>()->default_value(0), "toggle to record y.")
+		("record_z",    po::value<int>()->default_value(0), "toggle to record z.")
+		("record_vlim", po::value<string>()->default_value("0 1e8"), "time range to record x,y,z trace.")
 		("record_path", po::value<string>()->default_value("./data/"), "path to save data")
 		;
 	// create variable map

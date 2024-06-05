@@ -39,7 +39,7 @@ int random_S;
 double P_c;                   // Connect probability 
 int Lyapunov;                     // compute largest lyapunov exponnet
 int Power_spectrum = 0;				  // record v for power spectrum	
-int record_data[2];				// save data or not
+int record_data[4];				// save data or not
 char file[200];				  // Record data path
 double Record_x_start, Record_x_end;
 
@@ -66,7 +66,7 @@ struct neuron *neu, *neu_old;
 //-----------------------------------------------------------------------------
 //		Record firing time and voltage
 //-----------------------------------------------------------------------------
-FILE *FP,*FP1, *FP_FFTW, *FP_fire_pattern;
+FILE *FP,*FPx, *FPy, *FPz, *FP_FFTW, *FP_fire_pattern;
 FILE *ffp; // for test
 
 //-----------------------------------------------------------------------------
