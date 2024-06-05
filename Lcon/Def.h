@@ -40,6 +40,7 @@ double P_c;                   // Connect probability
 int Lyapunov;                     // compute largest lyapunov exponnet
 int Power_spectrum = 0;				  // record v for power spectrum	
 int record_data[4];				// save data or not
+int TrialID = 0;			   // Default: 0.  for multiple trials with fixed CS and change state seeds 
 char file[200];				  // Record data path
 double Record_x_start, Record_x_end;
 

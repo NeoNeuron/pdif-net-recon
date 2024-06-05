@@ -36,7 +36,7 @@ void Create_connect_matrix(long& seed)
 	CS = new double *[N];
 	for (int i = 0; i < N; i++)
 		CS[i] = new double[N];
-	long seed1 = 15, seed2 = 43;
+	long seed1 = 15, seed2 = 43; // seed for random S
 
 	for (int i = 0; i < 1000; i++)
 	{
@@ -166,8 +166,6 @@ void Record_connect_matrix()
 	}
 }
 
-
-
 void Initialization(long &seed0,long &seed2)
 {
 	S[1] = S[0]; S[2] = S[0]; S[3] = S[0];
@@ -185,6 +183,11 @@ void Initialization(long &seed0,long &seed2)
 	Record_connect_matrix();
 	neu = new struct neuron[N];
 	neu_old = new struct neuron[N];
+
+	if (TrialID) // multiple trials case for init seeds
+	{
+		seed2 += TrialID;
+	}
 
 	long Seed = 11, Seed1 = 43;
 	for (int i = 0; i < 1000; i++)

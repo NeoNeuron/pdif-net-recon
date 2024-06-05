@@ -77,6 +77,7 @@ void Read_parameters(po::variables_map& vm)
 		strcat(file, "EI/N=");
 	sprintf(ch, "%d", N), strcat(file, ch), strcat(file, "/");
 
+	TrialID = vm["TrialID"].as<int>();
 	// initialize folder
 	_mkdir(file);
 
@@ -113,9 +114,13 @@ void out_put_filename()
 
 	strcat(str, "p="), sprintf(c, "%0.2f", P_c), strcat(str, c);
 	strcat(str, "s="), sprintf(c, "%0.3f", S[0]), strcat(str, c);
-	strcat(str, "f=0.000u=0.000");
 
 	printf("dt=%0.3f, T_Max=%0.2e\n", T_step, T_Max);
+
+	if (TrialID)  // for multiple trials with fixed CS and init seeds 
+	{
+		strcat(str, "-"), sprintf(c, "%d", TrialID), strcat(str, c);
+	}
 
 	if (record_data[0])
 	{

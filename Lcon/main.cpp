@@ -19,7 +19,6 @@
 
 int main(int argc,char **argv)
 {
-	long seed, seed0, seed1, seed2;
 	clock_t t0, t1;	 
 	char str[200];
 	double MLE;
@@ -38,6 +37,7 @@ int main(int argc,char **argv)
 		("NE",          po::value<int>()->default_value(2), "num of E neurons")
 		("NI",          po::value<int>()->default_value(0), "num of I neurons")
 		("seed",        po::value<string>()->default_value("11 11"), "seed to generate connectivity matrix.")
+		("TrialID",     po::value<int>()->default_value(0), "Default: 0. for multiple trials with fixed CS and change init seeds")
 		("T_Max",       po::value<double>()->default_value(1e7), "Simulation time period, unit ms.")
 		("T_step",      po::value<double>()->default_value(0.01), "Time step, unit ms.")
 		("S",           po::value<string>()->default_value("0.25 0.25 0.25 0.25"), "Synaptic coupling strength")
@@ -81,16 +81,12 @@ int main(int argc,char **argv)
 	po::store(po::parse_command_line(argc, argv, cml_options), vm);
 	po::notify(vm);
 
-	vector<int> seed_buff;
-	str2vec(vm["seed"].as<string>(), seed_buff);
-	seed = seed_buff[0]; 
-	seed1 = seed_buff[1];
+	vector<long int> seeds; // [0] for connect matrix, [1] for neuronal state
+	str2vec(vm["seed"].as<string>(), seeds);
 
 	Read_parameters(vm);
 	out_put_filename();
-	seed0 = seed;    // Create connect matrix
-	seed2 = seed1;  // Initialization
-	Initialization(seed0, seed2);
+	Initialization(seeds[0], seeds[1]);
 
 
 	//neu[0].x = 10;   ///EPSP
@@ -100,7 +96,7 @@ int main(int argc,char **argv)
 
 	t0 = clock();
 	if (Lyapunov)
-		MLE = Largest_Lyapunov(seed2, 1, T_step);
+		MLE = Largest_Lyapunov(seeds[1], 1, T_step);
 	else
 		Run_model();
 	t1 = clock();
