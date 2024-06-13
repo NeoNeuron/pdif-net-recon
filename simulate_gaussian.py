@@ -1,7 +1,6 @@
 # %%
 import numpy as np
 from causal4.utils import *
-from struct import unpack
 from numba import njit
 from pathlib import Path
 data_path = Path(__file__).parents[0]/'Gaussian/data/EE/'
@@ -65,6 +64,10 @@ def sim_Gaussian(N:int=2,
     PATH.mkdir(exist_ok=True, parents=True)
     vol_fname = PATH / f"Gaussianp={p:.2f}s={s:.3f}tau={tau:.0f}ref={int(ref):d}l={T:.0e}_voltage.dat"
     spk_fname = PATH / f"Gaussianp={p:.2f}s={s:.3f}tau={tau:.0f}ref={int(ref):d}th={threshold:.3f}l={T:.0e}_spike_train.dat"
+    if ref > 0:
+        ref_L = int(np.ceil(ref/dt))
+        if ref % dt == 0:
+            ref_L += 1
     # Generate Gaussian data
     Tn = np.ceil(T/dt).astype(int)
     if seed is not None:
@@ -95,6 +98,7 @@ def sim_Gaussian(N:int=2,
             vol_file = open(vol_fname, 'rb')
             gen_voltage_flag = False
 
+        offset = 0
         for start, period in tranges:
             if gen_voltage_flag:
                 noise = np.random.randn(int(period), N)
@@ -110,25 +114,22 @@ def sim_Gaussian(N:int=2,
                     if record_v:
                         save2bin(vol_fname, vol_out, 'ab')
             else:
-                vol_out = unpack('d'*(N+1)*int(period), vol_file.read(8*(N+1)*int(period)))
-                vol_out = np.asarray(vol_out).reshape(-1,N+1)
+                vol_out = np.fromfile(vol_fname, dtype=float, count=int(period*(N+1)), offset=offset).reshape(-1,N+1)
+                offset += int(period*(N+1)*8)
                 time = vol_out[:,0]
                 x = vol_out[:,1:]
 
             spike_mask = (np.diff(x>threshold, axis=0) == 1)
-            spike_time = [time[:-1][spike_mask[:,i]] for i in range(N)]
-            spike_time = np.array([
-                np.vstack((element, np.ones_like(element)*idx)).T
-                for idx, element in enumerate(spike_time)
-                ])
-            spike_time = np.vstack(spike_time)
-            spike_time = spike_time[np.argsort(spike_time[:,0], axis=0),:]
-            spike_time[:,0] /= 1000.
-            spike_time = force_refractory(spike_time, t_ref=ref)
+            if ref > 0:
+                spike_mask = apply_refractory(ref_L, spike_mask)
+            spike_time = (np.tile(time[:-1], (N,1)).T)[spike_mask]
+            spike_idx = np.tile(np.arange(N), (time.shape[0]-1, 1))[spike_mask]
+            spike_data = np.vstack((spike_time, spike_idx)).T
+            spike_data[:,0] /= 1000.
             if start == 0:
-                save2bin(spk_fname, spike_time, 'wb')
+                save2bin(spk_fname, spike_data, 'wb')
             else:
-                save2bin(spk_fname, spike_time, 'ab')
+                save2bin(spk_fname, spike_data, 'ab')
         if not gen_voltage_flag:
             vol_file.close()
     return spk_fname, vol_fname

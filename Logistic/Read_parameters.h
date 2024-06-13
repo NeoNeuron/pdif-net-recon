@@ -101,7 +101,6 @@ void out_put_filename()
 		else
 			strcat(str, "s="), sprintf(c, "%0.3f", S[2]), strcat(str, c);
 	}
-	strcat(str, "f=0.000u=0.000");
 
 	printf("dt=%0.3f, T_Max=%0.2e\n", T_step, T_Max);
 
