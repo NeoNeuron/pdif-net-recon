@@ -69,7 +69,7 @@ void Run_model()
 
 		t += T_Step_Large;
 
-		if (record_data[1] && t > Record_v_start && t <= Record_v_end && t - tt >= 0.5-1e-8)
+		if (record_data[1] && t > Record_v_start && t <= Record_v_end && t - tt >= T_Step_Large-1e-8)
 		{
 			tt = t;
 			if (!(t - neu[0].last_fire_time <= T_ref && Lib_method))

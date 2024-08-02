@@ -90,13 +90,14 @@ void Read_parameters(po::variables_map& vm)
 		strcpy(save_mode, "w");
     }
 
-	if (N == NE)
-		strcat(file, "EE/N=");
-	else if (N == NI)
-		strcat(file, "II/N=");
-	else
-		strcat(file, "EI/N=");
-	sprintf(ch, "%d", N), strcat(file, ch), strcat(file, "/");
+	// deprecated: remove the creation of subfolders according the network size and type
+	// if (N == NE)
+	// 	strcat(file, "EE/N=");
+	// else if (N == NI)
+	// 	strcat(file, "II/N=");
+	// else
+	// 	strcat(file, "EI/N=");
+	// sprintf(ch, "%d", N), strcat(file, ch), strcat(file, "/");
 
 	TrialID = vm["TrialID"].as<int>();
 	// initialize folder
@@ -158,10 +159,17 @@ void out_put_filename()
 		strcat(str, "LN-");
 
 	strcat(str, "p="), sprintf(c, "%0.2f", P_c), strcat(str, c);
-	if (S[0]<1e-3 && S[0]>1e-10)
-		strcat(str, "s="), sprintf(c, "%0.5f", S[0]), strcat(str, c);  
-	else
-		strcat(str, "s="), sprintf(c, "%0.3f", S[0]), strcat(str, c);
+	if (NE) {
+		if (S[0]<1e-3 && S[0]>1e-10)
+			strcat(str, "s="), sprintf(c, "%0.5f", S[0]), strcat(str, c);  
+		else
+			strcat(str, "s="), sprintf(c, "%0.3f", S[0]), strcat(str, c);
+	} else {
+		if (S[2]<1e-3 && S[2]>1e-10)
+			strcat(str, "s="), sprintf(c, "%0.5f", S[2]), strcat(str, c);  
+		else
+			strcat(str, "s="), sprintf(c, "%0.3f", S[2]), strcat(str, c);
+	}
 	if (NE && NI) {
 		if (S[2]<1e-3 && S[2]>1e-10)
 			strcat(str, "s="), sprintf(c, "%0.5f", S[2]), strcat(str, c);  
@@ -235,11 +243,11 @@ void out_put_filename()
 	if (record_data[0] || record_data[1] || Power_spectrum || RecordFP)
 	{
 		if (NE == N)
-			printf("file:NE=%d\\%s\n", N, str);
+			printf("file:NE=%d    %s\n", N, str);
 		else if (NI == N)
-			printf("file:NI=%d\\%s\n", N, str);
+			printf("file:NI=%d    %s\n", N, str);
 		else
-			printf("file:NEI=%d\\%s\n", N, str);
+			printf("file:NEI=%d    %s\n", N, str);
 	}
 	
 }

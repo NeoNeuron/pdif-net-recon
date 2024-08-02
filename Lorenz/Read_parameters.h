@@ -79,7 +79,7 @@ void Read_parameters(po::variables_map& vm)
     record_data[3] = vm["record_z"].as<int>();
 
     vector<double> xlim_buff;
-    str2vec(vm["record_lim"].as<string>(), xlim_buff);
+    str2vec(vm["record_vlim"].as<string>(), xlim_buff);
     Record_x_start = xlim_buff[0];
     Record_x_end = xlim_buff[1];
 
@@ -93,13 +93,13 @@ void Read_parameters(po::variables_map& vm)
 		strcpy(save_mode, "w");
     }
 
-	if (N == NE)
-		strcat(file, "EE/N=");
-	else if (N == NI)
-		strcat(file, "II/N=");
-	else
-		strcat(file, "EI/N=");
-	sprintf(ch, "%d", N), strcat(file, ch), strcat(file, "/");
+	// if (N == NE)
+	// 	strcat(file, "EE/N=");
+	// else if (N == NI)
+	// 	strcat(file, "II/N=");
+	// else
+	// 	strcat(file, "EI/N=");
+	// sprintf(ch, "%d", N), strcat(file, ch), strcat(file, "/");
 
 	// initialize folder
 	_mkdir(file);
@@ -185,11 +185,11 @@ void out_put_filename()
 	if (record_data[0] || record_data[1] || record_data[2] || record_data[3])
 	{
 		if (NE == N)
-			printf("file:NE=%d\\%s\n", N, str);
+			printf("file:NE=%d       %s\n", N, str);
 		else if (NI == N)
-			printf("file:NI=%d\\%s\n", N, str);
+			printf("file:NI=%d       %s\n", N, str);
 		else
-			printf("file:NEI=%d\\%s\n", N, str);
+			printf("file:NEI=%d       %s\n", N, str);
 	}
 
 }

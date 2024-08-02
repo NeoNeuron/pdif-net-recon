@@ -69,13 +69,13 @@ void Read_parameters(po::variables_map& vm)
 
     strcpy(file, vm["record_path"].as<string>().c_str());
 
-	if (N == NE)
-		strcat(file, "EE/N=");
-	else if (N == NI)
-		strcat(file, "II/N=");
-	else
-		strcat(file, "EI/N=");
-	sprintf(ch, "%d", N), strcat(file, ch), strcat(file, "/");
+	// if (N == NE)
+	// 	strcat(file, "EE/N=");
+	// else if (N == NI)
+	// 	strcat(file, "II/N=");
+	// else
+	// 	strcat(file, "EI/N=");
+	// sprintf(ch, "%d", N), strcat(file, ch), strcat(file, "/");
 
 	TrialID = vm["TrialID"].as<int>();
 	// initialize folder
@@ -146,11 +146,11 @@ void out_put_filename()
 	if (record_data[0] || record_data[1] || record_data[2] || record_data[3])
 	{
 		if (NE == N)
-			printf("file:NE=%d\\%s\n", N, str);
+			printf("file:NE=%d        %s\n", N, str);
 		else if (NI == N)
-			printf("file:NI=%d\\%s\n", N, str);
+			printf("file:NI=%d        %s\n", N, str);
 		else
-			printf("file:NEI=%d\\%s\n", N, str);
+			printf("file:NEI=%d        %s\n", N, str);
 	}
 	
 }

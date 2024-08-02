@@ -41,7 +41,7 @@ int main(int argc, char **argv) {
 		("seed",        po::value<string>()->default_value("11 11"), "seed to generate connectivity matrix and init Poisson generators.")
 		("T_Max",       po::value<double>()->default_value(1e7), "Simulation time period, unit ms.")
 		("T_step",      po::value<double>()->default_value(0.05), "Time step, unit ms.")
-		("S",           po::value<string>()->default_value("0.02 0.02 0.02 0.02"), "Synaptic coupling strength")
+		("S",           po::value<string>()->default_value("0.02 0.02 0.02 0.02"), "Synaptic coupling strength, E2E, E2I, I2E, I2I.")
 		("I_CONST",     po::value<double>()->default_value(0), "Constant external drive.")
 		("Nu",          po::value<double>()->default_value(0.1), "Poisson input rate, unit kHz.")
 		("full_mode",   po::value<int>()->default_value(0), "Assign connectivity matrix and feed forward strength entry by entry.")
