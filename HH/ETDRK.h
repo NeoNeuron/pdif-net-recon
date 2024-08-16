@@ -235,7 +235,7 @@ void Update_ETDRK2(int n, struct neuron &a, double t, double dt)
 		an[1] = a.m*g[1] + FF[0][1] * (g[1] - 1) / A[1]; //m
 		an[2] = a.h*g[2] + FF[0][2] * (g[2] - 1) / A[2]; //h
 		an[3] = a.n*g[3] + FF[0][3] * (g[3] - 1) / A[3]; //n
-		///////////////////// 1
+		// ================== 1
 
 		Update_neu_G(n, a, t, h); //include a.t=t+dt
 
@@ -255,7 +255,7 @@ void Update_ETDRK2(int n, struct neuron &a, double t, double dt)
 
 		for (int i = 0; i < 4; i++)
 			FF[1][i] = F[1][i] - A[i] * an[i];
-		////////////////////// 2
+		// ================== 2
 		double gm[4][2] = {0}, s[4];
 
 

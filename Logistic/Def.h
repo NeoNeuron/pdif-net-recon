@@ -2,6 +2,7 @@
 
 using namespace std;
 #define PI (atan(1)*4)
+int num_threads_openmp;
 
 //-----------------------------------------------------------------------------
 //		Parameters with fixed value 

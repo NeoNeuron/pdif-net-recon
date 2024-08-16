@@ -37,7 +37,7 @@ void update_single_neuron(int id, struct neuron &a, double t,double dt)
 
 void update_all_neuron(struct neuron *a, double t)
 {
-#pragma omp parallel for    
+#pragma omp parallel for num_threads(num_threads_openmp)
 	for (int id = 0; id < N; id++)
 	{
 		a[id].if_fired = 0;
@@ -57,7 +57,7 @@ void update_all_neuron(struct neuron *a, double t)
 		a[id].wait_strength_I = 0;
 
 
-		//// check fire 
+		// check fire 
 		if (v_start < V_th && a[id].x >= V_th && t - a[id].last_fire_time >= T_ref)
 		{
 			a[id].last_fire_time = t;
@@ -103,13 +103,15 @@ void update_all_neuron(struct neuron *a, double t)
 
 void Run_model()
 {
+	num_threads_openmp = N >= 8 ? 8 : 4;
 	double t = 0, tt = 0, tt_fftw = 0, t_lib = 0, t_fp = 0;
 	double t_test = 0;
 
 	while (t < T_Max)
 	{
 
-//#pragma omp parallel for
+// #pragma omp parallel for num_threads(num_threads_openmp)
+//! warning: file IO is not thread safe here
 		for (int i = 0; i < N; i++)
 			update_single_neuron(i, neu[i], t, T_step);
 		t += T_step;
