@@ -65,8 +65,13 @@ def sim_Gaussian(data_path, N:int=2,
 
     data_path = Path(data_path)
     data_path.mkdir(exist_ok=True, parents=True)
-    vol_fname = data_path / f"Gaussianp={p:.2f}s={s:.3f}tau={tau:.0f}ref={int(ref):d}l={T:.0e}_voltage.dat"
-    spk_fname = data_path / f"Gaussianp={p:.2f}s={s:.3f}tau={tau:.0f}ref={int(ref):d}th={threshold:.3f}l={T:.0e}_spike_train.dat"
+    fname = f"Gaussianp={p:.2f}s={s:.3f}tau={tau:.0f}ref={int(ref):d}"
+    if (data_path/(fname+'_voltage.dat')).exists() and not force_regen:
+        vol_fname = data_path / f"{fname}l={T:.0e}_voltage.dat"
+        spk_fname = data_path / f"{fname}th={threshold:.3f}l={T:.0e}_spike_train.dat"
+    else:
+        vol_fname = data_path / f"{fname}_voltage.dat"
+        spk_fname = data_path / f"{fname}th={threshold:.3f}_spike_train.dat"
     if ref > 0:
         ref_L = int(np.ceil(ref/dt))
         if ref % dt == 0:
