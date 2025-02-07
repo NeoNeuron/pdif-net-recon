@@ -2,6 +2,7 @@
 import os
 import yaml
 import numpy as np
+import matplotlib.pyplot as plt
 import causal4.Causality as Causality
 import causal4.myplot as mplt
 import causal4.utils as c4u
@@ -15,13 +16,16 @@ for key in pm_causal_set.keys():
 
 #%%
 refs=[3.0]*6+[0.5]*2+[0.0, 3.0]
-thresholds = [-50, -50, -50, -50, -50, -50, 10, 10, 0.9, 0.02]
-
+thresholds = [-50] * 6 + [10, 10, 0.9, 0.02]
+# sfx = None
+sfx = 'noisy1'
 for th, ref, (key, val) in zip(thresholds, refs, pm_causal_set.items()):
     val = val.copy()
     if key == 'Gaussian':
         val['spk_fname'] = val['spk_fname'].replace('th=0.020','')
-    val['spk_fname'] = val['spk_fname']+ f'_th={th:.2f}ref={ref:.2f}'
+    if sfx is not None:
+        val['spk_fname'] += '_' + sfx 
+    val['spk_fname'] += f'_th={th:.2f}ref={ref:.2f}'
     estimator = Causality.CausalityEstimator(
         **val, n_thread=int(os.cpu_count()/4))
     # estimator.delay=16
@@ -29,6 +33,7 @@ for th, ref, (key, val) in zip(thresholds, refs, pm_causal_set.items()):
     # estimator._run_estimation(regen=True, verbose=True)
     # estimator.order = (1,1)
     data = estimator.fetch_data(new_run=True)
+    data = data.drop(columns=['TE(l=5)'])
 
     # % Plot distribution of TE values in log-scale
     data_matched = c4u.match_features(
@@ -39,7 +44,12 @@ for th, ref, (key, val) in zip(thresholds, refs, pm_causal_set.items()):
 
     try:
         fig = mplt.reconstruction_illustration_TE(fig_data)
-        fig.savefig(val['path']/f"causal_recon_{key}.pdf", transparent=True)
+        plt.tight_layout()
+        figname = f"causal_recon_{key}"
+        if sfx is not None:
+            figname += '_' + sfx
+        figname += '.pdf'
+        fig.savefig(root_path/'figures/N10_subnet'/figname, transparent=True)
     except:
         print(f"Failed to save {key}")
         continue

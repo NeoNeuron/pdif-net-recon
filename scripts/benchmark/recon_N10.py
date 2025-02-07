@@ -2,6 +2,7 @@
 import os
 import yaml
 import numpy as np
+import matplotlib.pyplot as plt
 import causal4.Causality as Causality
 import causal4.myplot as mplt
 import causal4.utils as c4u
@@ -31,7 +32,9 @@ for key, val in pm_causal_set.items():
 
     try:
         fig = mplt.reconstruction_illustration_TE(fig_data)
-        fig.savefig(val['path']/f"causal_recon_{key}.pdf", transparent=True)
+        plt.tight_layout()
+        figname = f"causal_recon_{key}.pdf"
+        fig.savefig(root_path/'figures/N10'/figname, transparent=True)
     except:
         print(f"Failed to save {key}")
         continue

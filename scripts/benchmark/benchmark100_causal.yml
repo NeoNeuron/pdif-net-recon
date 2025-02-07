@@ -1,0 +1,129 @@
+HHEE:
+    N: 100
+    T: 1.0e+7
+    DT: 1.0e+6
+    dt: 0.5
+    order: !!python/tuple
+        - 1
+        - 1
+    delay: 3
+    spk_fname: HHp=0.25s=0.020f=0.080u=0.150
+    conn_file: connect_matrix-p=0.250.dat
+    path: benchmark/N100/HHEE/
+
+HHII:
+    N: 100
+    T: 1.0e+7
+    DT: 1.0e+6
+    dt: 0.5
+    order: !!python/tuple
+        - 1
+        - 1
+    delay: 3
+    spk_fname: HHp=0.25s=0.080f=0.080u=0.150
+    conn_file: connect_matrix-p=0.250.dat
+    path: benchmark/N100/HHII/
+
+HHEI:
+    N: 100
+    T: 1.0e+7
+    DT: 1.0e+6
+    dt: 0.5
+    order: !!python/tuple
+        - 1
+        - 1
+    delay: 3
+    spk_fname: HHp=0.25s=0.020s=0.080f=0.080u=0.150
+    conn_file: connect_matrix-p=0.250.dat
+    path: benchmark/N100/HHEI/
+
+HHconEE:
+    N: 100
+    T: 1.0e+7
+    DT: 1.0e+6
+    dt: 0.5
+    order: !!python/tuple
+        - 1
+        - 1
+    delay: 3
+    spk_fname: HHconp=0.25s=0.020f=0.080u=0.150
+    conn_file: connect_matrix-p=0.250.dat
+    path: benchmark/N100/HHconEE/
+
+HHconII:
+    N: 100
+    T: 1.0e+7
+    DT: 1.0e+6
+    dt: 0.5
+    order: !!python/tuple
+        - 1
+        - 1
+    delay: 3
+    spk_fname: HHconp=0.25s=0.080f=0.080u=0.150
+    conn_file: connect_matrix-p=0.250.dat
+    path: benchmark/N100/HHconII/
+
+HHconEI:
+    N: 100
+    T: 1.0e+7
+    DT: 1.0e+6
+    dt: 0.5
+    order: !!python/tuple
+        - 1
+        - 1
+    delay: 3
+    spk_fname: HHconp=0.25s=0.020s=0.080f=0.080u=0.150
+    conn_file: connect_matrix-p=0.250.dat
+    path: benchmark/N100/HHconEI/
+
+Lorenz:
+    N: 100
+    T: 1.0e+6
+    DT: 1.0e+5
+    dt: 0.01
+    order: !!python/tuple
+        - 1
+        - 1
+    delay: 0
+    spk_fname: Lp=0.25s=0.500f=0.000u=0.000
+    conn_file: connect_matrix-p=0.250.dat
+    path: benchmark/N100/Lorenz/
+
+Lcon:
+    N: 100
+    T: 1.0e+6
+    DT: 1.0e+5
+    dt: 0.04
+    order: !!python/tuple
+        - 1
+        - 8
+    delay: 0.08
+    spk_fname: Lconp=0.10s=0.100
+    conn_file: connect_matrix-p=0.100.dat
+    path: benchmark/N100/Lcon/
+
+Logistic:
+    N: 100
+    T: 1.0e+8
+    DT: 1.0e+5
+    dt: 2
+    order: !!python/tuple
+        - 2
+        - 1
+    delay: 0
+    spk_fname: Logp=0.25s=0.005
+    conn_file: connect_matrix-p=0.250.dat
+    path: benchmark/N100/Logistic/
+
+Gaussian:
+    N: 100
+    T: 1.0e+8
+    DT: 1.0e+5
+    dt: 1
+    order: !!python/tuple
+        - 1
+        - 5
+    delay: 16
+    spk_fname: Gaussianp=0.25s=0.030tau=20ref=10th=0.020
+    conn_file: connect_matrix-p=0.250.dat
+    path: benchmark/N100/Gaussian/

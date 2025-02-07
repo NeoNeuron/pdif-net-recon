@@ -2,6 +2,7 @@
 import os
 import yaml
 import numpy as np
+import matplotlib.pyplot as plt
 import causal4.Causality as Causality
 import causal4.myplot as mplt
 import causal4.utils as c4u
@@ -28,7 +29,7 @@ for key, val in pm_causal_set.items():
         **val, n_thread=int(os.cpu_count()/4))
     # estimator.get_optimal_delay(np.arange(20))
     # print(estimator.delay)
-    estimator._run_estimation(regen=True, verbose=True)
+    # estimator._run_estimation(regen=True, verbose=True)
     data = estimator.fetch_data(new_run=True)
     data.drop(columns=['TE(l=5)'], inplace=True)
 
@@ -41,7 +42,9 @@ for key, val in pm_causal_set.items():
 
     try:
         fig = mplt.reconstruction_illustration_TE(fig_data)
-        fig.savefig(val['path']/f"causal_recon_full_net{key}.pdf", transparent=True)
+        plt.tight_layout()
+        figname = f"causal_recon_{key}.pdf"
+        fig.savefig(root_path/'figures/N100'/figname, transparent=True)
     except:
         print(f"Failed to save {key}")
         continue
