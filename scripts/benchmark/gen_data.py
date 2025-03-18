@@ -103,7 +103,7 @@ for key, sigma, dt in zip(pm_causal_set.keys(), sigmas, dts):
         print(sigma_e/4*i)
         chunked_npy_operation(
             add_noise, vol_fname,
-            vol_fname.with_stem(vol_fname.stem+f'_noisy_{i:d}').with_suffix('.npy'),
+            vol_fname.with_stem(vol_fname.stem+f'_noisy{i:d}').with_suffix('.npy'),
             num_chunks=20, sigma=sigma_e/4*i)
 #%%
 # convert *.dat to *.npy

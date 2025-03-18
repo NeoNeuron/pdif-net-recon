@@ -17,7 +17,6 @@ for key in pm_causal_set.keys():
 #%%
 refs=[3.0]*6+[0.5]*2+[0.0, 3.0]
 thresholds = [-50] * 6 + [10, 10, 0.9, 0.02]
-# sfx = None
 sfx = 'noisy1'
 for th, ref, (key, val) in zip(thresholds, refs, pm_causal_set.items()):
     val = val.copy()

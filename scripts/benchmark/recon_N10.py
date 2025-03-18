@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import causal4.Causality as Causality
 import causal4.myplot as mplt
 import causal4.utils as c4u
+import time
 
 from pathlib import Path
 root_path = Path(__file__).parents[2]
@@ -19,8 +20,12 @@ for key, val in pm_causal_set.items():
     val = val.copy()
     val['spk_fname'] = val['spk_fname']
     estimator = Causality.CausalityEstimator(
-        **val, n_thread=int(os.cpu_count()/4))
-    # estimator._run_estimation(regen=True, verbose=True)
+        **val, n_thread=10)
+    _, text = estimator._run_estimation(regen=True, verbose=False, return_log=True)
+    wall_time = float(text.splitlines()[-1].split()[3])
+    cpu_time = float(text.splitlines()[-1].split()[7])
+    print(key, f"Elapsed cpu time: {cpu_time:.2f} s")
+    print(key, f"Elapsed time: {wall_time:.2f} s")
     data = estimator.fetch_data(new_run=True)
 
     # Plot distribution of TE values in log-scale

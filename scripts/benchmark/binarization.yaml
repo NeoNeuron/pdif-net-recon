@@ -1,0 +1,22 @@
+refractory:
+  Gaussian: 3.0
+  HHEE: 3.0
+  HHEI: 3.0
+  HHII: 3.0
+  HHconEE: 3.0
+  HHconEI: 3.0
+  HHconII: 3.0
+  Lcon: 0.5
+  Logistic: 0.0
+  Lorenz: 0.5
+threshold:
+  Gaussian: 0.02
+  HHEE: -50
+  HHEI: -50
+  HHII: -50
+  HHconEE: -50
+  HHconEI: -50
+  HHconII: -50
+  Lcon: 10
+  Logistic: 0.9
+  Lorenz: 10

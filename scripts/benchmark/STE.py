@@ -4,17 +4,15 @@ root_path = Path(__file__).resolve().parents[2]
 import numpy as np
 import pandas as pd
 from sklearn.metrics import roc_auc_score, roc_curve
-from causal4.ddc import DDC, c_sensitivity, DDC_long
+import smite
 import causal4.myplot as myplot
-from causal4.Causality import CausalityEstimator
-from causal4.utils import fetch_voltage
 import time
-import pickle as pkl
 
 import yaml
 import matplotlib.pyplot as plt
 plt.rcParams['font.size']=16
 import seaborn as sns
+import pickle as pkl
 
 def get_vfname(fname: str, sfx:str=None):
     if key == 'Gaussian':
@@ -26,7 +24,6 @@ def get_vfname(fname: str, sfx:str=None):
     if sfx is not None:
         fname += sfx
     return fname + '.npy'
-
 
 #%%
 yml_names = ['benchmark10_causal.yml',
@@ -45,6 +42,7 @@ save_folder_names = [
     'N10_subnet_noisy',
     'N10_subnet_noisy',
     ]
+m = 5
 for yml_name, sfx, sfname in zip(yml_names, sfxs, save_folder_names):
     
     with open(yml_name, 'r') as yamlfile:
@@ -64,12 +62,12 @@ for yml_name, sfx, sfname in zip(yml_names, sfxs, save_folder_names):
         # vol_data = np.load(vol_fname, mmap_mode='r')
         vol_data = np.load(vol_fname)
         dt = vol_data[1,0]-vol_data[0,0]
-        # L = int(vol_data.shape[0]/4)
-        t0_cpu = time.time()
-        t0_wall = time.process_time()
-        ddc = DDC(vol_data[:,1:].T, dt)
-        t1_wall = time.process_time()
-        t1_cpu = time.time()
+        stride = int(val['dt'] / dt)
+        t0_wall = time.time()
+        t0_cpu = time.process_time()
+        ste = smite.symbolic_transfer_entropy_matrix(vol_data[0::stride,1:], m=m, n_jobs=10)
+        t1_cpu = time.process_time()
+        t1_wall = time.time()
         conn_fname = val['path'] / val['conn_file']
         xx, yy = np.meshgrid(np.arange(N), np.arange(N))
         if conn_fname.suffix == '.dat': 
@@ -80,27 +78,25 @@ for yml_name, sfx, sfname in zip(yml_names, sfxs, save_folder_names):
             raise ValueError('Unknown file format')
         df_list = []
         recon_df = pd.DataFrame({'pre_id': xx[mask],
-                            'post_id': yy[mask],
-                            'ddc': ddc[mask],
-                            'ddc_abs': np.abs(ddc[mask]),
-                            'log-ddc_abs': np.log10(np.abs(ddc[mask])),
-                            'connection': conn[mask]})
+                           'post_id': yy[mask],
+                           'ste': ste[mask],
+                           'log-ste': np.log10(ste[mask]),
+                           'connection': conn[mask]})
         recon_list[key] = recon_df
         # column (row) index representing pre_id (post_id)
-        auc =[roc_auc_score(recon_df['connection'], recon_df['ddc']),
-              roc_auc_score(recon_df['connection'], recon_df['ddc_abs'])]
+        auc =[roc_auc_score(recon_df['connection'], recon_df['ste']),
+              roc_auc_score(recon_df['connection'], recon_df['log-ste']),]
         auc_list[key] = auc
         estimation_time[key] = [t1_wall-t0_wall, t1_cpu-t0_cpu]
         print(key, dt, f"{t1_wall-t0_wall:.2f}", auc)
-
-    save_path = root_path / 'results' / sfname / 'DDC'
+    
+    save_path = root_path / 'results' / sfname / 'STE'
     save_path.mkdir(parents=True, exist_ok=True)
-    auc_df = pd.DataFrame(auc_list, index=['ddc', 'ddc_abs']).T
     sfx = '' if sfx is None else sfx
+    auc_df = pd.DataFrame(auc_list, index=['ste', 'log-ste']).T
     auc_df.to_pickle(save_path / f'auc_list{sfx:s}.pkl')
     with open(save_path / f'recon_list{sfx:s}.pkl', 'wb') as f:
         pkl.dump(recon_list, f)
     time_df = pd.DataFrame(estimation_time, index=['wall', 'cpu']).T
     time_df.to_pickle(save_path / f'estimation_time{sfx:s}.pkl')
 # %%
-
