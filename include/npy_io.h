@@ -14,6 +14,12 @@ inline bool is_npy_file(const std::string& fname) {
 	return (suffix == "npy");
 }
 
+inline bool fileExists(const std::string& filename) {
+    std::ifstream file(filename);
+    return file.good();
+}
+
+
 // Function to load a .npy file
 template <typename T>
 std::vector<T> load_npy(const std::string& filename, std::vector<size_t>& shape) {

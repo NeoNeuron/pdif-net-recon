@@ -1,3 +1,6 @@
+#include <iomanip>
+#include "npy_io.h"
+
 double Decide_S(int i, int j, std::mt19937 &rng)  // i-->j
 {
 	// scaling
@@ -138,14 +141,14 @@ void Create_connect_matrix(std::mt19937 &rng) {
 	// }
 }
 
-void Assign_CS()
+void Assign_CS(std::mt19937 &rng)
 {
 	CS = new double *[N];
 	for (int i = 0; i < N; i++) {
 		CS[i] = new double[N]{0};
 		for (int j = 0; j < N; j++) {
 			if (Connect_Matrix[i][j] == 1)
-				CS[i][j] = S[0];
+				CS[i][j] = Decide_S(i, j, rng);
 		}
 	}
 }
@@ -154,32 +157,41 @@ void Record_connect_matrix()
 {
 	if (record_data[0] || record_data[1])
 	{
-		FILE *fp;
-		char str[200], ch[10];
-
-		strcpy(str, file), strcat(str, "connect_matrix-p=");
-		sprintf(ch, "%0.3f", P_c), strcat(str, ch);
-
+		// Format output filename using std::ostringstream with controlled precision
+		ostringstream oss;
+		oss << file;
+		oss << "connect_matrix-p=" << fixed << setprecision(3) << P_c;
+			// << ".." << scientific << setprecision(2) << Tmax << "-";
 		if (random_S == 1)
-			strcat(str, "-U");
+			oss << "-U";
 		else if (random_S == 2)
-			strcat(str, "-G");
+			oss << "-G";
 		else if (random_S == 3)
-			strcat(str, "-E");
+			oss << "-E";
 		else if (random_S == 4)
-			strcat(str, "-LN");
-		strcat(str, ".dat");
+			oss << "-LN";
+		oss << ".npy";
 
-		if ((fp = fopen(str, "rb")) == NULL)
-		{
-			fp = fopen(str, "wb");
-			for (int i = 0; i < N; i++)
-				fwrite(Connect_Matrix[i], sizeof(double), N, fp);
+		string output_filename = oss.str();
+		ofstream fp = save_npy_header<double>(
+			output_filename, {N, N});
+		for (int i = 0; i < N; i++)
+			fp.write(reinterpret_cast<const char*>(Connect_Matrix[i]), N * sizeof(double));
+		fp.close();
 
-			if (random_S != 0)
+		if (fileExists(output_filename)) {
+			std::cerr << "\033[31mWARNING: Connectivity matrix ";
+			std::cerr << output_filename << " already exists!\033[0m";
+			std::cerr << std::endl;
+		} else {
+			if (random_S != 0) {
+				output_filename.erase(output_filename.end() - 4, output_filename.end());
+				output_filename.append("_strength.npy");
+				ofstream fp = save_npy_header<double>(output_filename, {N, N});
 				for (int i = 0; i < N; i++)
-					fwrite(CS[i], sizeof(double), N, fp);
-			fclose(fp);
+					fp.write(reinterpret_cast<const char*>(CS[i]), N * sizeof(double));
+				fp.close();
+			}
 		}
 
 	}
@@ -471,7 +483,7 @@ void Initialization(std::mt19937 &rng_conn, std::mt19937 &rng_dym)
 		// neu[i].Poisson_input_num = 1;    // Uncomment for EPSP calibration
 	}
 	if (full_toggle) {
-		Assign_CS();
+		Assign_CS(rng_conn);
 	} else {
 		Create_connect_matrix(rng_conn);
 	}
