@@ -21,12 +21,12 @@ void Check_update_conti_or_Poisson_input(int n, struct neuron &a, double t, doub
 	else
 	{
 		double t1 = t;
-		for (int i = 0; i < neu[n].Poisson_input_num; i++)
+		for (int i = 0; i < a.Poisson_input_num; i++)
 		{
-			if (neu[n].Poisson_input_time[i] > t1 && neu[n].Poisson_input_time[i] <= t + dt)
+			if (a.Poisson_input_time[i] > t1 && a.Poisson_input_time[i] <= t + dt)
 			{
-				evolve_model_with_correct_timestep(n, a, t1, neu[n].Poisson_input_time[i] - t1);
-				t1 = neu[n].Poisson_input_time[i];
+				evolve_model_with_correct_timestep(n, a, t1, a.Poisson_input_time[i] - t1);
+				t1 = a.Poisson_input_time[i];
 				double x_start = a.x;
 				a.x += f[n];
 
@@ -41,13 +41,6 @@ void Check_update_conti_or_Poisson_input(int n, struct neuron &a, double t, doub
 	}
 }
 
-
-//void evolve_with_multi_time_nodes(int n, struct neuron &a, double t, double dt)
-//{
-//	Check_update_conti_or_Poisson_input(n, a, t, dt);
-//
-//
-//}
 
 void Exchange(struct neuron &a, struct neuron b)  // a <-- b
 {
@@ -168,6 +161,7 @@ void evolve_model_with_initial_timestep(struct neuron *a, struct neuron *a_old, 
 		double first_fire_time = t + dt;
 		int first_fire_neu = -1;
 
+		// Find the first firing time and the corresponding neuron id
 		for (int i = 0; i < N; i++)
 		{
 			if (a_old[i].if_fired && a_old[i].last_fire_time < first_fire_time)

@@ -12,7 +12,6 @@
 #include "Initialization.h"
 #include "Find_cubic_hermite_root.h"
 #include "Runge_Kutta4.h"
-#include "RK4_Rossler.h"
 #include "Run_model.h"
 #include "Largest_Lyapunov.h"
 #include "Delete.h"

@@ -2,7 +2,7 @@
 //       G_sse, G_ssi & G_ff update analytically
 //-----------------------------------------------------------------------------
 
-void Update_once_RK4(double *k, double *w, int n, double t, double h)
+void Update_once_RK4(double *k, double *w, double t, double dt)
 {
 	double I_input;
 	if (I_CONST)
@@ -11,9 +11,9 @@ void Update_once_RK4(double *k, double *w, int n, double t, double h)
 		I_input = 0;
 
 
-	k[0] = h * (sigma*(w[1] - w[0]) + I_input);
-	k[1] = h * (rho*w[0] - w[1] - w[0] * w[2]);
-	k[2] = h * (-beta * w[2] + w[0] * w[1]);
+	k[0] = dt * (sigma*(w[1] - w[0]) + I_input);
+	k[1] = dt * (rho*w[0] - w[1] - w[0] * w[2]);
+	k[2] = dt * (-beta * w[2] + w[0] * w[1]);
 
 }
 
@@ -38,21 +38,21 @@ void Update_RK4(int n, struct neuron &a, double t, double dt)
 
 	for (int i = 0; i < 3; i++)
 		w0[i] = w[i];
-	Update_once_RK4(k[0], w0, n, t, dt);            //1	
+	Update_once_RK4(k[0], w0, t, dt);            //1	
 
 	for (int i = 0; i < 3; i++)
 		w0[i] = w[i] + 0.5*k[0][i];
-	Update_once_RK4(k[1], w0, n, t + dt / 2, dt);   //2
+	Update_once_RK4(k[1], w0, t + dt / 2, dt);   //2
 
 
 	for (int i = 0; i < 3; i++)
 		w0[i] = w[i] + 0.5*k[1][i];
-	Update_once_RK4(k[2], w0, n, t + dt / 2, dt);   //3
+	Update_once_RK4(k[2], w0, t + dt / 2, dt);   //3
 
 
 	for (int i = 0; i < 3; i++)
 		w0[i] = w[i] + k[2][i];
-	Update_once_RK4(k[3], w0, n, t + dt, dt);   //4
+	Update_once_RK4(k[3], w0, t + dt, dt);   //4
 
 	for (int i = 0; i < 3; i++)
 		w[i] = w[i] + (k[0][i] + k[1][i] * 2 + k[2][i] * 2 + k[3][i]) / 6.0;
