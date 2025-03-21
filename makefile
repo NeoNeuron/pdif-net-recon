@@ -4,7 +4,7 @@ CXXFLAGS = -fopenmp -g -O2
 LDLIBS = -lboost_program_options -fopenmp
 # define variable path
 DIR_INC = include
-DIR_SRC = HH Causality HHcon Lorenz Lcon Logistic FN ML 
+DIR_SRC = HH Causality HHcon Lorenz Lcon Rossler Logistic FN ML 
 DIR_BIN = bin
 
 vpath %.cpp $(DIR_SRC)
@@ -19,7 +19,8 @@ OBJS_Causality = $(SRCS_Causality:.cpp=.o)
 HEADERS_HHcon := $(notdir $(wildcard HHcon/*.h))
 HEADERS_Lorenz := $(notdir $(wildcard Lorenz/*.h))
 HEADERS_Lcon := $(notdir $(wildcard Lcon/*.h))
-BIN := $(DIR_BIN)/calCausality $(DIR_BIN)/simHH $(DIR_BIN)/simHHcon $(DIR_BIN)/simLorenz $(DIR_BIN)/simLcon $(DIR_BIN)/simFN $(DIR_BIN)/simML $(DIR_BIN)/simLogistic
+HEADERS_Rossler := $(notdir $(wildcard Rossler/*.h))
+BIN := $(DIR_BIN)/calCausality $(DIR_BIN)/simHH $(DIR_BIN)/simHHcon $(DIR_BIN)/simLorenz $(DIR_BIN)/simLcon $(DIR_BIN)/simRossler $(DIR_BIN)/simFN $(DIR_BIN)/simML $(DIR_BIN)/simLogistic
 
 .PHONY : all
 all : $(BIN)
@@ -38,6 +39,9 @@ $(DIR_BIN)/simLorenz : $(DIR_BIN) $(HEADERS_COMMON) $(HEADERS_Lorenz)
 
 $(DIR_BIN)/simLcon : $(DIR_BIN) $(HEADERS_COMMON) $(HEADERS_Lcon) 
 	$(CXX) $(CPPFLAGS) Lcon/main.cpp -o $(DIR_BIN)/simLcon $(LDLIBS)
+
+$(DIR_BIN)/simRossler : $(DIR_BIN) $(HEADERS_COMMON) $(HEADERS_Rossler) 
+	$(CXX) $(CPPFLAGS) -O2 Rossler/main.cpp -o $(DIR_BIN)/simRossler $(LDLIBS)
 
 $(DIR_BIN)/simFN : $(DIR_BIN) $(HEADERS_COMMON) $(HEADERS_FN) 
 	$(CXX) $(CPPFLAGS) FN/main.cpp -o $(DIR_BIN)/simFN $(LDLIBS)
