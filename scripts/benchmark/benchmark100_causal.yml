@@ -93,11 +93,11 @@ Lcon:
     N: 100
     T: 1.0e+6
     DT: 1.0e+5
-    dt: 0.04
+    dt: 0.2
     order: !!python/tuple
+        - 4
         - 1
-        - 8
-    delay: 0.08
+    delay: 0
     spk_fname: Lconp=0.10s=0.100
     conn_file: connect_matrix-p=0.100.dat
     path: benchmark/N100/Lcon/
@@ -127,3 +127,16 @@ Gaussian:
     spk_fname: Gaussianp=0.25s=0.030tau=20ref=10th=0.020
     conn_file: connect_matrix-p=0.250.dat
     path: benchmark/N100/Gaussian/
+
+Rcon:
+    N: 100
+    T: 1.0e+7
+    DT: 1.0e+5
+    dt: 3.0
+    order: !!python/tuple
+        - 10
+        - 1
+    delay: 0.00
+    spk_fname: Rconp=0.25s=0.002
+    conn_file: connect_matrix-p=0.250.dat
+    path: benchmark/N100/Rcon/

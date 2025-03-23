@@ -231,3 +231,21 @@ Gaussian:
         - 0
         - 1.0e+8
 
+Rcon:
+    simulator: bin/simRcon
+    NE: 100
+    NI: 0
+    seed: !!python/tuple
+        - 10
+        - 10
+    T_Max: 1.0e+7
+    T_step: 0.01
+    S: !!python/tuple
+        - 0.002
+        - 0.002
+        - 0.002
+        - 0.002
+    full_mode: 0
+    P_c: 0.25
+    record_path: benchmark/N100/Rcon/
+    record_x: 1
