@@ -13,6 +13,10 @@ from causal4.myplot import ReconstructionFigureTE
 import networkx as nx
 import causal4.utils as c4u
 from matplotlib.patches import ConnectionPatch
+from matplotlib.ticker import FuncFormatter
+@FuncFormatter
+def sci_formatter(x, pos):
+    return r'$10^{%d}$'%x
 #%% #* plot demonstration figure for connectivity matrix
 def make_conn_diagram(ax):
     np.random.seed(32)
@@ -132,7 +136,11 @@ make_graph_diagram(G, ax[1], nodesize=4000)
 ax[1].set_xlim(-1,3) 
 #%%
 from causal4.myplot import format_xticks
-fig, ax = plt.subplots(3,4,figsize=(20,14),)# gridspec_kw=dict(wspace=0.3, hspace=0.5, width_ratios=(0.8,1,1,1))
+fig, ax = plt.subplots(
+    3, 4, figsize=(20,16),
+    gridspec_kw=dict(wspace=0.5, hspace=0.5,
+                     left=0.05, right=0.95,
+                     top=0.95, bottom=0.08),)
 
 
 G = nx.DiGraph()
@@ -148,6 +156,7 @@ G = nx.relabel_nodes(G, {1:'X', 2:'Y', 3:'Z'})
 pos = {n: coordinate for n, coordinate in zip(G,((1,np.sqrt(3)),(0,0),(2,0),))}
 make_graph_diagram(G, ax[1,0], nodesize=4000, fontsize=30)
 ax[1,0].set_xlim(-1,3) 
+ax[1,0].set_ylim(-1,3) 
 
 make_conn_diagram(ax[2,0])
 ax[2,0].set_title('100-node network', fontsize=24, pad=16)
@@ -162,7 +171,7 @@ keys = ['HH', 'Lorenz', 'Logistic']
 
 sss = [np.arange(0.000,0.051,0.003),
        np.arange(0.000,1.01,0.08),
-       np.arange(0.000,0.024,0.001)
+       np.arange(0.000,0.024,0.002)
 ]
 
 dts = [0.5, 0.02, 1.0]
@@ -210,15 +219,18 @@ for ax_col, spk_fname, key, ss, dt, acf_xmax in zip(ax[:,1:].T, spk_fnames, keys
         zax.plot(t_lag, acf.mean(0), '-', lw=2.5, color=C)
         zax.axhline(0, ls='--', color='#AAAAAA')
         ax_col[0].set_xlabel('time-lag (ms)', fontsize=26)
-        ax_col[0].set_ylabel('ACF', fontsize=26)
+        ax_col[0].set_ylabel('ACF', fontsize=26, labelpad=-20)
         zax.zax.set_xlabel('time-lag (ms)', fontsize=14, labelpad=-10)
         zax.zax.set_ylabel('ACF', fontsize=14, labelpad=-10)
         for tick in zax.zax.xaxis.get_major_ticks():
             tick.label1.set_fontsize(14)
         for tick in zax.zax.yaxis.get_major_ticks():
             tick.label1.set_fontsize(14)
+        if key == 'HH':
+            zax.zax.set_xticks([0, 25])
     ax_col[0].set_xlim(-0.1, acf_xmax)
     ax_col[0].set_ylim(-0.3, 1.00)
+    ax_col[0].set_yticks([-0.3, 0, 0.5, 1.0])
     ax_col[0].set_title(key+' networks', fontsize=24, pad=22)
 
     subfolder = key+'3_scan_S'
@@ -239,7 +251,7 @@ for ax_col, spk_fname, key, ss, dt, acf_xmax in zip(ax[:,1:].T, spk_fnames, keys
         data01 = data[data['pre_id'].eq(0) * data['post_id'].eq(1)]['TE'].values[0]
         data10 = data[data['pre_id'].eq(1) * data['post_id'].eq(0)]['TE'].values[0]
         data02 = data[data['pre_id'].eq(0) * data['post_id'].eq(2)]['TE'].values[0]
-        dps.append(data[data['pre_id'].eq(0) * data['post_id'].eq(1)]['Delta_p'].values[0])
+        dps.append(data[data['pre_id'].eq(0) * data['post_id'].eq(1)]['dp1'].values[0])
         ptdte.append([data01, data10, data02])
     ptdte = np.array(ptdte)
     dps = np.array(dps)
@@ -268,7 +280,7 @@ for ax_col, spk_fname, key, ss, dt, acf_xmax in zip(ax[:,1:].T, spk_fnames, keys
     ax_col[1].yaxis.get_offset_text().set_x(-0.2)  # Move y-axis offset label to the left
 
     # s vs dp LARGE
-    axins = ax_col[1].inset_axes([0.18, 0.6, 0.5, 0.4])
+    axins = ax_col[1].inset_axes([0.18, 0.65, 0.5, 0.4])
     axins.ticklabel_format(style='sci', scilimits=(0,0), axis='both', useMathText=True)
 
     ffit = linearfit(ss, dps)
@@ -276,24 +288,31 @@ for ax_col, spk_fname, key, ss, dt, acf_xmax in zip(ax[:,1:].T, spk_fnames, keys
 
     axins.plot(ss,dps,'.', color='#1E3B7A', ms=8, clip_on=False)
     axins.plot([0,ss[-1]],[0,ffit(ss[-1])],c='#F26A9D',lw=1.5)
-    axins.set_xlabel('S', fontsize=20, labelpad=0)
+    axins.set_xlabel('S', fontsize=20, labelpad=-17)
     # axins.set_ylabel(r'$\Delta$p', fontsize=20, rotation=0, ha='center', va='center')
-    axins.text(-0.28, 0.45, r'$\Delta$p',
-        rotation=0, fontsize=20,
+    axins.text(-0.15, 0.5, r'$\Delta p_{a,b}$',
+        rotation=90, fontsize=20,
         transform=axins.transAxes,
+        ha='center', va='center',
     )
     axins.tick_params(direction="in")
     axins.set_xlim(0, ss[-1])
     axins.tick_params(axis='x', pad=10)
     if key == 'HH':
-        axins.set_ylim(0, 1.5)
-        axins.set_yticks([0, 1.5], ['0', '1.5'])
+        axins.set_xlim(0, 5e-2)
+        axins.set_xticks([0,5e-2])
+        axins.set_ylim(0, 1e-2)
+        axins.set_yticks([0, 1e-2])
     elif key == 'Lorenz':
-        axins.set_ylim(-.13, 0.0)
-        axins.set_yticks([-0.13, 0])
+        axins.set_xlim(0, 1)
+        axins.set_xticks([0,1])
+        axins.set_ylim(-2e-3, 0.0)
+        axins.set_yticks([-2e-3, 0])
     else:
-        axins.set_ylim(-0.05, 0.004)
-        axins.set_yticks([-0.05, 0])
+        axins.set_xlim(0, 2.4e-2)
+        axins.set_xticks([0,2e-2])
+        axins.set_ylim(-2e-2, 0.0)
+        axins.set_yticks([-2e-2, 0])
 
     subfolder = key+'100'
     if key == 'Logistic':
@@ -313,14 +332,26 @@ for ax_col, spk_fname, key, ss, dt, acf_xmax in zip(ax[:,1:].T, spk_fnames, keys
         edges = tmp['edges'] + (tmp['edges'][1] - tmp['edges'][0])/2
         counts = tmp[hist_key]
         mask = counts > 0
-        ax_col[-1].plot(edges[mask], counts[mask], color=color, lw=5, clip_on=False)
+        ax_col[-1].plot(edges[mask], counts[mask], color=color, lw=5, clip_on=True)
         ax_col[-1].fill_between(edges[mask], 0, counts[mask], color=color, alpha=0.5)
     ax_col[-1].axvline(tmp['th_svm'], ls='-', color='#F26A9D', lw=4)
-    format_xticks(ax_col[-1], (edges[0], edges[-1]))
+    if key == 'HH':
+        ax_col[-1].set_xlim(-9, -4)
+        # format_xticks(ax_col[-1], (-9, -4))
+    elif key == 'Lorenz':
+        ax_col[-1].set_xlim(-11, -4)
+        ax_col[-1].set_xticks([-10, -8, -6, -4])
+    elif key == 'Logistic':
+        ax_col[-1].set_xlim(-7, -4)
+    ax_col[-1].xaxis.set_major_formatter(sci_formatter)
+        # format_xticks(ax_col[-1], (-7, -4))
     ax_col[-1].set_ylim(0)
     ax_col[-1].set_xlabel('PTD-TE value', fontsize=26)
     ax_col[-1].set_ylabel('density', fontsize=26)
 
-plt.tight_layout()
+for tag, axi in zip('abcdefghijkl', ax.flatten()):
+    axi.text(-0.2, 1.20, tag, transform=axi.transAxes,
+             fontsize=32, fontweight='bold', va='top')
+
 fig.savefig(root/'fig_nc/pdf'/'fig3.pdf', transparent=True)
 #%%

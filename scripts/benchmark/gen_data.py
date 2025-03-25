@@ -88,8 +88,8 @@ for key in pm_causal_set.keys():
     np.save(fname_new, spk_data_new)
 
 #%% add noise to the data
-dts = [0.2]*6 + [0.01, 0.02] + [1, 1]
-sigmas = [4]*6 + [20, 16, 0.1, 0.01]
+dts = [0.2]*6 + [0.01, 0.02] + [1, 1] + [0.01]
+sigmas = [4]*6 + [20, 16, 0.1, 0.01, 20]
 def add_noise(voltage, sigma):
     voltage[:,1:] += np.random.randn(voltage.shape[0], voltage.shape[1]-1)*sigma
     return voltage
@@ -162,15 +162,13 @@ for key in pm_causal_set.keys():
     plt.tight_layout()
     fig.savefig(root_path/'figures/N10_subnet' / (key+'_return_map.png'))
 # %% binarization noisy subetworks
-refs = [3.0]*6+[0.5]*2+[0.0, 3.0]
-thresholds = [-50]*6 + [10, 10, 0.9, 0.02]
+refs = [3.0]*6+[0.5]*2+[0.0, 3.0, 5.0]
+thresholds = [-50]*6 + [10, 10, 0.9, 0.02, 10]
 for (key, pm), ref, th in zip(pm_causal_set.items(), refs, thresholds):
-    # xrange = (0,1000)
-    # spk_raw = c4u.load_spike_data(dataset_dir/(pm['spk_fname']+'_spike_train.dat'),
-    #                     xrange=xrange, verbose=True)
-    spk_noisy_fname = c4u.binarize(
-        pm['path']/(get_vol_fname(pm['spk_fname'],key)+'_noisy.npy'),
-        N=int(pm['N']), threshold=th, T=pm['T'], verbose=True,
-        ref=ref, force_regen=False, sfx=None)#'noisy1')
-    print(spk_noisy_fname.name)
+    for i in range(1,5):
+        spk_noisy_fname = c4u.binarize(
+            pm['path']/(get_vol_fname(pm['spk_fname'],key)+f'_noisy{i:d}.npy'),
+            N=int(pm['N']), threshold=th, T=pm['T'], verbose=True,
+            ref=ref, force_regen=False, sfx=f'noisy{i:d}')
+        print(spk_noisy_fname.name)
 #%%

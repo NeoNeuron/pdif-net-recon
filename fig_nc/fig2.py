@@ -60,14 +60,18 @@ gt = np.load(root/'HH3-chain/connect_matrix-p=0.250.npy')
 TE = np.zeros((3,3))
 TE[~np.eye(3, dtype=bool)] = data_matched['TE']
 sns.heatmap(gt, linecolor='#DDDDDD', lw=2, ax=ax[0,1], square=True, cmap='Oranges', cbar=False)
-sns.heatmap(TE, linecolor='#DDDDDD', lw=2, ax=ax[0,2], square=True, cmap='Oranges', cbar_kws={'label':'PTD-TE'})
+sns.heatmap(TE, linecolor='#DDDDDD', lw=2, ax=ax[0,2], square=True, cmap='Oranges', cbar_kws={'label':'PTD-TE value'})
+cb_ax = ax[1,2].figure.axes[-1]
+cb_ax.ticklabel_format(style='sci', scilimits=(0,0), axis='y', useMathText=True)
+cb_ax.yaxis.offsetText.set_horizontalalignment('left')
+cb_ax.yaxis.offsetText.set_position((0,0))
 for axi in ax[0,1:]:
-    axi.set_xticks(np.arange(3)+0.5, ['X', 'Y', 'Z'])
-    axi.set_yticks(np.arange(3)+0.5, ['X', 'Y', 'Z'])
-    axi.set_xlabel('To', fontsize=14)
-    axi.set_ylabel('From', fontsize=14)
-ax[0,1].set_title('Ground truth', fontsize=25, pad=16)
-ax[0,2].set_title('PTD-TE', fontsize=25, pad=16)
+    axi.set_xticks(np.arange(3)+0.5, ['X', 'Y', 'Z'], fontsize=16)
+    axi.set_yticks(np.arange(3)+0.5, ['X', 'Y', 'Z'], fontsize=16)
+    axi.set_xlabel('To', fontsize=16)
+    axi.set_ylabel('From', fontsize=16)
+ax[0,1].set_title('Ground truth', fontsize=20, pad=16)
+ax[0,2].set_title('PTD-TE', fontsize=20, pad=16)
 #%
 f = np.arange(0.05,0.21,0.01)
 fu = np.arange(1, 5.1, 0.2)*1e-2
@@ -88,8 +92,8 @@ cb = fig.colorbar(pax, ax=ax[0,3], ticks=[2,3,4], orientation='vertical')
 cb.ax.set_yticklabels([r'$10^{2}$',r'$10^{3}$',r'$10^{4}$'])
 ax[0,3].set_ylabel(r'$\nu f$ $(\times 10^{-2})$')
 ax[0,3].set_xlabel(r'$f$ $(\times 10^{-2})$')
-ax[0,3].set_yticks([1,3,5], ['1', '3', '5'])
-ax[0,3].set_xticks([5,10,15,20], ['5', '10', '15', '20'])
+ax[0,3].set_yticks([1,3,5], ['1', '3', '5'], fontsize=16)
+ax[0,3].set_xticks([5,10,15,20], ['5', '10', '15', '20'], fontsize=16)
 
 ax[0,3].set_title(r'$T^\mathrm{PTD}_{X\to Y} / T^\mathrm{PTD}_{X\to Z}$', fontsize=25, pad=16)
 
@@ -136,14 +140,18 @@ gt = np.load(root/'HH3-confounder/connect_matrix-p=0.250.npy')
 TE = np.zeros((3,3))
 TE[~np.eye(3, dtype=bool)] = data_matched['TE']
 sns.heatmap(gt, linecolor='#DDDDDD', lw=2, ax=ax[1,1], square=True, cmap='Oranges', cbar=False)
-sns.heatmap(TE, linecolor='#DDDDDD', lw=2, ax=ax[1,2], square=True, cmap='Oranges', cbar_kws={'label':'PTD-TE'})
+sns.heatmap(TE, linecolor='#DDDDDD', lw=2, ax=ax[1,2], square=True, cmap='Oranges', cbar_kws={'label':'PTD-TE value'})
+cb_ax = ax[1,2].figure.axes[-1]
+cb_ax.ticklabel_format(style='sci', scilimits=(0,0), axis='y', useMathText=True)
+cb_ax.yaxis.offsetText.set_horizontalalignment('left')
+cb_ax.yaxis.offsetText.set_position((0,0))
 for axi in ax[1,1:]:
-    axi.set_xticks(np.arange(3)+0.5, ['X', 'Y', 'Z'])
-    axi.set_yticks(np.arange(3)+0.5, ['X', 'Y', 'Z'])
-    axi.set_xlabel('To', fontsize=14)
-    axi.set_ylabel('From', fontsize=14)
-ax[1,1].set_title('Ground truth', fontsize=25, pad=16)
-ax[1,2].set_title('PTD-TE', fontsize=25, pad=16)
+    axi.set_xticks(np.arange(3)+0.5, ['X', 'Y', 'Z'], fontsize=16)
+    axi.set_yticks(np.arange(3)+0.5, ['X', 'Y', 'Z'], fontsize=16)
+    axi.set_xlabel('To', fontsize=16)
+    axi.set_ylabel('From', fontsize=16)
+ax[1,1].set_title('Ground truth', fontsize=20, pad=16)
+ax[1,2].set_title('PTD-TE', fontsize=20, pad=16)
 #%
 
 f = np.arange(0.05,0.21,0.01)
@@ -165,9 +173,18 @@ cb = fig.colorbar(pax, ax=ax[1,3], ticks=[1,2,3,4], orientation='vertical')
 cb.ax.set_yticklabels([r'$10^{1}$', r'$10^{2}$',r'$10^{3}$',r'$10^{4}$'])
 ax[1,3].set_ylabel(r'$\nu f$ $(\times 10^{-2})$')
 ax[1,3].set_xlabel(r'$f$ $(\times 10^{-2})$')
-ax[1,3].set_yticks([1,3,5], ['1', '3', '5'])
-ax[1,3].set_xticks([5,10,15,20], ['5', '10', '15', '20'])
+ax[1,3].set_yticks([1,3,5], ['1', '3', '5'], fontsize=16)
+ax[1,3].set_xticks([5,10,15,20], ['5', '10', '15', '20'], fontsize=16)
 ax[1,3].set_title(r'$T^\mathrm{PTD}_{X\to Y} / T^\mathrm{PTD}_{Y\to Z}$', fontsize=25, pad=16)
 plt.tight_layout()
+
+for tag, axi in zip('abcdefgh', ax.flatten()):
+    if tag in 'ae':
+        axi.text(-0., 1.25, tag, transform=axi.transAxes,
+                 fontsize=32, fontweight='bold', va='top')
+    else:
+        axi.text(-0.25, 1.25, tag, transform=axi.transAxes,
+                fontsize=32, fontweight='bold', va='top')
+
 fig.savefig(root/'fig_nc/pdf'/'fig2.pdf', transparent=True)
 #%%

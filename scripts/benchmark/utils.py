@@ -31,7 +31,7 @@ def run_simulation(pm_simulation:dict):
         yaml.dump(pm_simulation, yamlfile)
 
 def get_vol_fname(fname:str, key:str):
-    if key in ['Lorenz', 'Lcon']:
+    if key in ['Lorenz', 'Lcon', 'Rcon']:
         return fname + '_x'
     elif key == 'Gaussian':
         return fname.replace('th=0.020', '')+'_voltage'

@@ -14,19 +14,17 @@ plt.rcParams['font.size']=16
 import seaborn as sns
 import subprocess
 
-def get_vfname(fname: str, sfx:str=None):
+def get_vfname(fname: str, sfx:str=''):
     if key == 'Gaussian':
         fname = fname.replace('th=0.020','')
-    if fname.startswith('Lp') or fname.startswith('Lcon'):
+    if fname.startswith('Lp') or fname.startswith('Lcon') or fname.startswith('Rcon'):
         fname = fname + '_x'
     else:
         fname = fname + '_voltage'
-    if sfx is not None:
-        fname += sfx
-    return fname + '.npy'
+    return fname + sfx + '.npy'
 
-def get_spk_fname(fname: str, sfx:str=None, th: float=None, ref: float=None):
-    if sfx is None:
+def get_spk_fname(fname: str, sfx:str='', th: float=None, ref: float=None):
+    if len(sfx) == 0:
         return fname + '_spike_train.npy'
     else:
         if key == 'Gaussian':
@@ -51,7 +49,7 @@ yml_names = ['benchmark10_causal.yml',
              'benchmark10_subnet_causal.yml',
              'benchmark10_subnet_causal.yml',
             ]
-sfxs = [None, None, '_noisy1', '_noisy2', '_noisy3', '_noisy4']
+sfxs = ['', '', '_noisy1', '_noisy2', '_noisy3', '_noisy4']
 save_folder_names = [
     'N10',
     'N10_subnet',
@@ -66,6 +64,7 @@ with open(root_path / 'scripts/benchmark' / 'binarization.yaml', 'r') as binariz
 refs = binarization_cfg.get('refractory', {})
 thresholds = binarization_cfg.get('threshold', {})
 
+regen=True
 for yml_name, sfx, sfname in zip(yml_names, sfxs, save_folder_names):
     
     with open(yml_name, 'r') as yamlfile:
@@ -73,18 +72,28 @@ for yml_name, sfx, sfname in zip(yml_names, sfxs, save_folder_names):
     for key in pm_causal_set.keys():
         pm_causal_set[key]['path'] = root_path / pm_causal_set[key]['path']
 
+    save_path = root_path / 'results' / sfname / 'GLMCC'
+    save_path.mkdir(parents=True, exist_ok=True)
+
+    if (save_path / f'auc_list{sfx:s}.pkl').exists():
+        auc_list = pd.read_pickle(save_path / f'auc_list{sfx:s}.pkl').T.to_dict()
+    else:
+        auc_list = {}
+    if (save_path / f'recon_list{sfx:s}.pkl').exists():
+        with open(save_path / f'recon_list{sfx:s}.pkl', 'rb') as f:
+            recon_list = pkl.load(f)
+    else:
+        recon_list = {}
+    if (save_path / f'estimation_time{sfx:s}.pkl').exists():
+        estimation_time = pd.read_pickle(save_path / f'estimation_time{sfx:s}.pkl').T.to_dict()
+    else:
+        estimation_time = {}
     #! Calculate GLMCC
     # load data
-    recon_list = {}
-    auc_list = {}
-    estimation_time = {}
     mask = (1 - np.eye(10)).astype(bool)
     for i, (key, val) in enumerate(pm_causal_set.items()):
-        # print(key)
-        if key in ['Logistic',]:
-            recon_list[key] = None
-            auc_list[key] = np.nan
-            estimation_time[key] = [np.nan, np.nan]
+        if key in recon_list and not regen:
+            print(f'{key} already exists')
             continue
         N = val['N']
         spk_fname = get_spk_fname(
@@ -101,37 +110,31 @@ for yml_name, sfx, sfname in zip(yml_names, sfxs, save_folder_names):
 
         # wall_time = t1_wall-t0_wall
         # cpu_time = t1_cpu-t0_cpu
-        save_path = root_path / 'results' / sfname / 'GLMCC'
-        if key in ['Lorenz', 'Lcon']:
-            if sfx is None:
-                with open(save_path / (key + '_old.txt'), 'r') as f:
-                    tmp = f.readlines()
-            else:
-                with open(save_path / (key + '_old' + sfx[-1] + '.txt'), 'r') as f:
-                    tmp = f.readlines()
+        # if key in ['Lorenz', 'Lcon']:
+        #     if sfx is None:
+        #         with open(save_path / (key + '_old.txt'), 'r') as f:
+        #             tmp = f.readlines()
+        #     else:
+        #         with open(save_path / (key + '_old' + sfx[-1] + '.txt'), 'r') as f:
+        #             tmp = f.readlines()
+        # else:
+        if len(sfx)==0:
+            with open(save_path / (key + '.txt'), 'r') as f:
+                tmp = f.readlines()
         else:
-            if sfx is None:
-                with open(save_path / (key + '.txt'), 'r') as f:
-                    tmp = f.readlines()
-            else:
-                with open(save_path / (key + sfx[-1] + '.txt'), 'r') as f:
-                    tmp = f.readlines()
+            with open(save_path / (key + sfx[-1] + '.txt'), 'r') as f:
+                tmp = f.readlines()
         wall_time = float(tmp[-1].split(' ')[-2])
         cpu_time = float(tmp[-2].split(' ')[-2])
 
         # print(key, wall_time, cpu_time)
         
         try:
-            if key == 'Gaussian':
+            if key in ['Gaussian', 'Rcon', 'Logistic']:
                 val['T'] /= 10
-            if key in ['Lorenz', 'Lcon']:
-                GLMCC = np.loadtxt(
-                    val['path'] / f"W_GLM_{val['T']/1e3:.0f}_old-{spk_fname.replace('npy', 'csv'):s}",
-                    delimiter=',').T
-            else:
-                GLMCC = np.loadtxt(
-                    val['path'] / f"W_GLM_{val['T']/1e3:.0f}-{spk_fname.replace('npy', 'csv'):s}",
-                    delimiter=',').T
+            GLMCC = np.loadtxt(
+                val['path'] / f"W_GLM_{val['T']/1e3:.0f}-{spk_fname.replace('npy', 'csv'):s}",
+                delimiter=',').T
             conn_fname = val['path'] / val['conn_file']
             xx, yy = np.meshgrid(np.arange(N), np.arange(N))
             if conn_fname.suffix == '.dat': 
@@ -150,24 +153,21 @@ for yml_name, sfx, sfname in zip(yml_names, sfxs, save_folder_names):
                                 'connection': conn[mask]})
             recon_list[key] = glmcc_df
             # column (row) index representing pre_id (post_id)
-            auc =[roc_auc_score(glmcc_df['connection'], glmcc_df['glmcc']),
-                  roc_auc_score(glmcc_df['connection'], glmcc_df['glmcc_abs']),]
+            auc ={'glmcc':roc_auc_score(glmcc_df['connection'], glmcc_df['glmcc']),
+                  'glmcc_abs':roc_auc_score(glmcc_df['connection'], glmcc_df['glmcc_abs']),}
             auc_list[key] = auc
-            estimation_time[key] = [wall_time, cpu_time]
+            estimation_time[key] = {'wall':wall_time, 'cpu':cpu_time}
             print(key, f"{wall_time:.2f}", auc)
         except Exception as e:
             print(e)
             recon_list[key] = None
-            auc_list[key] = np.nan
-            estimation_time[key] = [np.nan, np.nan]
+            auc_list[key] = {'glmcc': np.nan, 'glmcc_abs': np.nan}
+            estimation_time[key] = {'wall': np.nan, 'cpu': np.nan}
     
-    save_path = root_path / 'results' / sfname / 'GLMCC'
-    save_path.mkdir(parents=True, exist_ok=True)
-    sfx = '' if sfx is None else sfx
-    auc_df = pd.DataFrame(auc_list, index=['glmcc', 'glmcc_abs']).T
+    auc_df = pd.DataFrame(auc_list).T
     auc_df.to_pickle(save_path / f'auc_list{sfx:s}.pkl')
     with open(save_path / f'recon_list{sfx:s}.pkl', 'wb') as f:
         pkl.dump(recon_list, f)
-    time_df = pd.DataFrame(estimation_time, index=['wall', 'cpu']).T
+    time_df = pd.DataFrame(estimation_time).T
     time_df.to_pickle(save_path / f'estimation_time{sfx:s}.pkl')
 # %%

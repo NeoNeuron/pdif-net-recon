@@ -26,23 +26,14 @@ est_time
 # %%
 subfolder = 'results/N10'
 dfname = 'recon_list.pkl'
-with open(root_path / subfolder / 'PTD-TE' / dfname, 'rb') as f:
-    recon_list_ptdte = pkl.load(f)
-with open(root_path / subfolder / 'DDC' / dfname, 'rb') as f:
-    recon_list_ddc = pkl.load(f)
-with open(root_path / subfolder / 'STE' / dfname, 'rb') as f:
-    recon_list_ste = pkl.load(f)
-with open(root_path / subfolder / 'GLMCC' / dfname, 'rb') as f:
-    recon_list_glmcc = pkl.load(f)
-with open(root_path / subfolder / 'CCM' / dfname, 'rb') as f:
-    recon_list_ccm = pkl.load(f)
-with open(root_path / subfolder / 'FDCCM' / dfname, 'rb') as f:
-    recon_list_fdccm = pkl.load(f)
-with open(root_path / subfolder / 'SCCM' / dfname, 'rb') as f:
-    recon_list_sccm = pkl.load(f)
+keys = ['PTD-TE', 'STE', 'GLMCC', 'DDC', 'CCM', 'FDCCM', 'SCCM']
 labels = ['TE', 'ste', 'glmcc_abs', 'ddc_abs', 'CCM', 'FDCCM', 'SCCM'] 
+recon_data = {}
+for key in keys:
+    with open(root_path / subfolder / key / dfname, 'rb') as f:
+        recon_data[key] = pkl.load(f)
 #%%
-val = recon_list_ptdte['Lorenz']
+val = recon_data['PTD-TE']['Lcon']
 data_recon = c4u._reconstruction_analysis(val, 'TE', 'connection', algorithm='EM', hist_type='linear')
 plt.plot(data_recon[1]['edges'], data_recon[1]['hist_disconn'], label='dis-conn')
 plt.plot(data_recon[1]['edges'], data_recon[1]['hist_conn'], label='conn')
@@ -57,8 +48,6 @@ kmeans.cluster_centers_
 # plt.axhline(-6.5, ls='--', color='k')
 # plt.axhline(-5.45, ls='--', color='k')
 # kmeans.labels_
-#%%
-#%%
 # recon_dict = {}
 # for i, key in enumerate(est_time.T.keys()):
 #     recon_dict[key] = recon_list_ste[i]
@@ -68,18 +57,16 @@ kmeans.cluster_centers_
 #     pkl.dump(recon_dict, f)
 #%%
 heatmap_kws = {'cbar': False, 'square': True, 'cmap':'Oranges'}
-fig, ax = plt.subplots(8,10,figsize=(10,8))
+fig, ax = plt.subplots(8,11,figsize=(11,8))
 # plot ground truth
-for axi, (key, val) in zip(ax[0], recon_list_ptdte.items()):
+for axi, (key, val) in zip(ax[0], recon_data['PTD-TE'].items()):
     conn_mat = get_conn_mat(val, key='connection')
     sns.heatmap(conn_mat, ax=axi, **heatmap_kws)
     axi.set_title(key, fontweight='bold', fontsize=12)
 ax[0,0].set_ylabel('GT')
 
-for ax_row, recon_data, label in zip(ax[1:], [
-    recon_list_ptdte, recon_list_ste, recon_list_glmcc, recon_list_ddc, recon_list_ccm,
-    recon_list_fdccm, recon_list_sccm], labels):
-    for axi, (key, val) in zip(ax_row, recon_data.items()):
+for ax_row, key, label in zip(ax[1:], keys, labels):
+    for axi, (_, val) in zip(ax_row, recon_data[key].items()):
         if val is None:
             continue
         data_recon = c4u._reconstruction_analysis(val, label, 'connection', algorithm='EM', hist_type='linear')
@@ -89,13 +76,14 @@ for ax_row, recon_data, label in zip(ax[1:], [
         inconsistent_mask = conn_mat != recon_mat  # Find inconsistent blocks
         for y, x in zip(*np.where(inconsistent_mask)):  # Add transparent squares
             axi.add_patch(plt.Rectangle((x, y), 1, 1, fill=False, edgecolor='#00BAFF', lw=1.5, alpha=1.0))
-    ax_row[0].set_ylabel(label)
+    ax_row[0].set_ylabel(key)
+    # break
 
 for axi in ax.flatten():
     axi.set_xticks([])
     axi.set_yticks([])
 # %%
-val = recon_list_glmcc['HHEE'].copy()
+val = recon_list['GLMCC']['HHEE'].copy()
 c4u.reconstruction_analysis_TE()
 data_recon = c4u._reconstruction_analysis(val, 'glmcc_abs', 'connection', hist_type='linear')
 buff = data_recon[1]
@@ -116,14 +104,19 @@ for key, label in zip(keys, labels):
 auc_df = pd.DataFrame(auc_list)
 # %
 colors = [
-    '#335C8C', '#82b6db', '#cbe1ef', '#df1423', '#ca631c', '#5a3e16', '#f9ba80', 
+    # '#335C8C', '#82b6db', '#cbe1ef', '#df1423', '#ca631c', '#5a3e16', '#f9ba80', 
+    '#2D527C', '#9796C7', '#BEB0D5', '#EBC4CD', '#FDD5A8', '#F3AE8F', '#BE8076',
 ]
-ax = auc_df.plot.bar(color=colors, figsize=(12,3), width=0.7)
-ax.set_xticklabels(auc_df.index, rotation=0, fontweight='bold')
+auc_df = np.maximum(auc_df, 0.505)
+ax = auc_df.loc[['HHEE', 'HHEI', 'HHconEE', 'HHconEI', 'Lorenz', 'Logistic', 'Rcon', 'Gaussian']].plot.bar(color=colors, figsize=(12,3), width=0.7, ec='w')
+ax.set_xticklabels(['HHEE', 'HHEI', 'HHconEE', 'HHconEI', 'Lorenz', 'Logistic', 'Rossler', 'Gaussian'],)
+ax.tick_params(axis='x', labelsize=18, rotation=0)
 ax.set_ylabel('AUC', fontsize=20)
 ax.set_ylim(0.5, 1.0)
+ax.legend(loc='upper right', bbox_to_anchor=(1.11, 1.05), fontsize=12)
 plt.tight_layout()
-sns.despine(offset=10, trim=True)
+sns.despine()
+# sns.despine(offset=0, trim=True)
 plt.savefig(root_path / 'fig_nc/pdf' / f'comp_auc{noise_level:s}.pdf', transparent=True)
 
 #%%
@@ -145,18 +138,24 @@ for noise_level in noise_levels:
 dfs = pd.concat(dfs)
 df = dfs.reset_index().rename(columns={'index':'network'})
 #%%
-fig, ax = plt.subplots(2,5, figsize=(15,6), sharex=True, sharey=True)
-for net, axi in zip(['HHEE', 'HHII', 'HHEI', 'HHconEE', 'HHconII','HHconEI',
-            'Lorenz', 'Lcon', 'Logistic', 'Gaussian'], ax.flatten()):
+fig, ax = plt.subplots(2,4, figsize=(14,6), sharex=True, sharey=True)
+for net, axi in zip(['HHEE', 'HHEI', 'HHconEE', 'HHconEI',
+            'Lorenz', 'Logistic', 'Rcon', 'Gaussian'], ax.flatten()):
     for i, key in enumerate(keys):
         tmp = df[df['network'].eq(net)]
-        lw = 2 if i == 0 else 1.5
-        ms = 14 if i == 0 else 10
-        axi.plot(tmp['noise_level'], tmp[key], '-o', ms=ms, mec='w', mew=0.5, color=colors[i], label=key, lw=lw)
+        lw = 1.5 if i == 0 else 2
+        ms = 10 if i == 0 else 12
+        zorder = 10 if i == 0 else None
+        buff = np.maximum(tmp[key], 0.5)
+        axi.plot(tmp['noise_level'], buff,
+                  '-o', ms=ms, mec='w', mew=1.5, color=colors[i],
+                  label=key, lw=lw, zorder=zorder)
     axi.set_xticks([0,1,2,3])
     axi.set_yticks([0.4, 0.6, 0.8, 1.0])
     axi.set_title(net, fontweight='bold', fontsize=20)
-ax[0,0].legend()
+[axi.set_xlabel('Noise level', fontsize=20) for axi in ax[-1]]
+[axi.set_ylabel('AUC', fontsize=20) for axi in ax[:,0]]
+ax[0,-1].legend(loc='upper left', bbox_to_anchor=(1.0, 1.00), fontsize=16)
 sns.despine(offset=1, trim=True)
 plt.tight_layout()
 fig.savefig(root_path / 'fig_nc/pdf' / 'comp_auc_all.pdf', transparent=True)

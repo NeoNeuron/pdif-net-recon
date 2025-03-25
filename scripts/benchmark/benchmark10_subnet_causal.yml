@@ -117,11 +117,11 @@ Lcon:
 
 Logistic:
     N: 10
-    T: 1.0e+8
+    T: 1.0e+7
     DT: 1.0e+5
     dt: 2
     order: !!python/tuple
-        - 2
+        - 4
         - 1
     delay: 0
     spk_fname: Logp=0.25s=0.005
@@ -132,11 +132,11 @@ Gaussian:
     N: 10
     T: 1.0e+8
     DT: 1.0e+5
-    dt: 2
+    dt: 5
     order: !!python/tuple
+        - 4
         - 1
-        - 1
-    delay: 16
+    delay: 5
     spk_fname: Gaussianp=0.25s=0.030tau=20ref=10th=0.020
     conn_file: connect_matrix-p=0.250.npy
     path: benchmark/N10_subnet/Gaussian/
@@ -147,8 +147,8 @@ Rcon:
     DT: 1.0e+5
     dt: 3.0
     order: !!python/tuple
-        - 4
-        - 1
+        - 5
+        - 5
     delay: 0.00
     spk_fname: Rconp=0.25s=0.002
     conn_file: connect_matrix-p=0.250.npy
