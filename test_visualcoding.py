@@ -181,8 +181,8 @@ for out_dir in Path('./visualcoding/').iterdir():
             pval = data_fig['log_norm_fit_pval'][key]
             if not hasattr(pval, '__len__'):
                 continue
-            gauss1 = Gaussian(edges, *pval[[1,3]]) * (1-pval[0])
-            gauss2 = Gaussian(edges, *pval[[2,4]]) * pval[0]
+            gauss1 = c4u.Gaussian(edges, *pval[[1,3]]) * (1-pval[0])
+            gauss2 = c4u.Gaussian(edges, *pval[[2,4]]) * pval[0]
             # print(pval[0])
             ax_hist.plot(edges,gauss1, color=line_rc[key]['color'], ls='--')
             ax_hist.plot(edges,gauss2, color=line_rc[key]['color'], ls='--')
@@ -248,8 +248,8 @@ for out_dir in Path('./visualcoding/').iterdir():
             popt = data_fig_all[stim]['log_norm_fit_pval'][key]
             if not hasattr(popt, '__len__'):
                 continue
-            axi.plot(bins[:-1], Gaussian(bins[:-1], popt[1], popt[3])*(1-popt[0]), lw=4, alpha=1.0, color=line_rc[key]['color'],zorder=0)
-            axi.plot(bins[:-1], Gaussian(bins[:-1], popt[2], popt[4])*(popt[0]), lw=4, alpha=1.0, color=c_inv[line_rc[key]['color']],zorder=0)
+            axi.plot(bins[:-1], c4u.Gaussian(bins[:-1], popt[1], popt[3])*(1-popt[0]), lw=4, alpha=1.0, color=line_rc[key]['color'],zorder=0)
+            axi.plot(bins[:-1], c4u.Gaussian(bins[:-1], popt[2], popt[4])*(popt[0]), lw=4, alpha=1.0, color=c_inv[line_rc[key]['color']],zorder=0)
             # calculate threshold
             axi.axvline(data_fig_all[stim]['th_gauss'][key], color='k', ls='-')
 
