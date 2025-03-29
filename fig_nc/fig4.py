@@ -73,7 +73,7 @@ for i, (subfolder, dfname) in enumerate(
         auc_list[key] = pd.read_pickle(root_path / subfolder / key / dfname.replace('recon_list', 'auc_list'))[label]
         # print(key, auc_list[key])
     auc_df = pd.DataFrame(auc_list)
-    auc_df = np.maximum(auc_df, 0.505)
+    auc_df = np.maximum(auc_df, 0.510)
     axb = fig.subplots(1,1, gridspec_kw={
         'left': 0.05+i*0.5, 'right': 0.48+i*0.5, 'top': 0.35, 'bottom': 0.24,
     })
