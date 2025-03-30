@@ -10,48 +10,25 @@ import seaborn as sns
 import networkx as nx
 from causal4.Causality import CausalityEstimator
 from causal4.utils import match_features
+from figrc import *
 
 fig, ax = plt.subplots(
     2,4,figsize=(14,7),)# gridspec_kw=dict(wspace=0.3, hspace=0.5, width_ratios=(0.8,1,1,1))
 # )
 
-def make_graph_diagram(ax, nodesize=2000, fontsize=26):
-    G = nx.DiGraph()
-    G.add_edges_from([(1,2), (2,3)])
-    G = nx.relabel_nodes(G, {1:'X', 2:'Y', 3:'Z'})
-    pos = {
-        n: coordinate 
-        for n, coordinate in zip(G,((1,np.sqrt(3)),(0,0),(2,0),))
-    }
-    nx.draw_networkx_nodes(
-        G, pos=pos, ax=ax,
-        node_color='#F49227',
-        edgecolors='k',
-        node_size=nodesize,
-    )
-    nx.draw_networkx_labels(
-        G, pos=pos, ax=ax,
-        labels={n:n for n in G},
-        font_size=fontsize,
-        font_weight='bold',
-    )
-    nx.draw_networkx_edges(
-        G, pos=pos, ax=ax,
-        width=2,
-        node_size=nodesize,
-        arrowsize=40,
-        arrows=True,
-    )
-    ax.set_clip_on(False)
-    ax.axis('equal')
-    ax.axis('off')
-    ax.set_xlim(-1,3)
-    ax.set_ylim(-1,np.sqrt(3)+1)
-
-make_graph_diagram(ax[0,0])
+G = nx.DiGraph()
+G.add_edges_from([(1,2), (2,3)])
+G = nx.relabel_nodes(G, {1:'X', 2:'Y', 3:'Z'})
+pos = {
+    n: coordinate 
+    for n, coordinate in zip(G,((1,np.sqrt(3)),(0,0),(2,0),))
+}
+make_graph_diagram(G, ax[0,0], pos,)
+ax[0,0].set_xlim(-1,3)
+ax[0,0].set_ylim(-1,np.sqrt(3)+1)
 
 estimator = CausalityEstimator(
-    # root/'HH3-chain', 'HHp=0.25s=0.020f=0.080u=0.150', 3, delay=3, T=1e6,
+    # root/'HH3-chain', 'HHp=0.25s=0.020f=0.080u=0.150', 3, delay=3, T=1e7,
     root/'HH3-chain', 'HHp=0.25s=0.020f=0.200u=0.050', 3, delay=3, T=1e7,
 )
 data = estimator.fetch_data()
@@ -105,28 +82,7 @@ pos = {
     n: coordinate 
     for n, coordinate in zip(G,((1,np.sqrt(3)),(0,0),(2,0),))
 }
-nx.draw_networkx_nodes(
-    G, pos=pos, ax=ax[1,0],
-    node_color='#F49227',
-    edgecolors='k',
-    node_size=2000,
-)
-nx.draw_networkx_labels(
-    G, pos=pos, ax=ax[1,0],
-    labels={n:n for n in G},
-    font_size=26,
-    font_weight='bold',
-)
-nx.draw_networkx_edges(
-    G, pos=pos, ax=ax[1,0],
-    width=2,
-    node_size=2000,
-    arrowsize=40,
-    arrows=True,
-)
-ax[1,0].set_clip_on(False)
-ax[1,0].axis('equal')
-ax[1,0].axis('off')
+make_graph_diagram(G, ax[1,0], pos)
 ax[1,0].set_xlim(-1,3)
 ax[1,0].set_ylim(-1,np.sqrt(3)+1)
 
