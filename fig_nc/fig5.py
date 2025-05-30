@@ -15,7 +15,8 @@ def get_conn_mat(df, key='connection'):
     return conn_mat
 colors = [
     # '#335C8C', '#82b6db', '#cbe1ef', '#df1423', '#ca631c', '#5a3e16', '#f9ba80', 
-    '#2D527C', '#9796C7', '#BEB0D5', '#EBC4CD', '#FDD5A8', '#F3AE8F', '#BE8076',
+    # '#2D527C', '#9796C7', '#BEB0D5', '#EBC4CD', '#FDD5A8', '#F3AE8F', '#BE8076',
+    '#2D527C', '#ea3323',  '#ff8b00',  '#febb26',  '#1eb253',  '#017cf3', '#9c78fe',
 ]
 selected_nets = ['HHEE', 'HHEI', 'HHconEE', 'HHconEI', 'Lorenz', 'Logistic', 'Rcon', 'Gaussian']
 heatmap_kws = {'cbar': False, 'square': True}
@@ -86,7 +87,7 @@ for i, (subfolder, dfname) in enumerate(
         'left': 0.05+i*0.5, 'right': 0.48+i*0.5, 'top': 0.35, 'bottom': 0.24,
     })
     ax = auc_df.loc[['HHEE', 'HHEI', 'HHconEE', 'HHconEI', 'Lorenz', 'Logistic', 'Rcon', 'Gaussian']].plot.bar(color=colors, width=0.7, ec='w', ax=axb)
-    axb.set_xticklabels(['HHEE', 'HHEI', 'HHconEE', 'HHconEI', 'Lorenz', 'Logistic', 'Rossler', 'Gaussian'],)
+    axb.set_xticklabels(['HHEE', 'HHEI', 'HHconEE', 'HHconEI', 'Lorenz', 'Logistic', 'Rössler', 'Gaussian'],)
     axb.tick_params(axis='x', labelsize=12, rotation=0)
     axb.set_ylabel('AUC', fontsize=20)
     axb.set_ylim(0.5, 1.0)
@@ -119,25 +120,31 @@ dfs = pd.concat(dfs)
 df = dfs.reset_index().rename(columns={'index':'network'})
 
 ax = fig.subplots(1,8, sharey=True, gridspec_kw={
-    'left': 0.05, 'right': 0.98, 'top': 0.17, 'bottom': 0.05,
+    'left': 0.05, 'right': 0.92, 'top': 0.17, 'bottom': 0.05,
     })
+lw = {
+    'PTD-TE': 1, 'STE': 2, 'GLMCC': 2.5, 'DDC': 2,
+    'CCM': 4, 'FDCCM': 2.5, 'SCCM': 2,
+}
+
 for net, axi in zip(['HHEE', 'HHEI', 'HHconEE', 'HHconEI',
             'Lorenz', 'Logistic', 'Rcon', 'Gaussian'], ax.flatten()):
     for i, key in enumerate(keys):
         tmp = df[df['network'].eq(net)]
-        lw = 1.5 if i == 0 else 2
-        ms = 10 if i == 0 else 12
+        # lw = 1.2 if i == 0 else 2
         zorder = 10 if i == 0 else None
+        marker = 'o' if i == 0 else 'o'
         buff = np.maximum(tmp[key], 0.5)
         axi.plot(tmp['noise_level'], buff,
-                  '-o', ms=ms, mec='w', mew=1.5, color=colors[i],
-                  label=key, lw=lw, zorder=zorder)
+                    '-', marker=marker, ms=8, color=colors[i],
+                  label=key, lw=lw[key], zorder=zorder, clip_on=False)
     axi.set_xticks([0,1,2,3])
-    axi.set_yticks([0.4, 0.6, 0.8, 1.0])
+    axi.set_yticks([0.5, 0.75, 1.0])
     if net == 'Rcon':
-        axi.set_title('Rossler', fontweight='bold', fontsize=20)
+        axi.set_title('Rössler', fontweight='bold', fontsize=20)
     else:
         axi.set_title(net, fontweight='bold', fontsize=20)
+ax[-1].legend(loc='upper left', bbox_to_anchor=(1.02, 0.96), fontsize=10)
 [axi.set_xlabel('noise level', fontsize=18) for axi in ax]
 ax[0].set_ylabel('AUC', fontsize=20)
 # ax[0,-1].legend(loc='upper left', bbox_to_anchor=(1.0, 1.00), fontsize=16)
