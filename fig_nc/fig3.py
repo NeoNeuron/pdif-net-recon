@@ -80,7 +80,7 @@ def plot_s_vs_ptdte(data_path, ax, spk_fname, ss, dt, order, delay):
     axins.plot([0,ss[-1]],[0,ffit(ss[-1])],c='#F26A9D',lw=1.5)
     axins.set_xlabel('S', fontsize=20, labelpad=-17)
     # axins.set_ylabel(r'$\Delta$p', fontsize=20, rotation=0, ha='center', va='center')
-    axins.text(-0.15, 0.5, r'$\Delta p_{a,b}$',
+    axins.text(-0.15, 0.5, r'$\Delta p_{0,1}$',
         rotation=90, fontsize=20,
         transform=axins.transAxes,
         ha='center', va='center',
@@ -260,10 +260,10 @@ for axi, key in zip(ax.T, keys):
     axi[0].plot(direct, np.polyval(pval, direct), color='#F26A9D', lw=3, zorder=-1)
     label_fs = 25
     if key == 'confounder':
-        axi[0].set_xlabel(r'$\Delta p^{Y\to X}_{a,b}\cdot \Delta p^{Y\to Z}_{a,b}$', fontsize=label_fs, usetex=False)
+        axi[0].set_xlabel(r'$\Delta p^{Y\to X}_{0,1}\cdot \Delta p^{Y\to Z}_{0,1}$', fontsize=label_fs, usetex=False)
     elif key == 'chain':
-        axi[0].set_xlabel(r'$\Delta p^{X\to Y}_{a,b}\cdot \Delta p^{Y\to Z}_{a,b}$', fontsize=label_fs, usetex=False)
-    axi[0].set_ylabel(r'$\Delta p^{X\to Z}_{a,b}$', fontsize=label_fs, usetex=False)
+        axi[0].set_xlabel(r'$\Delta p^{X\to Y}_{0,1}\cdot \Delta p^{Y\to Z}_{0,1}$', fontsize=label_fs, usetex=False)
+    axi[0].set_ylabel(r'$\Delta p^{X\to Z}_{0,1}$', fontsize=label_fs, usetex=False)
     # axi.set_title(r'$R^2=%.3f$'%(Linear_R2(direct, indirect, pval)), fontsize=14)
     axi[0].set_xlim(0.6e-6,2.0e-5)
     axi[0].xaxis.get_offset_text().set_x(1.05)

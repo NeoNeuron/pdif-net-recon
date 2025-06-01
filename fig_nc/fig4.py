@@ -185,7 +185,7 @@ for ax_col, spk_fname, key, ss, dt, acf_xmax in zip(ax[:,1:], spk_fnames, keys, 
     axins.plot([0,ss[-1]],[0,ffit(ss[-1])],c='#F26A9D',lw=1.5)
     axins.set_xlabel('S', fontsize=20, labelpad=-17)
     # axins.set_ylabel(r'$\Delta$p', fontsize=20, rotation=0, ha='center', va='center')
-    axins.text(-0.15, 0.5, r'$\Delta p_{a,b}$',
+    axins.text(-0.15, 0.5, r'$\Delta p_{0,1}$',
         rotation=90, fontsize=20,
         transform=axins.transAxes,
         ha='center', va='center',
