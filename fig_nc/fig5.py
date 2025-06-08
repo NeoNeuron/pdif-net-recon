@@ -50,7 +50,9 @@ for i, (subfolder, dfname) in enumerate(
         conn_mat = get_conn_mat(recon_data['PTD-TE'][net], key='connection')
         sns.heatmap(conn_mat, ax=axi, **heatmap_kws, cmap='Greens')
         if net == 'Rcon':
-            axi.set_title('Rossler', fontweight='bold', fontsize=12)
+            axi.set_title('Rössler', fontweight='bold', fontsize=12)
+        elif net == 'Gaussian':
+            axi.set_title('LRNN', fontweight='bold', fontsize=12)
         else:
             axi.set_title(net, fontweight='bold', fontsize=12)
     ax[0,0].set_ylabel('ground truth')
@@ -142,6 +144,8 @@ for net, axi in zip(['HHEE', 'HHEI', 'HHconEE', 'HHconEI',
     axi.set_yticks([0.5, 0.75, 1.0])
     if net == 'Rcon':
         axi.set_title('Rössler', fontweight='bold', fontsize=20)
+    elif net == 'Gaussian':
+        axi.set_title('LRNN', fontweight='bold', fontsize=20)
     else:
         axi.set_title(net, fontweight='bold', fontsize=20)
 ax[-1].legend(loc='upper left', bbox_to_anchor=(1.02, 0.96), fontsize=10)
