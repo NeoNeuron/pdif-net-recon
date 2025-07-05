@@ -1,158 +1,124 @@
-# %%
+# -*- coding: utf-8 -*-
+# Author: Kai Chen
+
+#%%
+from pathlib import Path
+root = Path(__file__).resolve().parents[1]
 import numpy as np
 import matplotlib.pyplot as plt
-import seaborn as sns
-import pandas as pd
-import pickle as pkl
+from causal4.Causality import CausalityEstimator
+from causal4.utils import match_features, reconstruction_analysis_TE
+from causal4.myplot import ReconstructionFigureTE
+import networkx as nx
 import causal4.utils as c4u
-from pathlib import Path
-root_path = Path(__file__).parents[1]
+import pickle as pkl
 from figrc import *
 
-def get_conn_mat(df, key='connection'):
-    conn_mat = np.zeros((int(df['pre_id'].max()+1),int(df['post_id'].max()+1)))
-    conn_mat[df['pre_id'], df['post_id']] = df[key]
-    return conn_mat
-colors = [
-    # '#335C8C', '#82b6db', '#cbe1ef', '#df1423', '#ca631c', '#5a3e16', '#f9ba80', 
-    # '#2D527C', '#9796C7', '#BEB0D5', '#EBC4CD', '#FDD5A8', '#F3AE8F', '#BE8076',
-    '#2D527C', '#ea3323',  '#ff8b00',  '#febb26',  '#1eb253',  '#017cf3', '#9c78fe',
-]
-selected_nets = ['HHEE', 'HHEI', 'HHconEE', 'HHconEI', 'Lorenz', 'Logistic', 'Rcon', 'Gaussian']
-heatmap_kws = {'cbar': False, 'square': True}
-# %%
-keys = ['PTD-TE', 'STE', 'GLMCC', 'DDC', 'CCM', 'FDCCM', 'SCCM']
-labels = ['TE', 'ste', 'glmcc_abs', 'ddc_abs', 'CCM', 'FDCCM', 'SCCM'] 
-fig = plt.figure(figsize=(16,14))
-for i, (subfolder, dfname) in enumerate(
-    zip(['results/N10', 'results/N10_subnet_noisy'], ['recon_list.pkl', 'recon_list_noisy3.pkl'])):
-    # subfolder = 'results/N10'
-    # dfname = 'recon_list.pkl'
-    causal_data = {}
-    for key in keys:
-        with open(root_path / subfolder / key / dfname, 'rb') as f:
-            causal_data[key] = pkl.load(f)
-
-    recon_data = {}
-    for key, label in zip(keys, labels):
-        recon_data[key] = {}
-        for net in selected_nets:
-            if net not in causal_data[key]:
-                continue
-            val = causal_data[key][net].copy()
-            data_recon = c4u._reconstruction_analysis(val, label, 'connection', algorithm='EM', hist_type='linear')
-            recon_data[key][net] = data_recon[0]
-    ax = fig.subplots(8,8, gridspec_kw={
-        'left': 0.05+i*0.5, 'right': 0.48+i*0.5, 'top': 0.95, 'bottom': 0.40,
-    })
-    # plot ground truth
-    for axi, net in zip(ax[0], selected_nets):
-        conn_mat = get_conn_mat(recon_data['PTD-TE'][net], key='connection')
-        sns.heatmap(conn_mat, ax=axi, **heatmap_kws, cmap='Greens')
-        if net == 'Rcon':
-            axi.set_title('Rössler', fontweight='bold', fontsize=12)
-        elif net == 'Gaussian':
-            axi.set_title('LRNN', fontweight='bold', fontsize=12)
-        else:
-            axi.set_title(net, fontweight='bold', fontsize=12)
-    ax[0,0].set_ylabel('ground truth')
-
-    for ax_row, key, label in zip(ax[1:], keys, labels):
-        for axi, net in zip(ax_row, selected_nets):
-            if net not in recon_data[key]:
-                continue
-            val = recon_data[key][net].copy()
-            conn_mat = get_conn_mat(val, key='connection')
-            recon_mat = get_conn_mat(val, key=f'recon-gauss-{label:s}')
-            sns.heatmap(recon_mat, ax=axi, **heatmap_kws, cmap='Oranges')
-            inconsistent_mask = conn_mat != recon_mat  # Find inconsistent blocks
-            for y, x in zip(*np.where(inconsistent_mask)):  # Add transparent squares
-                axi.add_patch(plt.Rectangle((x, y), 1, 1, fill=False, edgecolor='#00BAFF', lw=1.5, alpha=1.0))
-        ax_row[0].set_ylabel(key)
-        # break
-
-    for axi in ax.flatten():
-        axi.set_xticks([])
-        axi.set_yticks([])
-        axi.spines['top'].set_visible(False)
-        axi.spines['right'].set_visible(False)
-        axi.spines['left'].set_visible(False)
-        axi.spines['bottom'].set_visible(False)
-
-    auc_list = {}
-    for key, label in zip(keys, labels):
-        auc_list[key] = pd.read_pickle(root_path / subfolder / key / dfname.replace('recon_list', 'auc_list'))[label]
-        # print(key, auc_list[key])
-    auc_df = pd.DataFrame(auc_list)
-    auc_df = np.maximum(auc_df, 0.510)
-    axb = fig.subplots(1,1, gridspec_kw={
-        'left': 0.05+i*0.5, 'right': 0.48+i*0.5, 'top': 0.35, 'bottom': 0.24,
-    })
-    ax = auc_df.loc[['HHEE', 'HHEI', 'HHconEE', 'HHconEI', 'Lorenz', 'Logistic', 'Rcon', 'Gaussian']].plot.bar(color=colors, width=0.7, ec='w', ax=axb)
-    axb.set_xticklabels(['HHEE', 'HHEI', 'HHconEE', 'HHconEI', 'Lorenz', 'Logistic', 'Rössler', 'Gaussian'],)
-    axb.tick_params(axis='x', labelsize=12, rotation=0)
-    axb.set_ylabel('AUC', fontsize=20)
-    axb.set_ylim(0.5, 1.0)
-    axb.set_yticks([0.5, 0.6, 0.7, 0.8, 0.9, 1.0])
-    axb.legend(loc='lower left', bbox_to_anchor=(-0.05, 1.05), fontsize=10, ncols=7)
-    # plt.tight_layout()
-    sns.despine(ax=axb)
-
-fig.text(x=0.02, y=0.97, s='a', ha='center', va='center', fontsize=24, fontweight='bold')
-fig.text(x=0.52, y=0.97, s='b', ha='center', va='center', fontsize=24, fontweight='bold')
-fig.text(x=0.02, y=0.20, s='c', ha='center', va='center', fontsize=24, fontweight='bold')
-# sns.despine(offset=0, trim=True)
-# plt.savefig(root_path / 'fig_nc/pdf' / f'comp_auc{noise_level:s}.pdf', transparent=True)
-
-#%
-noise_levels = ['', '_noisy1', '_noisy2', '_noisy3']
-dfs = []
-for noise_level in noise_levels:
-    subfolder = 'results/N10_subnet' if noise_level == '' else 'results/N10_subnet_noisy'
-    auc_list = {}
-    dfname = f'auc_list{noise_level:s}.pkl'
-
-    for key, label in zip(keys, labels):
-        auc_list[key] = pd.read_pickle(root_path / subfolder / key / dfname)[label]
-        # print(key, auc_list[key])
-    auc_df = pd.DataFrame(auc_list)
-    auc_df['noise_level'] = 0 if noise_level == '' else int(noise_level[-1])
-    dfs.append(auc_df)
-dfs = pd.concat(dfs)
-df = dfs.reset_index().rename(columns={'index':'network'})
-
-ax = fig.subplots(1,8, sharey=True, gridspec_kw={
-    'left': 0.05, 'right': 0.92, 'top': 0.17, 'bottom': 0.05,
-    })
-lw = {
-    'PTD-TE': 1, 'STE': 2, 'GLMCC': 2.5, 'DDC': 2,
-    'CCM': 4, 'FDCCM': 2.5, 'SCCM': 2,
-}
-
-for net, axi in zip(['HHEE', 'HHEI', 'HHconEE', 'HHconEI',
-            'Lorenz', 'Logistic', 'Rcon', 'Gaussian'], ax.flatten()):
-    for i, key in enumerate(keys):
-        tmp = df[df['network'].eq(net)]
-        # lw = 1.2 if i == 0 else 2
-        zorder = 10 if i == 0 else None
-        marker = 'o' if i == 0 else 'o'
-        buff = np.maximum(tmp[key], 0.5)
-        axi.plot(tmp['noise_level'], buff,
-                    '-', marker=marker, ms=8, color=colors[i],
-                  label=key, lw=lw[key], zorder=zorder, clip_on=False)
-    axi.set_xticks([0,1,2,3])
-    axi.set_yticks([0.5, 0.75, 1.0])
-    if net == 'Rcon':
-        axi.set_title('Rössler', fontweight='bold', fontsize=20)
-    elif net == 'Gaussian':
-        axi.set_title('LRNN', fontweight='bold', fontsize=20)
+def get_vfname(fname: str, key:str, sfx:str=None):
+    if key == 'Gaussian':
+        fname = fname.replace('th=0.020','')
+    if fname.startswith('Lp') or fname.startswith('Lcon'):
+        fname = fname + '_x'
     else:
-        axi.set_title(net, fontweight='bold', fontsize=20)
-ax[-1].legend(loc='upper left', bbox_to_anchor=(1.02, 0.96), fontsize=10)
-[axi.set_xlabel('noise level', fontsize=18) for axi in ax]
-ax[0].set_ylabel('AUC', fontsize=20)
-# ax[0,-1].legend(loc='upper left', bbox_to_anchor=(1.0, 1.00), fontsize=16)
-[sns.despine(offset=1, trim=True, ax=axi) for axi in ax]
+        fname = fname + '_voltage'
+    if sfx is not None:
+        fname += sfx
+    return fname + '.dat'
 
-fig.savefig(root_path / 'fig_nc/pdf' / 'fig5.pdf', transparent=True)
+#%%
+fig = plt.figure(figsize=(24,10),)
+ax = fig.subplots(3, 4, 
+    gridspec_kw=dict(wspace=0.4, hspace=0.5,
+                     left=0.05, right=0.98,
+                     top=0.94, bottom=0.08, height_ratios=[1.2,0.8,2.3]),)
+
+keys = ['Lorenz', 'Logistic', 'Rcon', 'Gaussian']
+spk_fnames = ['Lp=0.25s=0.500f=0.000u=0.000',
+              'Logp=0.25s=0.005',
+              'Rconp=0.25s=0.002',
+            #   'RNNp=0.25s=0.030tau=20ref=10th=0.020',
+              'Gaussianp=0.25s=0.030tau=20ref=10th=0.020',
+              ]
+vol_fnames = ['Lp=0.25s=0.500f=0.000u=0.000_x',
+              'Logp=0.25s=0.005_voltage',
+              'Rconp=0.25s=0.002_x',
+            #   'RNNp=0.25s=0.030tau=20ref=10_voltage',
+              'Gaussianp=0.25s=0.030tau=20ref=10_voltage',
+              ]
+
+dts = [0.02, 1.0, 3.0, 5.0]
+Ts = [1e6, 1e8, 1e7, 1e8]
+orders = [(1,1), (2,1), (5,5), (4,1)]
+delays = [0, 0, 0, 16]
+ths = [10, 0.9, 8, 0.02]
+Tranges = [10, 30, 50, 600]
+
+
+regen=False
+for ax_col, spk_fname, key, dt, T, delay, order, vol_fname, th, Trange in zip(ax.T, spk_fnames, keys, dts, Ts, delays, orders, vol_fnames, ths, Tranges):
+    subfolder = root / f'benchmark/N100/{key:s}'
+    N = 100
+
+    print(np.fromfile(subfolder/'connect_matrix-p=0.250.dat', dtype=float).reshape(N, N)[0,1])
+
+    spks = c4u.load_spike_data(subfolder/(spk_fname + '_spike_train.dat'), xrange=(0, Trange))
+    if (subfolder/(vol_fname + '.npy')).exists():
+        voltages = np.load(subfolder/(vol_fname + '.npy'), mmap_mode='r')
+        voltage_dt = voltages[1,0] - voltages[0,0]
+        Tn = int(Trange / voltage_dt)
+        voltages = voltages[:Tn, :]
+    elif (subfolder/(vol_fname + '.dat')).exists():
+        voltages = c4u.fetch_voltage(subfolder/(vol_fname + '.dat'), N=N, voltage_range=(0, Trange))
+    ax_col[0].plot(voltages[:,0], voltages[:,1], lw=2, color='C0', clip_on=True)
+    ax_col[0].plot(voltages[:,0], voltages[:,2], lw=2, color='C2', clip_on=True)
+    ax_col[0].axhline(th, ls='--', color='r', lw=2, clip_on=True)
+    ax_col[0].set_ylabel('activity', fontsize=26)
+    ax_col[0].set_xlabel('time (ms)', fontsize=26)
+    ax_col[0].set_xlim(0, Trange)
+    mask = spks[:,1] == 0
+    ax_col[1].plot(spks[mask,0], spks[mask,1], '|', color='C0', ms=30, mew=3, clip_on=True)
+    mask = spks[:,1] == 1
+    ax_col[1].plot(spks[mask,0], spks[mask,1], '|', color='C2', ms=30, mew=3, clip_on=True)
+    ax_col[1].axhline(0, ls='--', color='k', lw=1, clip_on=True)
+    ax_col[1].axhline(1, ls='--', color='k', lw=1, clip_on=True)
+    ax_col[1].spines['left'].set_visible(False)
+    ax_col[1].set_xlim(0, Trange)
+    ax_col[1].set_ylim(-0.5, 1.5)
+    ax_col[1].set_xlabel('time (ms)', fontsize=26)
+    ax_col[1].set_yticks([])
+    # ax_col[1].set_ylabel('neuron ID', fontsize=26)
+
+    estimator = CausalityEstimator(
+        subfolder, spk_fname, N, delay=delay, T=T, dt=dt,
+        n_thread=128, order=order,
+    )
+    data = estimator.fetch_data(new_run=True)
+    data_matched = match_features(data, N, subfolder/'connect_matrix-p=0.250.dat')
+    df_recon, df_fig = reconstruction_analysis_TE(data_matched, nbins=60, hist_range=None, algorithm='EM')
+    print('acc: %.4f, auc: %.4f'%(df_fig['acc_svm']['TE'], df_fig['auc_svm']['TE']))
+    RED, GREEN = '#F49227', '#194955'
+    tmp = df_fig.loc['TE']
+    for hist_key, color in zip(('hist_conn', 'hist_disconn'), (RED, GREEN)):
+        edges = tmp['edges'] + (tmp['edges'][1] - tmp['edges'][0])/2
+        counts = tmp[hist_key]
+        mask = counts > 0
+        ax_col[-1].plot(edges[mask], counts[mask], color=color, lw=5, clip_on=True)
+        ax_col[-1].fill_between(edges[mask], 0, counts[mask], color=color, alpha=0.5)
+    ax_col[-1].axvline(tmp['th_svm'], ls='-', color='#F26A9D', lw=4)
+    if key == 'Lorenz':
+        ax_col[-1].set_xlim(-11, -4)
+        ax_col[-1].set_xticks([-10, -8, -6, -4])
+    elif key == 'Logistic':
+        ax_col[-1].set_xlim(-7, -4)
+    ax_col[-1].xaxis.set_major_formatter(sci_formatter)
+        # format_xticks(ax_col[-1], (-7, -4))
+    ax_col[-1].set_ylim(0)
+    ax_col[-1].set_xlabel('PTD-TE value', fontsize=26)
+    ax_col[-1].set_ylabel('density', fontsize=26)
+
+xx, yy = np.meshgrid(np.arange(4), np.arange(2), indexing='ij')
+for tag, x, y in zip('abcdefgh', xx.flatten(), yy.flatten()):
+    fig.text(0.02+x*0.25, 1.000-y*0.52, tag, fontsize=35, fontweight='bold', va='top')
+
+fig.savefig(root/'fig_nc/pdf'/'fig5.pdf', transparent=True)
 #%%

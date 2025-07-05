@@ -193,16 +193,20 @@ for axi, key in zip(ax.T, keys):
         data02 = data[data['connection'].eq(0)]['TE'].mean()
         ptdte.append(data01/data02)
     ptdte = np.array(ptdte).reshape(oo.shape)
-    pax = axi[1].pcolormesh(oo, dd, np.log10(ptdte), lw=.01, ec='w', vmin=0)#vmax=2)
-    cb = fig.colorbar(pax, ax=axi[1], ticks=[0,1,2], orientation='vertical', label='ratio')
+    pax = axi[0].pcolormesh(oo, dd, np.log10(ptdte), lw=.01, ec='w', vmin=0)#vmax=2)
+    cb = fig.colorbar(pax, ax=axi[0], ticks=[0,1,2], orientation='vertical', label='ratio', pad=0)
     cb.ax.set_yticklabels([r'$10^{0}$', r'$10^{1}$',r'$10^{2}$'])
-    axi[1].set_ylabel('delay (ms)', fontsize=26)
-    axi[1].set_xlabel(r'order $l$', fontsize=26)
-    axi[1].set_xlim(-0.5, 9.5)
-    axi[1].set_ylim(0.5, 9.5)
-    axi[1].set_yticks([0, 2, 4, 6, 8])
-    axi[1].set_xticks([1, 3, 5, 7, 9])
-    axi[1].axis('scaled')
+    axi[0].set_ylabel('delay (ms)', fontsize=26)
+    axi[0].set_xlabel(r'order $l$', fontsize=26)
+    axi[0].set_xlim(-0.5, 9.5)
+    axi[0].set_ylim(0.5, 9.5)
+    axi[0].set_yticks([0, 2, 4, 6, 8])
+    axi[0].set_xticks([1, 3, 5, 7, 9])
+    axi[0].axis('scaled')
+    if key == 'chain':
+        axi[0].set_title(r'$T^\mathrm{PTD}_{X\to Y} / T^\mathrm{PTD}_{X\to Z}$', fontsize=26, pad=16)
+    else:
+        axi[0].set_title(r'$T^\mathrm{PTD}_{X\to Y} / T^\mathrm{PTD}_{Y\to Z}$', fontsize=26, pad=16)
 
     cmap='viridis'
     with open(root / f'data/HH3_{key:s}.pkl', 'rb') as f:
@@ -211,9 +215,9 @@ for axi, key in zip(ax.T, keys):
         indirect=buff['indirect']
         S=buff['S']
 
-    ax_TE = inset_axes(axi[0], width="100%", height="100%",
+    ax_TE = inset_axes(axi[1], width="100%", height="100%",
                        bbox_to_anchor=(.65, .25, .4, .5),
-                       bbox_transform=axi[0].transAxes, loc='center')
+                       bbox_transform=axi[1].transAxes, loc='center')
 
     ax_TE.scatter(direct, indirect, s=40, c=S, cmap=cmap, vmax=0.03, vmin=0.01, ec='w', lw=0.1)
     ax_TE.ticklabel_format(style='sci', scilimits=(0,0), axis='both', useMathText=True)
@@ -233,9 +237,9 @@ for axi, key in zip(ax.T, keys):
     ax_TE.yaxis.get_offset_text().set_fontsize(12)
 
     if key == 'chain':
-        axcb = inset_axes(axi[0], width="45%", height="8%",
+        axcb = inset_axes(axi[1], width="45%", height="8%",
                         bbox_to_anchor=(0.66, 0.92, 1, 1),
-                        bbox_transform=axi[0].transAxes, loc=3)
+                        bbox_transform=axi[1].transAxes, loc=3)
         gradient = np.atleast_2d(np.linspace(0, 1, 301))
         axcb.imshow(gradient, aspect='auto', cmap=cmap, alpha=1)
         axcb.set_yticks([])
@@ -253,24 +257,24 @@ for axi, key in zip(ax.T, keys):
         indirect=buff['indirect']
         S=buff['S']
 
-    axi[0].scatter(direct, indirect, s=150, c=S, cmap=cmap, vmax=0.03, vmin=0.01, ec='w', clip_on=False)
-    axi[0].ticklabel_format(style='sci', scilimits=(0,0), axis='both', useMathText=True)
+    axi[1].scatter(direct, indirect, s=150, c=S, cmap=cmap, vmax=0.03, vmin=0.01, ec='w', clip_on=False)
+    axi[1].ticklabel_format(style='sci', scilimits=(0,0), axis='both', useMathText=True)
 
     pval = np.polyfit(direct, indirect, deg=1)
-    axi[0].plot(direct, np.polyval(pval, direct), color='#F26A9D', lw=3, zorder=-1)
+    axi[1].plot(direct, np.polyval(pval, direct), color='#F26A9D', lw=3, zorder=-1)
     label_fs = 25
     if key == 'confounder':
-        axi[0].set_xlabel(r'$\Delta p^{Y\to X}_{0,1}\cdot \Delta p^{Y\to Z}_{0,1}$', fontsize=label_fs, usetex=False)
+        axi[1].set_xlabel(r'$\Delta p^{Y\to X}_{0,1}\cdot \Delta p^{Y\to Z}_{0,1}$', fontsize=label_fs, usetex=False)
     elif key == 'chain':
-        axi[0].set_xlabel(r'$\Delta p^{X\to Y}_{0,1}\cdot \Delta p^{Y\to Z}_{0,1}$', fontsize=label_fs, usetex=False)
-    axi[0].set_ylabel(r'$\Delta p^{X\to Z}_{0,1}$', fontsize=label_fs, usetex=False)
+        axi[1].set_xlabel(r'$\Delta p^{X\to Y}_{0,1}\cdot \Delta p^{Y\to Z}_{0,1}$', fontsize=label_fs, usetex=False)
+    axi[1].set_ylabel(r'$\Delta p^{X\to Z}_{0,1}$', fontsize=label_fs, usetex=False)
     # axi.set_title(r'$R^2=%.3f$'%(Linear_R2(direct, indirect, pval)), fontsize=14)
-    axi[0].set_xlim(0.6e-6,2.0e-5)
-    axi[0].xaxis.get_offset_text().set_x(1.05)
+    axi[1].set_xlim(0.6e-6,2.0e-5)
+    axi[1].xaxis.get_offset_text().set_x(1.05)
 
-    axins = inset_axes(axi[0], width="100%", height="100%",
+    axins = inset_axes(axi[1], width="100%", height="100%",
                     bbox_to_anchor=(-.05, .45, .5, .5),
-                    bbox_transform=axi[0].transAxes, loc='center')
+                    bbox_transform=axi[1].transAxes, loc='center')
 
     G = nx.DiGraph()
     if key == 'chain':
@@ -289,7 +293,10 @@ for i, tag in enumerate('ab'):
     fig.text(0.02, 0.48+(1-i)*0.5, tag, fontsize=35, fontweight='bold', va='top')
 
 for i, tag in enumerate('cd'):
-    fig.text(0.35, 0.48+(1-i)*0.5, tag, fontsize=35, fontweight='bold', va='top')
+    fig.text(0.35+i*0.34, 0.98, tag, fontsize=35, fontweight='bold', va='top')
+
+for i, tag in enumerate('ef'):
+    fig.text(0.35+i*0.34, 0.48, tag, fontsize=35, fontweight='bold', va='top')
 
 fig.savefig(root/'fig_nc/pdf'/'fig3.pdf', transparent=True)
 #%%

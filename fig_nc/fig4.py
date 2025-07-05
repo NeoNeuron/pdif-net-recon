@@ -27,9 +27,9 @@ def get_vfname(fname: str, key:str, sfx:str=None):
     return fname + '.dat'
 
 #%%
-fig = plt.figure(figsize=(24,10),)
+fig = plt.figure(figsize=(18,10),)
 
-ax = fig.subplots(2, 4, 
+ax = fig.subplots(2, 3, 
     gridspec_kw=dict(wspace=0.4, hspace=0.5,
                      left=0.05, right=0.98,
                      top=0.94, bottom=0.08),)
@@ -58,6 +58,7 @@ for axi, spk_fname in zip(ax[:,0], spk_fnames):
     axi.set_xlim(-8, -4)
     axi.xaxis.set_major_formatter(sci_formatter)
     axi.set_ylim(0)
+    axi.set_yticks([0,0.5,1.0])
     axi.set_xlabel('PTD-TE value', fontsize=26)
     axi.set_ylabel('density', fontsize=26)
 
@@ -75,58 +76,58 @@ acf_xmaxs = [10, 20]
 regen=False
 for ax_col, spk_fname, key, ss, dt, acf_xmax in zip(ax[:,1:], spk_fnames, keys, sss, dts, acf_xmaxs):
 
-    zax = zoomedAxes(ax_col[0], (-0.1, acf_xmax/2), (-0.1,0.1), [0.4, 0.5, 0.6, 0.55])
+    # zax = zoomedAxes(ax_col[0], (-0.1, acf_xmax/2), (-0.1,0.1), [0.4, 0.5, 0.6, 0.55])
 
-    subfolder = key+'3_scan_S'
-    for fname, C in zip([f'ACF_SPK_{key:s}3_scan_S_{spk_fname:s}.npz',
-                         f'ACF_VOL_{key:s}3_scan_S_{spk_fname:s}.npz'], ['#F49227', '#194955']):
-        if not (root / subfolder / fname).exists() or regen:
-            tmp = (root / subfolder / fname).stem.split('_')
-            data_type = tmp[1]
-            spk_fname = tmp[-1]
-            if data_type == 'SPK':
-                spk_data = c4u.load_spike_data(root / subfolder / f'{spk_fname:s}_spike_train.dat',
-                                        xrange=(0,1e7))
-                dt = 0.5
-                time_series = c4u.spk2bin(spk_data[spk_data[:,1]==0], dt=dt)
-            elif data_type == 'VOL':
-                vol_data = c4u.fetch_voltage(root / subfolder / get_vfname(spk_fname, key),
-                                        N=3, voltage_range=None)
-                dt = vol_data[1,0] - vol_data[0,0]
-                time_series = vol_data[:,1]
-            dTn = int(time_series.shape[0]/100)
-            acf = []
-            if key == 'Lorenz':
-                nlags = 500 if data_type == 'SPK' else 1000
-            else:
-                nlags = 100 if data_type == 'SPK' else 250
-            for i in range(100):
-                seg = time_series[i*dTn:(i+1)*dTn]
-                acf_seg = c4u.ACF(seg, nlags=nlags)
-                acf.append(acf_seg)
-            acf = np.array(acf)
-            t_lag = np.arange(acf.shape[-1])*dt
-            np.savez(root / subfolder / fname, t_lag=t_lag, acf=acf)
-        else:
-            data = np.load(root / subfolder / fname)
-            t_lag = data['t_lag']
-            acf = data['acf']
-        zax.plot(t_lag, acf.mean(0), '-', lw=2.5, color=C)
-        zax.axhline(0, ls='--', color='#AAAAAA')
-        ax_col[0].set_xlabel('time-lag (ms)', fontsize=26)
-        ax_col[0].set_ylabel('ACF', fontsize=26, labelpad=-20)
-        zax.zax.set_xlabel('time-lag (ms)', fontsize=14, labelpad=0)
-        zax.zax.set_ylabel('ACF', fontsize=14, labelpad=-10)
-        for tick in zax.zax.xaxis.get_major_ticks():
-            tick.label1.set_fontsize(14)
-        for tick in zax.zax.yaxis.get_major_ticks():
-            tick.label1.set_fontsize(14)
-        if key == 'HH':
-            zax.zax.set_xticks([0, 25])
-    ax_col[0].set_xlim(-0.1, acf_xmax)
-    ax_col[0].set_ylim(-0.3, 1.00)
-    ax_col[0].set_yticks([-0.3, 0, 0.5, 1.0])
-    # ax_col[0].set_title(key+' networks', fontsize=24, pad=22)
+    # subfolder = key+'3_scan_S'
+    # for fname, C in zip([f'ACF_SPK_{key:s}3_scan_S_{spk_fname:s}.npz',
+    #                      f'ACF_VOL_{key:s}3_scan_S_{spk_fname:s}.npz'], ['#F49227', '#194955']):
+    #     if not (root / subfolder / fname).exists() or regen:
+    #         tmp = (root / subfolder / fname).stem.split('_')
+    #         data_type = tmp[1]
+    #         spk_fname = tmp[-1]
+    #         if data_type == 'SPK':
+    #             spk_data = c4u.load_spike_data(root / subfolder / f'{spk_fname:s}_spike_train.dat',
+    #                                     xrange=(0,1e7))
+    #             dt = 0.5
+    #             time_series = c4u.spk2bin(spk_data[spk_data[:,1]==0], dt=dt)
+    #         elif data_type == 'VOL':
+    #             vol_data = c4u.fetch_voltage(root / subfolder / get_vfname(spk_fname, key),
+    #                                     N=3, voltage_range=None)
+    #             dt = vol_data[1,0] - vol_data[0,0]
+    #             time_series = vol_data[:,1]
+    #         dTn = int(time_series.shape[0]/100)
+    #         acf = []
+    #         if key == 'Lorenz':
+    #             nlags = 500 if data_type == 'SPK' else 1000
+    #         else:
+    #             nlags = 100 if data_type == 'SPK' else 250
+    #         for i in range(100):
+    #             seg = time_series[i*dTn:(i+1)*dTn]
+    #             acf_seg = c4u.ACF(seg, nlags=nlags)
+    #             acf.append(acf_seg)
+    #         acf = np.array(acf)
+    #         t_lag = np.arange(acf.shape[-1])*dt
+    #         np.savez(root / subfolder / fname, t_lag=t_lag, acf=acf)
+    #     else:
+    #         data = np.load(root / subfolder / fname)
+    #         t_lag = data['t_lag']
+    #         acf = data['acf']
+    #     zax.plot(t_lag, acf.mean(0), '-', lw=2.5, color=C)
+    #     zax.axhline(0, ls='--', color='#AAAAAA')
+    #     ax_col[0].set_xlabel('time-lag (ms)', fontsize=26)
+    #     ax_col[0].set_ylabel('ACF', fontsize=26, labelpad=-20)
+    #     zax.zax.set_xlabel('time-lag (ms)', fontsize=14, labelpad=0)
+    #     zax.zax.set_ylabel('ACF', fontsize=14, labelpad=-10)
+    #     for tick in zax.zax.xaxis.get_major_ticks():
+    #         tick.label1.set_fontsize(14)
+    #     for tick in zax.zax.yaxis.get_major_ticks():
+    #         tick.label1.set_fontsize(14)
+    #     if key == 'HH':
+    #         zax.zax.set_xticks([0, 25])
+    # ax_col[0].set_xlim(-0.1, acf_xmax)
+    # ax_col[0].set_ylim(-0.3, 1.00)
+    # ax_col[0].set_yticks([-0.3, 0, 0.5, 1.0])
+    # # ax_col[0].set_title(key+' networks', fontsize=24, pad=22)
 
     subfolder = key+'3_scan_S'
     N = 3
@@ -158,24 +159,24 @@ for ax_col, spk_fname, key, ss, dt, acf_xmax in zip(ax[:,1:], spk_fnames, keys, 
     #108B96
     # CA462F
     for i, (line_setting, label) in enumerate(zip(line_settings, ['X->Y', 'Y->X', 'X->Z'])):
-        ax_col[1].plot(ss, ptdte[:,i], **line_setting, clip_on=False)
+        ax_col[0].plot(ss, ptdte[:,i], **line_setting, clip_on=False)
     ffit = squarefit(ss, ptdte[:,0])
     ss_fit = np.linspace(ss[0], ss[-1], 100)
-    ax_col[1].plot(ss_fit, ffit(ss_fit), '-', color='#F26A9D', lw=4, zorder=-1)
-    # ax_col[1].plot(ss, ptdte, '-o', ms=8, mec='w', clip_on=False)
-    # ax_col[1].legend([r'$T^\mathrm{PTD}_{X\to Y}$',
+    ax_col[0].plot(ss_fit, ffit(ss_fit), '-', color='#F26A9D', lw=4, zorder=-1)
+    # ax_col[0].plot(ss, ptdte, '-o', ms=8, mec='w', clip_on=False)
+    # ax_col[0].legend([r'$T^\mathrm{PTD}_{X\to Y}$',
     #                   r'$T^\mathrm{PTD}_{Y\to X}$',
     #                   r'$T^\mathrm{PTD}_{X\to Z}$'], fontsize=14, loc='lower right')
-    ax_col[1].set_xlabel(r'S', fontsize=26)
-    ax_col[1].set_ylabel('PTD-TE value', fontsize=26)
-    ax_col[1].set_xlim(0, ss[-1])
-    ax_col[1].set_ylim(0, ffit(ss[-1])*1.3)
-    ax_col[1].ticklabel_format(style='sci', scilimits=(0,0), axis='y', useMathText=True)
-    ax_col[1].tick_params(axis='x', pad=10)  # Increase x-axis tick label padding
-    ax_col[1].yaxis.get_offset_text().set_x(-0.2)  # Move y-axis offset label to the left
+    ax_col[0].set_xlabel(r'S', fontsize=26)
+    ax_col[0].set_ylabel('PTD-TE value', fontsize=26)
+    ax_col[0].set_xlim(0, ss[-1])
+    ax_col[0].set_ylim(0, ffit(ss[-1])*1.3)
+    ax_col[0].ticklabel_format(style='sci', scilimits=(0,0), axis='y', useMathText=True)
+    ax_col[0].tick_params(axis='x', pad=10)  # Increase x-axis tick label padding
+    ax_col[0].yaxis.get_offset_text().set_x(-0.2)  # Move y-axis offset label to the left
 
     # s vs dp LARGE
-    axins = ax_col[1].inset_axes([0.18, 0.65, 0.5, 0.4])
+    axins = ax_col[0].inset_axes([0.18, 0.65, 0.5, 0.4])
     axins.ticklabel_format(style='sci', scilimits=(0,0), axis='both', useMathText=True)
 
     ffit = linearfit(ss, dps)
@@ -245,8 +246,8 @@ for ax_col, spk_fname, key, ss, dt, acf_xmax in zip(ax[:,1:], spk_fnames, keys, 
     ax_col[-1].set_ylabel('density', fontsize=26)
 
 xx, yy = np.meshgrid(np.arange(4), np.arange(2), indexing='ij')
-for tag, x, y in zip('abcdefgh', xx.flatten(), yy.flatten()):
-    fig.text(x*0.25, 1.005-y*0.5, tag, fontsize=35, fontweight='bold', va='top')
+for tag, x, y in zip('abcdef', xx.flatten(), yy.flatten()):
+    fig.text(x*0.35, 1.005-y*0.5, tag, fontsize=35, fontweight='bold', va='top')
 
 fig.savefig(root/'fig_nc/pdf'/'fig4.pdf', transparent=True)
 #%%
