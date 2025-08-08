@@ -2,106 +2,58 @@
 from pathlib import Path
 root_path = Path(__file__).resolve().parents[2]
 import numpy as np
-import pandas as pd
-from sklearn.metrics import roc_auc_score, roc_curve
 from causal4.Causality import CausalityEstimator
 from causal4.utils import match_features
-import causal4.myplot as myplot
-import time
-import pickle as pkl
-
 import yaml
-import matplotlib.pyplot as plt
-plt.rcParams['font.size']=16
-import seaborn as sns
-import subprocess
-
-def get_vfname(fname: str, sfx:str=''):
-    if key == 'Gaussian':
-        fname = fname.replace('th=0.020','')
-    if fname.startswith('Lp') or fname.startswith('Lcon') or fname.startswith('Rcon'):
-        fname = fname + '_x'
-    else:
-        fname = fname + '_voltage'
-    return fname + sfx + '.npy'
-
-def get_spk_fname(fname: str, sfx:str='', th: float=None, ref: float=None):
-    if len(sfx) == 0:
-        return fname
-    else:
-        if key == 'Gaussian':
-            fname = fname.replace('th=0.020','')
-        fname += sfx + f'_th={th:.2f}ref={ref:.2f}'
-        return fname
-
-def run_shell_command(command: str):
-    result = subprocess.run(command, shell=True, capture_output=True, text=True)
-    if result.returncode != 0:
-        raise RuntimeError(f"Command failed with error: {result.stderr}")
-    return result.stdout
-
-# Example usage:
-# output = run_shell_command("ls -l")
-# print(output)
+from utils import get_vfname, get_spk_fname
 #%%
-yml_names = ['benchmark10_causal.yml',
-             'benchmark10_subnet_causal.yml',
-             'benchmark10_subnet_causal.yml',
-             'benchmark10_subnet_causal.yml',
-             'benchmark10_subnet_causal.yml',
-             'benchmark10_subnet_causal.yml',
-            ]
-sfxs = ['', '', '_noisy1', '_noisy2', '_noisy3', '_noisy4']
-save_folder_names = [
-    'N10',
-    'N10_subnet',
-    'N10_subnet_noisy',
-    'N10_subnet_noisy',
-    'N10_subnet_noisy',
-    'N10_subnet_noisy',
-    ]
+
+yml_name = 'benchmark_causal.yml'
+with open(yml_name, 'r') as yamlfile:
+    pm_causal_set = yaml.load(yamlfile, Loader=yaml.FullLoader)
+for key in pm_causal_set.keys():
+    pm_causal_set[key]['path'] = root_path / pm_causal_set[key]['path']
+#%%
+# sfxs = ['', '', '_noisy1', '_noisy2', '_noisy3', '_noisy4']
 # Load binarization thresholds and refs from YAML file
 with open(root_path / 'scripts/benchmark' / 'binarization.yaml', 'r') as binarization_file:
     binarization_cfg = yaml.load(binarization_file, Loader=yaml.FullLoader)
 refs = binarization_cfg.get('refractory', {})
 thresholds = binarization_cfg.get('threshold', {})
-
+#%%
 regen=True
+save_path = root_path / 'results/PTD-TE'
+save_path.mkdir(parents=True, exist_ok=True)
 
-for yml_name, sfx, sfname in zip(yml_names, sfxs, save_folder_names):
-    
-    with open(yml_name, 'r') as yamlfile:
-        pm_causal_set = yaml.load(yamlfile, Loader=yaml.FullLoader)
-    for key in pm_causal_set.keys():
-        pm_causal_set[key]['path'] = root_path / pm_causal_set[key]['path']
+indices = np.load(root_path / 'benchmark' / 'N100' / 'subnet_indices.npy')
+# spk_noisy_fname = c4u.binarize(
+#     pm['path']/get_vfname(pm['spk_fname'], sfx=f'_noisy{i:d}'),
+#     N=int(pm['N']), threshold=th, T=pm['T'], verbose=True,
+#     ref=ref, force_regen=False, sfx=f'noisy{i:d}',
+#     preprocess_fn=lambda x: x+np.random.randn(*x.shape)*sigma,)
+#! Calculate PTD-TE
+#%%
+for key, val in pm_causal_set.items():
+    val = val.copy()
+    # vol_std = np.load(get_vfname(val['spk_fname']), mmap_mode='r')[:10000, 1:].std()
+    for i in range(indices.shape[0]):
+        noisy_vfname = get_vfname(val['spk_fname'], '_n3')
+        # for key, val in pm_causal_set.items():
+            # if key in recon_list and not regen:
+            #     print(f'{key} already exists')
+            #     continue
+        # sfx = ''
+        
+        #     val['spk_fname'], sfx=sfx, th=thresholds[key], ref=refs[key])
+        # create mask file 
+        mask_fname = val['path'] / f'mask_{i:d}.npy'
+        if not mask_fname.exists():
+            xx, yy = np.meshgrid(indices[i], indices[i], indexing='ij')
+            mask_buff = np.vstack([xx.flatten(), yy.flatten()])
+            np.save(mask_fname, mask_buff)
 
-    save_path = root_path / 'results' / sfname / 'PTD-TE'
-    save_path.mkdir(parents=True, exist_ok=True)
-
-    if (save_path / f'auc_list{sfx:s}.pkl').exists():
-        auc_list = pd.read_pickle(save_path / f'auc_list{sfx:s}.pkl').T.to_dict()
-    else:
-        auc_list = {}
-    if (save_path / f'recon_list{sfx:s}.pkl').exists():
-        with open(save_path / f'recon_list{sfx:s}.pkl', 'rb') as f:
-            recon_list = pkl.load(f)
-    else:
-        recon_list = {}
-    if (save_path / f'estimation_time{sfx:s}.pkl').exists():
-        estimation_time = pd.read_pickle(save_path / f'estimation_time{sfx:s}.pkl').T.to_dict()
-    else:
-        estimation_time = {}
-
-    #! Calculate PTD-TE
-    for key, val in pm_causal_set.items():
-        if key in recon_list and not regen:
-            print(f'{key} already exists')
-            continue
-        val = val.copy()
-        val['spk_fname'] = get_spk_fname(
-            val['spk_fname'], sfx=sfx, th=thresholds[key], ref=refs[key])
-        estimator = CausalityEstimator(**val, n_thread=10)
-        _, text = estimator._run_estimation(regen=True, verbose=False, return_log=True)
+        estimator = CausalityEstimator(**val, n_thread=10, mask_file=mask_fname)
+        _, text = estimator._run_estimation(regen=regen, verbose=False, return_log=True)
         # print(text.splitlines()[-1].split())
         wall_time = float(text.splitlines()[-1].split()[3])
         cpu_time = float(text.splitlines()[-1].split()[7])
@@ -113,17 +65,9 @@ for yml_name, sfx, sfname in zip(yml_names, sfxs, save_folder_names):
         recon_df = match_features(
             data, N=val['N'], conn_file=val['path']/val['conn_file'])
 
-        recon_list[key] = recon_df
-        # column (row) index representing pre_id (post_id)
-        auc ={'TE':roc_auc_score(recon_df['connection'], recon_df['TE'])}
-        auc_list[key] = auc
-        estimation_time[key] = {'wall':wall_time, 'cpu':cpu_time}
-        print(key, f"{wall_time:.2f}", auc)
+        recon_df.attrs['wall_time'] = wall_time
+        recon_df.attrs['cpu_time']  = cpu_time
+        print(recon_df.attrs)
+        recon_df.to_pickle(save_path / f'recon_df_noise_0_{key:s}_{i:d}.pkl')
     
-    auc_df = pd.DataFrame(auc_list).T
-    auc_df.to_pickle(save_path / f'auc_list{sfx:s}.pkl')
-    with open(save_path / f'recon_list{sfx:s}.pkl', 'wb') as f:
-        pkl.dump(recon_list, f)
-    time_df = pd.DataFrame(estimation_time).T
-    time_df.to_pickle(save_path / f'estimation_time{sfx:s}.pkl')
 # %%

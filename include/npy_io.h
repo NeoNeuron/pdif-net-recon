@@ -93,9 +93,8 @@ std::vector<T> load_npy(const std::string& filename, std::vector<size_t>& shape)
     return data;
 }
 
-// Function to load a .npy file
-template <typename T>
-std::ifstream load_npy_header(const std::string& filename, std::vector<size_t>& shape) {
+// Function to load the header of a .npy file
+inline std::ifstream load_npy_header(const std::string& filename, std::vector<size_t>& shape) {
     std::ifstream file(filename, std::ios::binary);
     if (!file.is_open()) {
         throw std::runtime_error("Failed to open file.");
@@ -158,6 +157,56 @@ std::ifstream load_npy_header(const std::string& filename, std::vector<size_t>& 
     // return the binary file handler
     return file;
 }
+
+
+// Function to extract dtype of a .npy file
+inline std::string check_npy_dtype(const std::string& filename) {
+    std::ifstream file(filename, std::ios::binary);
+    if (!file.is_open()) {
+        throw std::runtime_error("Failed to open file.");
+    }
+
+    // Read the magic string
+    char magic[6];
+    file.read(magic, 6);
+    if (std::strncmp(magic, "\x93NUMPY", 6) != 0) {
+        throw std::runtime_error("Not a valid .npy file.");
+    }
+
+    // Read the version number
+    uint8_t version[2];
+    file.read(reinterpret_cast<char*>(version), 2);
+
+    // Read the header length
+    uint16_t header_len_v1;
+    uint32_t header_len_v2;
+    size_t header_len;
+    if (version[0] == 1) {
+        file.read(reinterpret_cast<char*>(&header_len_v1), 2);
+        header_len = header_len_v1;
+    } else if (version[0] == 2 || version[0] == 3) {
+        file.read(reinterpret_cast<char*>(&header_len_v2), 4);
+        header_len = header_len_v2;
+    } else {
+        throw std::runtime_error("Unsupported .npy version.");
+    }
+
+    // Read the header
+    std::vector<char> header(header_len + 1);
+    file.read(header.data(), header_len);
+    header[header_len] = '\0';  // Null-terminate the header string
+
+    // Parse the header to extract shape and data type
+    std::string header_str(header.data());
+
+    // Extract the data type
+    std::string dtype_str = header_str.substr(header_str.find("'descr':") + 9);
+    dtype_str = dtype_str.substr(0, dtype_str.find(","));  // Extract content within the quotes
+    dtype_str.erase(std::remove(dtype_str.begin(), dtype_str.end(), '\''), dtype_str.end());
+
+    return dtype_str;
+}
+
 
 // Function to save data to a .npy file
 template <typename T>

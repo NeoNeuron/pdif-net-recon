@@ -10,38 +10,50 @@ from multiprocessing import Pool
 from causal4.io import chunked_npy_operation, chunked_voltage_operation
 from utils import run_simulation, get_vfname
 #%% [markdown]
-# # Part 1: 10-neuron network
-#%% load config files for data generation and causal inference
-with open('benchmark10.yml', 'r') as yamlfile:
-    pm_set = yaml.load(yamlfile, Loader=yaml.FullLoader)
-with open('benchmark10_causal.yml', 'r') as yamlfile:
-    pm_causal_set = yaml.load(yamlfile, Loader=yaml.FullLoader)
-
-for key in pm_set.keys():
-    pm_set[key]['record_path'] = root_path / pm_set[key]['record_path']
-    pm_causal_set[key]['path'] = root_path / pm_causal_set[key]['path']
-#%% generate time series for benchmarks
-pool = Pool(len(pm_set))
-results = [pool.apply_async(run_simulation, args=(val,)) for key, val in pm_set.items()]
-pool.close()
-pool.join()
-#%% [markdown]
-# # Part 2: 100-neuron network
+# # Part 1: 100-neuron network
 #%% load config files for data generation and causal inference
 with open('benchmark100.yml', 'r') as yamlfile:
     pm_set = yaml.load(yamlfile, Loader=yaml.FullLoader)
 with open('benchmark100_causal.yml', 'r') as yamlfile:
     pm_causal_set = yaml.load(yamlfile, Loader=yaml.FullLoader)
 
+selected_keys = [
+    'HHEE', 'HHEI', 'HHconEE', 'HHconEI',
+    'Lorenz', 'Logistic', 'Rcon', 'RNN'
+]
+pm_set = {key: pm_set[key] for key in selected_keys}
+pm_causal_set = {key: pm_causal_set[key] for key in selected_keys}
 for key in pm_set.keys():
     pm_set[key]['record_path'] = root_path / pm_set[key]['record_path']
     pm_causal_set[key]['path'] = root_path / pm_causal_set[key]['path']
+#%% generate time series for benchmarks
+pool = Pool(1)
+results = [pool.apply_async(run_simulation, args=(pm_set['HHEE'],))]
+pool.close()
+pool.join()
 #%% generate time series for benchmarks
 pool = Pool(len(pm_set))
 results = [pool.apply_async(run_simulation, args=(val,)) for key, val in pm_set.items()]
 pool.close()
 pool.join()
-
+#%%
+import sys
+sys.exit()
+#%%
+# select voltage time series from 10 neurons for state-space reconstruction methods
+for key in pm_causal_set.keys():
+    #%%
+    key = 'HHEE'
+    pm = pm_causal_set[key]
+    fname_old = (pm['path']/get_vfname(pm['spk_fname'])).with_suffix('.dat')
+    fname_new=fname_old.with_suffix('.npy')
+    # convert *.dat to *.npy
+    if not fname_new.exists():
+        chunked_voltage_operation(lambda x: x,
+            fname_old, fname_new, N=pm['N'], num_chunks=100)
+    # truncate the connectivity matrix 
+    # fname_old = fname_old.with_name(pm['conn_file'])
+    # fname_new = fname_new.with_name(pm['conn_file']).with_suffix('.npy')
 #%%
 # select voltage time series from 10 neurons for state-space reconstruction methods
 selected_ids = np.arange(45,55)
@@ -131,10 +143,9 @@ import seaborn as sns
 for key in pm_causal_set.keys():
     pm = pm_causal_set[key]
     print(key)
-    fname = get_vfname(pm['spk_fname'])
-    vol_clean = np.load(pm['path'] / fname, mmap_mode='r')
-    fname = get_vfname(pm['spk_fname'], sfx='_noisy1')
-    vol_noisy = np.load(pm['path'] / fname, mmap_mode='r')
+    fname = get_vol_fname(pm['spk_fname'], key)
+    vol_clean = np.load(pm['path'] / (fname + '.npy'), mmap_mode='r')
+    vol_noisy = np.load(pm['path'] / (fname + '_noisy.npy'), mmap_mode='r')
     dt = vol_clean[1,0] - vol_clean[0,0]
     print(dt)
     Tn = 80 if key.startswith('L') else 400
@@ -168,16 +179,8 @@ thresholds = [-50]*6 + [10, 10, 0.9, 0.02, 10]
 for (key, pm), ref, th in zip(pm_causal_set.items(), refs, thresholds):
     for i in range(1,5):
         spk_noisy_fname = c4u.binarize(
-            pm['path']/get_vfname(pm['spk_fname'], sfx=f'_noisy{i:d}'),
+            pm['path']/(get_vol_fname(pm['spk_fname'],key)+f'_noisy{i:d}.npy'),
             N=int(pm['N']), threshold=th, T=pm['T'], verbose=True,
             ref=ref, force_regen=False, sfx=f'noisy{i:d}')
         print(spk_noisy_fname.name)
-#%% generate subnetwork seed
-import numpy as np
-np.random.seed(42)
-n_trials = 10
-indices = np.zeros((n_trials, 10), dtype=int)
-for i in range(n_trials):
-    indices[i] = np.sort(np.random.choice(100, 10, replace=False))
-np.save(root_path / 'benchmark' / 'N100' / 'subnet_indices.npy', indices)
-print(indices)
+#%%
