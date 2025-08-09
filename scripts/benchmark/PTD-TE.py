@@ -6,10 +6,11 @@ from causal4.Causality import CausalityEstimator
 from causal4.utils import match_features
 import yaml
 from utils import get_vfname, get_spk_fname
+import multiprocessing
+num_cpus = multiprocessing.cpu_count()
 #%%
 
-yml_name = 'benchmark_causal.yml'
-with open(yml_name, 'r') as yamlfile:
+with open(Path(__file__).resolve().parent / 'benchmark_causal.yml', 'r') as yamlfile:
     pm_causal_set = yaml.load(yamlfile, Loader=yaml.FullLoader)
 for key in pm_causal_set.keys():
     pm_causal_set[key]['path'] = root_path / pm_causal_set[key]['path']
@@ -52,7 +53,8 @@ for key, val in pm_causal_set.items():
             mask_buff = np.vstack([xx.flatten(), yy.flatten()])
             np.save(mask_fname, mask_buff)
 
-        estimator = CausalityEstimator(**val, n_thread=10, mask_file=mask_fname)
+        n_thread = min(int(indices.shape[1]*(indices.shape[1]-1)), num_cpus)
+        estimator = CausalityEstimator(**val, n_thread=n_thread, mask_file=mask_fname)
         _, text = estimator._run_estimation(regen=regen, verbose=False, return_log=True)
         # print(text.splitlines()[-1].split())
         wall_time = float(text.splitlines()[-1].split()[3])

@@ -7,8 +7,7 @@ import smite
 import yaml
 from utils import get_vfname
 
-yml_name = 'benchmark_causal.yml'
-with open(yml_name, 'r') as yamlfile:
+with open(Path(__file__).resolve().parent / 'benchmark_causal.yml', 'r') as yamlfile:
     pm_causal_set = yaml.load(yamlfile, Loader=yaml.FullLoader)
 for key in pm_causal_set.keys():
     pm_causal_set[key]['path'] = root_path / pm_causal_set[key]['path']

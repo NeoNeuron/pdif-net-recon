@@ -8,7 +8,7 @@ import yaml
 from utils import get_spk_fname
 from glmcc.Est_Data import Est_Data
 
-with open('benchmark_causal.yml', 'r') as yamlfile:
+with open(Path(__file__).resolve().parent / 'benchmark_causal.yml', 'r') as yamlfile:
     pm_causal_set = yaml.load(yamlfile, Loader=yaml.FullLoader)
 for key in pm_causal_set.keys():
     pm_causal_set[key]['path'] = root_path / pm_causal_set[key]['path']
@@ -38,10 +38,6 @@ dt = binarization_cfg.get('dt',{})
 
 regen=True
 # for yml_name, sfx, sfname in zip(yml_names, sfxs, save_folder_names):
-with open('benchmark_causal.yml', 'r') as yamlfile:
-    pm_causal_set = yaml.load(yamlfile, Loader=yaml.FullLoader)
-for key in pm_causal_set.keys():
-    pm_causal_set[key]['path'] = root_path / pm_causal_set[key]['path']
 
 save_path = root_path / 'results' / 'GLMCC'
 save_path.mkdir(parents=True, exist_ok=True)

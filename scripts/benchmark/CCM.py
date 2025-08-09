@@ -44,7 +44,7 @@ def run_CCM(ccm_type:str, data:np.ndarray, tau:int):
     return cmat, method.cpu_time, method.wall_time
 
 
-with open('benchmark_causal.yml', 'r') as yamlfile:
+with open(Path(__file__).resolve().parent / 'benchmark_causal.yml', 'r') as yamlfile:
     pm_causal_set = yaml.load(yamlfile, Loader=yaml.FullLoader)
 for key in pm_causal_set.keys():
     pm_causal_set[key]['path'] = root_path / pm_causal_set[key]['path']
