@@ -26,7 +26,7 @@ def run_CCM(ccm_type:str, data:np.ndarray, tau:int):
             n_T=30,
             rho_tol=0.025,
             exp_fit=True,
-            truncate_tol=1e-1
+            truncate_tol=1e-2
         )
         cmat = method.network_inference(data)
     elif ccm_type == 'SCCM':
