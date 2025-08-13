@@ -75,40 +75,62 @@ tau_dict = {
     'RNN':      2,
 }
 
-ccm_types = ['CCM', 'FDCCM', 'SCCM']
 
-for key, val in pm_causal_set.items():
+def core_function(key, val, shuffle_id, ccm_type, noise_level=None):
 
     L = L_dict[key]  # 读取的样本量
     tau = tau_dict[key]
 
     conn_fname = val['path'] / val['conn_file']
     conn = np.load(conn_fname)
-    for i in range(indices.shape[0]):
-        data = np.load(val['path'] / get_vfname(val['spk_fname']), mmap_mode='r')[:L, 1+indices[i]]
 
-        for ccm_type_ in ccm_types:
-            save_path = root_path / 'results' / ccm_type_
-            save_path.mkdir(parents=True, exist_ok=True)
+    data = np.load(val['path'] / get_vfname(val['spk_fname']), mmap_mode='r')[:L, 1+indices[shuffle_id]]
+    if noise_level is None:
+        preprocessing = lambda x: x
+    else:
+        sigma = data[:10000].flatten().std()*noise_level
+        preprocessing = lambda x: x+np.random.randn(*x.shape)*sigma
 
-            cmat, cpu_time, wall_time = run_CCM(ccm_type_, data, tau)
+    save_path = root_path / 'results' / ccm_type
+    save_path.mkdir(parents=True, exist_ok=True)
 
-            xx, yy = np.meshgrid(indices[i], indices[i], indexing='ij')
-            recon_df = pd.DataFrame({
-                'pre_id': xx.flatten(),
-                'post_id': yy.flatten(),
-                'ccm': cmat.flatten(),
-                'log-ccm': np.log10(cmat.flatten()),
-                'connection': conn[xx.flatten(), yy.flatten()]})
+    data = preprocessing(data)
+    cmat, cpu_time, wall_time = run_CCM(ccm_type, data, tau)
 
-            recon_df.replace([np.inf, -np.inf], np.nan, inplace=True)
-            recon_df.dropna(inplace=True)
+    xx, yy = np.meshgrid(indices[shuffle_id], indices[shuffle_id], indexing='ij')
+    recon_df = pd.DataFrame({
+        'pre_id': xx.flatten(),
+        'post_id': yy.flatten(),
+        'ccm': cmat.flatten(),
+        'log-ccm': np.log10(cmat.flatten()),
+        'connection': conn[xx.flatten(), yy.flatten()]})
 
-            recon_df.attrs['wall_time'] = wall_time
-            recon_df.attrs['cpu_time']  = cpu_time
-            recon_df.to_pickle(save_path / f'recon_df_noise_0_{key:s}_{i:d}.pkl')
+    recon_df.replace([np.inf, -np.inf], np.nan, inplace=True)
+    recon_df.dropna(inplace=True)
 
+    recon_df.attrs['wall_time'] = wall_time
+    recon_df.attrs['cpu_time']  = cpu_time
+    if noise_level is None:
+        recon_df.to_pickle(save_path / f'recon_df_noise_0_{key:s}_{shuffle_id:d}.pkl')
+    else:
+        recon_df.to_pickle(save_path / f'recon_df_noise_{noise_level:.1f}_{key:s}_{shuffle_id:d}.pkl')
 
+# %%
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument('--ccm', type=str, choices=['CCM', 'FDCCM', 'SCCM'], default='CCM')
+parser.add_argument('--key', type=str)
+parser.add_argument('--idx', type=int, default=0)
+parser.add_argument('--noise_level', type=float, default=None)
+args = parser.parse_args()
 
+core_function(args.key, pm_causal_set[args.key], args.idx, args.ccm, args.noise_level)
+#%%
 
+# ccm_types = ['CCM', 'FDCCM', 'SCCM']
 
+# for noise_level in [0.1, 0.2, 0.3, 0.4]:
+#     for key, val in pm_causal_set.items():
+#         for shuffle_id in range(indices.shape[0]):
+#             for ccm_type in ccm_types:
+#                 core_function(key, val, shuffle_id, ccm_type, noise_level)

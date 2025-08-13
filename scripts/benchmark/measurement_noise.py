@@ -57,7 +57,8 @@ for axi, (key, val) in zip(ax.flatten(), pm_causal_set.items()):
 plt.tight_layout()
 plt.savefig('measurement_noise_std02.pdf', bbox_inches='tight')
 # %%
-from joblib import Parallel, delayed
+from multiprocessing import Pool
+import gc
 from causal4.utils import binarize
 with open(root_path / 'scripts/benchmark' / 'binarization.yaml', 'r') as binarization_file:
     binarization_cfg = yaml.load(binarization_file, Loader=yaml.FullLoader)
@@ -68,17 +69,17 @@ dt= binarization_cfg.get('dt', 0.01)
 def binarize_with_noise(key, val, noise_intensity):
     tmp = np.load(val['path'] / get_vfname(val['spk_fname']), mmap_mode='r')[:10000, :11]
     sigma = tmp[:,1:].flatten().std()*noise_intensity
-    spk_noisy_fname = binarize(
-        val['path']/get_vfname(val['spk_fname']),
+    binarize(val['path']/get_vfname(val['spk_fname']),
         N=int(val['N']), threshold=thresholds[key], T=val['T'],
-        verbose=False, ref=refs[key], force_regen=False, sfx=f'noisy{noise_intensity:.1f}',
+        verbose=False, ref=refs[key], force_regen=True, sfx=f'noisy{noise_intensity:.1f}',
         preprocess_fn=lambda x: x+np.random.randn(*x.shape)*sigma,)
+    gc.collect()
 
 noise_intensities = [0.1, 0.2, 0.3, 0.4]
-job = Parallel(n_jobs=len(pm_causal_set))(
-    delayed(binarize_with_noise)(key, val, noise_intensity)
-    for key, val in pm_causal_set.items()
-    for noise_intensity in noise_intensities
-)
-# for key, val in pm_causal_set.items()
+pool = Pool(processes=len(pm_causal_set), maxtasksperchild=1)
+results = [pool.apply_async(binarize_with_noise, args=(key, val, noise_intensity))
+           for key, val in pm_causal_set.items()
+           for noise_intensity in noise_intensities]
+pool.close()
+pool.join()
 # %%
