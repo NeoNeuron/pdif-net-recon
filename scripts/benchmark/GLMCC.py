@@ -38,14 +38,15 @@ def core_function(key, val, shuffle_id, noise_level=None):
         # val['spk_fname'], sfx=sfx, th=thresholds[key], ref=refs[key])
     conn_fname = val['path'] / val['conn_file']
     conn = np.load(conn_fname)
-    if key in ['HHEE', 'HHEI', 'HHconEE', 'HHconEI']:
+    if key in ['HHEE', 'HHEI', 'HHconEE', 'HHconEI', 'Lorenz']:
         T = val['T'] / 1e4
-    elif key in ['Gaussian', 'Rcon', 'Logistic', 'RNN', 'Lorenz']:
+    elif key in ['Gaussian', 'Rcon', 'Logistic', 'RNN']:
         T = val['T'] / 1e6
+    print(f"[INFO]: Estimating GLMCC for {key} with T={T:.0f} ms, noise_level={noise_level}, shuffle_id={shuffle_id}...")
     W, cpu_time, wall_time = Est_Data(
         val['path'], spk_fname, N=N, T=T, indices=indices[shuffle_id],
         outfile_sfx=f'{shuffle_id:d}', DELTA=dt[key], WIN=dt[key]*50,
-        n_jobs=shuffle_id.shape[1])
+        n_jobs=indices.shape[1])
     try:
         GLMCC = np.load(val['path'] / f"W_GLM_{T:.0f}-{spk_fname:s}_{shuffle_id:d}.npy")
         xx, yy = np.meshgrid(indices[shuffle_id], indices[shuffle_id], indexing='ij')
