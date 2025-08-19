@@ -11,6 +11,7 @@ import networkx as nx
 from causal4.Causality import CausalityEstimator
 from causal4.utils import match_features
 from figrc import *
+from matplotlib.ticker import ScalarFormatter
 
 fig, ax = plt.subplots(
     2,4,figsize=(14,7),)# gridspec_kw=dict(wspace=0.3, hspace=0.5, width_ratios=(0.8,1,1,1))
@@ -64,15 +65,30 @@ ratio = np.array(ratio).reshape(ff.shape)
 #%
 Z=np.log10(ratio)
 print(f">> Min(ratio) = {ratio.min():.2f}")
-pax = ax[0,3].pcolormesh(ff*100, fufu*100, Z, vmin=2, vmax=4, edgecolor='w', lw=0.002)
+pax = ax[0,3].pcolormesh(ff, fufu, Z, vmin=2, vmax=4, edgecolor='w', lw=0.002)
 cb = fig.colorbar(pax, ax=ax[0,3], ticks=[2,3,4], orientation='vertical')
 cb.ax.set_yticklabels([r'$10^{2}$',r'$10^{3}$',r'$10^{4}$'])
-ax[0,3].set_ylabel(r'$\nu f$ $(\times 10^{-2})$')
-ax[0,3].set_xlabel(r'$f$ $(\times 10^{-2})$')
-ax[0,3].set_yticks([1,3,5], ['1', '3', '5'], fontsize=16)
-ax[0,3].set_xticks([5,10,15,20], ['5', '10', '15', '20'], fontsize=16)
+ax[0,3].set_ylabel(r'$\nu f\,\,(\mathrm{mS}\cdot\mathrm{cm}^{-2}\cdot\mathrm{ms}^{-1})$', fontsize=14)
+ax[0,3].set_xlabel(r'$f\,\,(\mathrm{mS}\cdot\mathrm{cm}^{-2})$', fontsize=14)
+ax[0,3].set_yticks([0.01,0.03,0.05], ['1', '3', '5'], fontsize=16)
+ax[0,3].set_xticks([0.05,0.1,0.15,0.2], ['5', '10', '15', '20'], fontsize=16)
 
-ax[0,3].set_title(r'$T^\mathrm{PTD}_{X\to Y} / T^\mathrm{PTD}_{X\to Z}$', fontsize=25, pad=16)
+# Customize/force offset text and give it new content
+formatter = ScalarFormatter(useMathText=True)
+formatter.set_powerlimits((0, 0))  # always use scientific notation
+
+for axis, pos in zip([ax[0,3].xaxis, ax[0,3].yaxis], [(0.9,0), (0,0)]):
+    axis.set_major_formatter(formatter)
+    # Need a draw so formatter computes the order of magnitude
+    fig.canvas.draw_idle()
+    off = axis.get_offset_text()
+    custom_exponent = -2  # change as needed
+    off.set_text(fr'$\times 10^{{{custom_exponent}}}$')
+    off.set_horizontalalignment('left')
+    off.set_position(pos)
+    off.set_visible(True)
+
+ax[0,3].set_title(r'$T^\mathrm{PTD}_{X\to Y} / T^\mathrm{PTD}_{X\to Z}$', fontsize=22, pad=0)
 
 #%
 G = nx.DiGraph()
@@ -124,14 +140,30 @@ ratio = np.array(ratio).reshape(ff.shape)
 #%
 Z=np.log10(ratio)
 print(f">> Min(ratio) = {ratio.min():.2f}")
-pax = ax[1,3].pcolormesh(ff*100, fufu*100, Z, vmin=1, vmax=4, edgecolor='w', lw=0.002)
+pax = ax[1,3].pcolormesh(ff, fufu, Z, vmin=1, vmax=4, edgecolor='w', lw=0.002)
 cb = fig.colorbar(pax, ax=ax[1,3], ticks=[1,2,3,4], orientation='vertical')
 cb.ax.set_yticklabels([r'$10^{1}$', r'$10^{2}$',r'$10^{3}$',r'$10^{4}$'])
-ax[1,3].set_ylabel(r'$\nu f$ $(\times 10^{-2})$')
-ax[1,3].set_xlabel(r'$f$ $(\times 10^{-2})$')
-ax[1,3].set_yticks([1,3,5], ['1', '3', '5'], fontsize=16)
-ax[1,3].set_xticks([5,10,15,20], ['5', '10', '15', '20'], fontsize=16)
-ax[1,3].set_title(r'$T^\mathrm{PTD}_{X\to Y} / T^\mathrm{PTD}_{Y\to Z}$', fontsize=25, pad=16)
+ax[1,3].set_ylabel(r'$\nu f\,\,(\mathrm{mS}\cdot\mathrm{cm}^{-2}\cdot\mathrm{ms}^{-1})$', fontsize=14)
+ax[1,3].set_xlabel(r'$f\,\,(\mathrm{mS}\cdot\mathrm{cm}^{-2})$', fontsize=14)
+ax[1,3].set_yticks([0.01,0.03,0.05],['1', '3', '5'], fontsize=16)
+ax[1,3].set_xticks([0.05,0.1,0.15,0.20],['5', '10', '15', '20'], fontsize=16)
+
+# Customize/force offset text and give it new content
+formatter = ScalarFormatter(useMathText=True)
+formatter.set_powerlimits((0, 0))  # always use scientific notation
+
+for axis, pos in zip([ax[1,3].xaxis, ax[1,3].yaxis], [(0.9,0), (0,0)]):
+    axis.set_major_formatter(formatter)
+    # Need a draw so formatter computes the order of magnitude
+    fig.canvas.draw_idle()
+    off = axis.get_offset_text()
+    custom_exponent = -2  # change as needed
+    off.set_text(fr'$\times 10^{{{custom_exponent}}}$')
+    off.set_horizontalalignment('left')
+    off.set_position(pos)
+    off.set_visible(True)
+
+ax[1,3].set_title(r'$T^\mathrm{PTD}_{X\to Y} / T^\mathrm{PTD}_{Y\to Z}$', fontsize=22, pad=0)
 plt.tight_layout()
 
 for tag, axi in zip('abcdefgh', ax.flatten()):

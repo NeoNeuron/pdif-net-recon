@@ -61,7 +61,7 @@ def plot_s_vs_ptdte(data_path, ax, spk_fname, ss, dt, order, delay):
     # ax.legend([r'$T^\mathrm{PTD}_{X\to Y}$',
     #                   r'$T^\mathrm{PTD}_{Y\to X}$',
     #                   r'$T^\mathrm{PTD}_{X\to Z}$'], fontsize=14, loc='lower right')
-    ax.set_xlabel(r'S', fontsize=26)
+    ax.set_xlabel(r'$S$ $(\mathrm{mS}\cdot\mathrm{cm}^{-2})$', fontsize=26, usetex=False)
     ax.set_ylabel('PTD-TE value', fontsize=26)
     ax.set_xlim(0, ss[-1])
     ax.set_ylim(0, ffit(ss[-1])*1.3)
@@ -226,10 +226,10 @@ for axi, key in zip(ax.T, keys):
     ax_TE.plot(direct, np.polyval(pval, direct), color='#F26A9D', lw=2, zorder=-1)
     label_fs = 17
     if key == 'confounder':
-        ax_TE.set_xlabel(r'$T_{Y\to X}^\mathrm{PTD}\cdot T_{Y\to Z}^\mathrm{PTD}$', fontsize=label_fs, usetex=False)
+        ax_TE.set_xlabel(r'$T_{X\to Y}^\mathrm{PTD}\cdot T_{X\to Z}^\mathrm{PTD}$', fontsize=label_fs, usetex=False)
     elif key == 'chain':
         ax_TE.set_xlabel(r'$T_{X\to Y}^\mathrm{PTD}\cdot T_{Y\to Z}^\mathrm{PTD}$', fontsize=label_fs, usetex=False)
-    ax_TE.set_ylabel(r'$T_{X\to Z}^\mathrm{PTD}$', fontsize=label_fs, usetex=False)
+    ax_TE.set_ylabel(r'$T_{Y\to Z}^\mathrm{PTD}$', fontsize=label_fs, usetex=False)
     # ax_dp.set_title(r'$R^2=%.3f$'%(Linear_R2(direct, indirect, pval)), fontsize=14)
     ax_TE.set_xlim(-2e-12,3.5e-11)
     ax_TE.xaxis.get_offset_text().set_x(1.3)
@@ -247,7 +247,7 @@ for axi, key in zip(ax.T, keys):
         axcb.xaxis.set_ticks_position('top')
         axcb.set_xticklabels(['$0.01$', '$0.02$', '$0.03$'], fontsize=14)
         axcb.xaxis.set_label_position('top')
-        axcb.set_xlabel(r'$S$ $(\mathrm{mS}\,\mathrm{cm}^{-2})$', fontsize=16, usetex=False)
+        axcb.set_xlabel(r'$S$ $(\mathrm{mS}\cdot\mathrm{cm}^{-2})$', fontsize=16, usetex=False)
 
     # ax[2].set_title(r'$R^2=%.3f$'%(Linear_R2(S[::2], dp[::2], [pval[0], 0])), fontsize=14)
 
@@ -264,10 +264,10 @@ for axi, key in zip(ax.T, keys):
     axi[1].plot(direct, np.polyval(pval, direct), color='#F26A9D', lw=3, zorder=-1)
     label_fs = 25
     if key == 'confounder':
-        axi[1].set_xlabel(r'$\Delta p^{Y\to X}_{0,1}\cdot \Delta p^{Y\to Z}_{0,1}$', fontsize=label_fs, usetex=False)
+        axi[1].set_xlabel(r'$\Delta p^{X\to Y}_{0,1}\cdot \Delta p^{X\to Z}_{0,1}$', fontsize=label_fs, usetex=False)
     elif key == 'chain':
         axi[1].set_xlabel(r'$\Delta p^{X\to Y}_{0,1}\cdot \Delta p^{Y\to Z}_{0,1}$', fontsize=label_fs, usetex=False)
-    axi[1].set_ylabel(r'$\Delta p^{X\to Z}_{0,1}$', fontsize=label_fs, usetex=False)
+    axi[1].set_ylabel(r'$\Delta p^{Y\to Z}_{0,1}$', fontsize=label_fs, usetex=False)
     # axi.set_title(r'$R^2=%.3f$'%(Linear_R2(direct, indirect, pval)), fontsize=14)
     axi[1].set_xlim(0.6e-6,2.0e-5)
     axi[1].xaxis.get_offset_text().set_x(1.05)
