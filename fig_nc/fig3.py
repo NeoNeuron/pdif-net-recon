@@ -227,9 +227,10 @@ for axi, key in zip(ax.T, keys):
     label_fs = 17
     if key == 'confounder':
         ax_TE.set_xlabel(r'$T_{X\to Y}^\mathrm{PTD}\cdot T_{X\to Z}^\mathrm{PTD}$', fontsize=label_fs, usetex=False)
+        ax_TE.set_ylabel(r'$T_{Y\to Z}^\mathrm{PTD}$', fontsize=label_fs, usetex=False)
     elif key == 'chain':
         ax_TE.set_xlabel(r'$T_{X\to Y}^\mathrm{PTD}\cdot T_{Y\to Z}^\mathrm{PTD}$', fontsize=label_fs, usetex=False)
-    ax_TE.set_ylabel(r'$T_{Y\to Z}^\mathrm{PTD}$', fontsize=label_fs, usetex=False)
+        ax_TE.set_ylabel(r'$T_{X\to Z}^\mathrm{PTD}$', fontsize=label_fs, usetex=False)
     # ax_dp.set_title(r'$R^2=%.3f$'%(Linear_R2(direct, indirect, pval)), fontsize=14)
     ax_TE.set_xlim(-2e-12,3.5e-11)
     ax_TE.xaxis.get_offset_text().set_x(1.3)
@@ -265,9 +266,10 @@ for axi, key in zip(ax.T, keys):
     label_fs = 25
     if key == 'confounder':
         axi[1].set_xlabel(r'$\Delta p^{X\to Y}_{0,1}\cdot \Delta p^{X\to Z}_{0,1}$', fontsize=label_fs, usetex=False)
+        axi[1].set_ylabel(r'$\Delta p^{Y\to Z}_{0,1}$', fontsize=label_fs, usetex=False)
     elif key == 'chain':
         axi[1].set_xlabel(r'$\Delta p^{X\to Y}_{0,1}\cdot \Delta p^{Y\to Z}_{0,1}$', fontsize=label_fs, usetex=False)
-    axi[1].set_ylabel(r'$\Delta p^{Y\to Z}_{0,1}$', fontsize=label_fs, usetex=False)
+        axi[1].set_ylabel(r'$\Delta p^{X\to Z}_{0,1}$', fontsize=label_fs, usetex=False)
     # axi.set_title(r'$R^2=%.3f$'%(Linear_R2(direct, indirect, pval)), fontsize=14)
     axi[1].set_xlim(0.6e-6,2.0e-5)
     axi[1].xaxis.get_offset_text().set_x(1.05)
