@@ -22,12 +22,14 @@ for axi, (key, val) in zip(ax.flatten(), pm_causal_set.items()):
     tmp = tmp[:100000, 1:11].flatten()
     counts, bins = np.histogram(tmp, bins=100, density=True)
     axi.plot(bins[1:], counts)
+    axi.fill_between(bins[1:], counts, alpha=0.3)
     axi.set_title(key, fontweight='bold')
     th = bins[np.nonzero(np.cumsum(counts)*(bins[1]-bins[0]) > 0.9)[0][0]]
     axi.axvline(th, color='r', linestyle='--', label='90% line')
     axi.axvline(tmp.mean(), color='g', linestyle='--', label='mean')
     axi.axvline(tmp.mean()+tmp.std(), color='b', linestyle='--', label='std')
     axi.axvline(tmp.mean()-tmp.std(), color='b', linestyle='--')
+    axi.set_ylim(0)
     print(key, ':', tmp.std())
 ax[0,0].legend()
 plt.tight_layout()
@@ -46,7 +48,7 @@ n_subfigures = len(pm_causal_set)
 fig, ax = plt.subplots(n_subfigures//2, 2, figsize=(8, 16), gridspec_kw={'hspace': 0.4, 'wspace': 0.3})
 for axi, (key, val) in zip(ax.flatten(), pm_causal_set.items()):
     tmp = np.load(val['path'] / get_vfname(val['spk_fname']), mmap_mode='r')[:10000, :11]
-    tmp_std = tmp[:,1:].flatten().std()*.2
+    tmp_std = tmp[:,1:].flatten().std()*0.4
     counts, bins = np.histogram(tmp, bins=100, density=True)
     axi.plot(tmp[:,0], tmp[:,1], label='data')
     axi.plot(tmp[:,0], tmp[:,1]+np.random.randn(tmp.shape[0])*tmp_std, alpha=0.7, label='noise')
@@ -55,7 +57,7 @@ for axi, (key, val) in zip(ax.flatten(), pm_causal_set.items()):
     print(key, ':', tmp_std)
 # ax[0,0].legend()
 plt.tight_layout()
-plt.savefig('measurement_noise_std02.pdf', bbox_inches='tight')
+plt.savefig('measurement_noise_std=0.4.pdf', bbox_inches='tight')
 # %%
 from multiprocessing import Pool
 import gc
