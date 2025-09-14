@@ -33,7 +33,7 @@ def run_simulation(pm_simulation:dict):
     else:
         call([simulator] + arg_wrapper(_pm))
     # dump yaml config to pm_simulation['record_path']
-    with open(_pm['record_path'] + 'config.yml', 'w') as yamlfile:
+    with open(Path(_pm['record_path']) / 'config.yml', 'w') as yamlfile:
         yaml.dump(pm_simulation, yamlfile)
 
 def get_vfname(fname: str, sfx:str=''):

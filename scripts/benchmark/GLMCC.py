@@ -39,9 +39,9 @@ def core_function(key, val, shuffle_id, noise_level=None):
     conn_fname = val['path'] / val['conn_file']
     conn = np.load(conn_fname)
     if key in ['HHEE', 'HHEI', 'HHconEE', 'HHconEI', 'Lorenz']:
-        T = val['T'] / 1e4
+        T = val['T'] / 1e3
     elif key in ['Gaussian', 'Rcon', 'Logistic', 'RNN']:
-        T = val['T'] / 1e6
+        T = val['T'] / 1e4
     print(f"[INFO]: Estimating GLMCC for {key} with T={T:.0f} ms, noise_level={noise_level}, shuffle_id={shuffle_id}...")
     W, cpu_time, wall_time = Est_Data(
         val['path'], spk_fname, N=N, T=T, indices=indices[shuffle_id],

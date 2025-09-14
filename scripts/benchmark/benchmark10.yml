@@ -3,8 +3,8 @@ HHEE:
     NE: 10
     NI: 0
     seed: !!python/tuple
-        - 0
-        - 0
+        - 42
+        - 42
     T_Max: 1.0e+7
     T_step: 0.2
     S: !!python/tuple
@@ -19,7 +19,9 @@ HHEE:
     P_c: 0.25
     record_path: benchmark/N10/HHEE/
     record_v: 1
-    record_v: 1
+    record_vlim: !!python/tuple
+        - 0
+        - 1.0e+7
 
 HHII:
     simulator: bin/simHH
@@ -42,6 +44,9 @@ HHII:
     P_c: 0.25
     record_path: benchmark/N10/HHII/
     record_v: 1
+    record_vlim: !!python/tuple
+        - 0
+        - 1.0e+7
 
 HHEI:
     simulator: bin/simHH
@@ -64,6 +69,9 @@ HHEI:
     P_c: 0.25
     record_path: benchmark/N10/HHEI/
     record_v: 1
+    record_vlim: !!python/tuple
+        - 0
+        - 1.0e+7
 
 HHconEE:
     simulator: bin/simHHcon
@@ -86,6 +94,9 @@ HHconEE:
     P_c: 0.25
     record_path: benchmark/N10/HHconEE/
     record_v: 1
+    record_vlim: !!python/tuple
+        - 0
+        - 1.0e+7
 
 HHconII:
     simulator: bin/simHHcon
@@ -108,6 +119,9 @@ HHconII:
     P_c: 0.25
     record_path: benchmark/N10/HHconII/
     record_v: 1
+    record_vlim: !!python/tuple
+        - 0
+        - 1.0e+7
 
 HHconEI:
     simulator: bin/simHHcon
@@ -130,6 +144,9 @@ HHconEI:
     P_c: 0.25
     record_path: benchmark/N10/HHconEI/
     record_v: 1
+    record_vlim: !!python/tuple
+        - 0
+        - 1.0e+7
 
 Lorenz:
     simulator: bin/simLorenz
@@ -149,6 +166,9 @@ Lorenz:
     P_c: 0.25
     record_path: benchmark/N10/Lorenz/
     record_x: 1
+    record_vlim: !!python/tuple
+        - 0
+        - 1.0e+6
 
 Lcon:
     simulator: bin/simLcon
@@ -168,6 +188,9 @@ Lcon:
     P_c: 0.25
     record_path: benchmark/N10/Lcon/
     record_x: 1
+    record_vlim: !!python/tuple
+        - 0
+        - 1.0e+6
 
 Logistic:
     simulator: bin/simLogistic
@@ -187,6 +210,9 @@ Logistic:
     P_c: 0.25
     record_path: benchmark/N10/Logistic/
     record_v: 1
+    record_vlim: !!python/tuple
+        - 0
+        - 1.0e+8
 
 Gaussian:
     simulator: simulate_gaussian.py
@@ -201,6 +227,9 @@ Gaussian:
     threshold: 0.020
     record_path: benchmark/N10/Gaussian/
     record_v: 1
+    record_vlim: !!python/tuple
+        - 0
+        - 1.0e+8
 
 Rcon:
     simulator: bin/simRcon
@@ -220,3 +249,20 @@ Rcon:
     P_c: 0.25
     record_path: benchmark/N10/Rcon/
     record_x: 1
+
+RNN:
+    simulator: simulate_RNN.py
+    N: 10
+    seed: 11
+    T_Max: 1.0e+8
+    T_step: 1
+    S: 0.030
+    P_c: 0.25
+    tau: 20
+    ref: 10
+    threshold: 0.200
+    record_path: benchmark/N10/RNN/
+    record_v: 1
+    record_vlim: !!python/tuple
+        - 0
+        - 1.0e+8
