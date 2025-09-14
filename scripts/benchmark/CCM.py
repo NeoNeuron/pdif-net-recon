@@ -1,6 +1,4 @@
 #%%
-from pathlib import Path
-root_path = Path(__file__).resolve().parents[2]
 import numpy as np
 import crossmap_indices as cm
 import yaml
@@ -44,13 +42,6 @@ def run_CCM(ccm_type:str, data:np.ndarray, tau:int):
     return cmat, method.cpu_time, method.wall_time
 
 
-with open(Path(__file__).resolve().parent / 'benchmark_causal.yml', 'r') as yamlfile:
-    pm_causal_set = yaml.load(yamlfile, Loader=yaml.FullLoader)
-for key in pm_causal_set.keys():
-    pm_causal_set[key]['path'] = root_path / pm_causal_set[key]['path']
-
-indices = np.load(root_path / 'benchmark' / 'N100' / 'subnet_indices.npy')
-
 L_dict = {
     'HHconEE': int(2e6),  # total 2e8
     'HHconEI': int(2e6),  # total 2e8
@@ -76,7 +67,7 @@ tau_dict = {
 }
 
 
-def core_function(key, val, shuffle_id, ccm_type, noise_level=None):
+def core_function(key, val, shuffle_id:int=None, ccm_type:int='CCM', noise_level=None):
 
     L = L_dict[key]  # 读取的样本量
     tau = tau_dict[key]
@@ -84,20 +75,25 @@ def core_function(key, val, shuffle_id, ccm_type, noise_level=None):
     conn_fname = val['path'] / val['conn_file']
     conn = np.load(conn_fname)
 
-    data = np.load(val['path'] / get_vfname(val['spk_fname']), mmap_mode='r')[:L, 1+indices[shuffle_id]]
+    if shuffle_id is None:
+        indices = np.arange(conn.shape[0], dtype=int)
+    else:
+        indices = np.load(val['path'].parent / 'subnet_indices.npy')[shuffle_id]
+
+    data = np.load(val['path'] / get_vfname(val['spk_fname']), mmap_mode='r')[:L, 1+indices]
     if noise_level is None:
         preprocessing = lambda x: x
     else:
         sigma = data[:10000].flatten().std()*noise_level
         preprocessing = lambda x: x+np.random.randn(*x.shape)*sigma
 
-    save_path = root_path / 'results' / ccm_type
+    save_path = val['path'].parents[2] / 'results' / ccm_type
     save_path.mkdir(parents=True, exist_ok=True)
 
     data = preprocessing(data)
     cmat, cpu_time, wall_time = run_CCM(ccm_type, data, tau)
 
-    xx, yy = np.meshgrid(indices[shuffle_id], indices[shuffle_id], indexing='ij')
+    xx, yy = np.meshgrid(indices, indices, indexing='ij')
     recon_df = pd.DataFrame({
         'pre_id': xx.flatten(),
         'post_id': yy.flatten(),
@@ -110,21 +106,34 @@ def core_function(key, val, shuffle_id, ccm_type, noise_level=None):
 
     recon_df.attrs['wall_time'] = wall_time
     recon_df.attrs['cpu_time']  = cpu_time
-    if noise_level is None:
-        recon_df.to_pickle(save_path / f'recon_df_noise_0_{key:s}_{shuffle_id:d}.pkl')
+    if shuffle_id is None:
+        recon_df.to_pickle(save_path / f'recon_df_noise_0_{key:s}_fullnet.pkl')
     else:
-        recon_df.to_pickle(save_path / f'recon_df_noise_{noise_level:.1f}_{key:s}_{shuffle_id:d}.pkl')
+        if noise_level is None:
+            recon_df.to_pickle(save_path / f'recon_df_noise_0_{key:s}_{shuffle_id:d}.pkl')
+        else:
+            recon_df.to_pickle(save_path / f'recon_df_noise_{noise_level:.1f}_{key:s}_{shuffle_id:d}.pkl')
 
 # %%
-import argparse
-parser = argparse.ArgumentParser()
-parser.add_argument('--ccm', type=str, choices=['CCM', 'FDCCM', 'SCCM'], default='CCM')
-parser.add_argument('--key', type=str)
-parser.add_argument('--idx', type=int, default=0)
-parser.add_argument('--noise_level', type=float, default=None)
-args = parser.parse_args()
+if __name__ == '__main__':
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--ccm', type=str, choices=['CCM', 'FDCCM', 'SCCM'], default='CCM')
+    parser.add_argument('--key', type=str)
+    parser.add_argument('--idx', type=int, default=None)
+    parser.add_argument('--noise_level', type=float, default=None)
+    parser.add_argument('--cfg-file', dest='cfg_file', type=str, default='benchmark_causal.yml')
+    args = parser.parse_args()
 
-core_function(args.key, pm_causal_set[args.key], args.idx, args.ccm, args.noise_level)
+    from pathlib import Path
+    root_path = Path(__file__).resolve().parents[2]
+
+    with open(Path(__file__).resolve().parent / args.cfg_file, 'r') as yamlfile:
+        pm_causal_set = yaml.load(yamlfile, Loader=yaml.FullLoader)
+    for key in pm_causal_set.keys():
+        pm_causal_set[key]['path'] = root_path / pm_causal_set[key]['path']
+
+    core_function(args.key, pm_causal_set[args.key], args.idx, args.ccm, args.noise_level)
 #%%
 
 # ccm_types = ['CCM', 'FDCCM', 'SCCM']
