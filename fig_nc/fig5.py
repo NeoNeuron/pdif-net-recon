@@ -26,40 +26,48 @@ def get_vfname(fname: str, key:str, sfx:str=None):
     return fname + '.dat'
 
 #%%
-fig = plt.figure(figsize=(24,10),)
+fig = plt.figure(figsize=(24,14),)
+axt = fig.subplots(1, 4, 
+    gridspec_kw=dict(wspace=0.4, hspace=0.5,
+                     left=0.05, right=0.98,
+                     top=1.0, bottom=0.8))
 ax = fig.subplots(3, 4, 
     gridspec_kw=dict(wspace=0.4, hspace=0.5,
                      left=0.05, right=0.98,
-                     top=0.94, bottom=0.08, height_ratios=[1.2,0.8,2.3]),)
+                     top=0.74, bottom=0.08, height_ratios=[1.2,0.8,2.3]),)
 
-keys = ['Lorenz', 'Logistic', 'Rcon', 'Gaussian']
+keys = ['Lorenz', 'Logistic', 'Rcon', 'RNN']
 spk_fnames = ['Lp=0.25s=0.500f=0.000u=0.000',
               'Logp=0.25s=0.005',
               'Rconp=0.25s=0.002',
-            #   'RNNp=0.25s=0.030tau=20ref=10th=0.020',
-              'Gaussianp=0.25s=0.030tau=20ref=10th=0.020',
+              'RNNp=0.25s=0.030tau=20ref=10th=0.200',
+            #   'Gaussianp=0.25s=0.030tau=20ref=10th=0.020',
               ]
 vol_fnames = ['Lp=0.25s=0.500f=0.000u=0.000_x',
               'Logp=0.25s=0.005_voltage',
               'Rconp=0.25s=0.002_x',
-            #   'RNNp=0.25s=0.030tau=20ref=10_voltage',
-              'Gaussianp=0.25s=0.030tau=20ref=10_voltage',
+              'RNNp=0.25s=0.030tau=20ref=10_voltage',
+            #   'Gaussianp=0.25s=0.030tau=20ref=10_voltage',
               ]
 
 dts = [0.02, 1.0, 3.0, 5.0]
 Ts = [1e6, 1e8, 1e7, 1e8]
-orders = [(1,1), (2,1), (5,5), (4,1)]
+orders = [(1,1), (2,1), (5,5), (5,1)]
 delays = [0, 0, 0, 16]
-ths = [10, 0.9, 8, 0.02]
+ths = [10, 0.9, 8, 0.2]
 Tranges = [10, 30, 50, 600]
 
 
 regen=False
-for ax_col, spk_fname, key, dt, T, delay, order, vol_fname, th, Trange in zip(ax.T, spk_fnames, keys, dts, Ts, delays, orders, vol_fnames, ths, Tranges):
+for axti, ax_col, spk_fname, key, dt, T, delay, order, vol_fname, th, Trange in zip(axt, ax.T, spk_fnames, keys, dts, Ts, delays, orders, vol_fnames, ths, Tranges):
     subfolder = root / f'benchmark/N100/{key:s}'
     N = 100
 
     print(np.fromfile(subfolder/'connect_matrix-p=0.250.dat', dtype=float).reshape(N, N)[0,1])
+
+    img = plt.imread(key+'.png')  # Replace with the actual path to your PNG file
+    axti.imshow(img, aspect='equal')
+    axti.axis('off')  # Hide axes if desired
 
     spks = c4u.load_spike_data(subfolder/(spk_fname + '_spike_train.dat'), xrange=(0, Trange))
     if (subfolder/(vol_fname + '.npy')).exists():
@@ -69,7 +77,7 @@ for ax_col, spk_fname, key, dt, T, delay, order, vol_fname, th, Trange in zip(ax
         voltages = voltages[:Tn, :]
     elif (subfolder/(vol_fname + '.dat')).exists():
         voltages = c4u.fetch_voltage(subfolder/(vol_fname + '.dat'), N=N, voltage_range=(0, Trange))
-    ax_col[0].plot(voltages[:,0], voltages[:,1], lw=2, color='C0', clip_on=True)
+    ax_col[0].plot(voltages[:,0], voltages[:,1], lw=2, color='#3532A0', clip_on=True)
     ax_col[0].plot(voltages[:,0], voltages[:,2], lw=2, color='C2', clip_on=True)
     ax_col[0].axhline(th, ls='--', color='r', lw=2, clip_on=True)
     ax_col[0].set_ylabel('activity', fontsize=26)
@@ -94,7 +102,7 @@ for ax_col, spk_fname, key, dt, T, delay, order, vol_fname, th, Trange in zip(ax
     )
     data = estimator.fetch_data(new_run=True)
     data_matched = match_features(data, N, subfolder/'connect_matrix-p=0.250.dat')
-    df_recon, df_fig = reconstruction_analysis_TE(data_matched, nbins=60, hist_range=None, algorithm='EM')
+    df_recon, df_fig = reconstruction_analysis_TE(data_matched, nbins=50, algorithm='EM')
     print('acc: %.4f, auc: %.4f'%(df_fig['acc_svm']['TE'], df_fig['auc_svm']['TE']))
     RED, GREEN = '#F49227', '#194955'
     tmp = df_fig.loc['TE']
@@ -116,9 +124,11 @@ for ax_col, spk_fname, key, dt, T, delay, order, vol_fname, th, Trange in zip(ax
     ax_col[-1].set_xlabel('PTD-TE value', fontsize=26)
     ax_col[-1].set_ylabel('density', fontsize=26)
 
-xx, yy = np.meshgrid(np.arange(4), np.arange(2), indexing='ij')
-for tag, x, y in zip('abcdefgh', xx.flatten(), yy.flatten()):
-    fig.text(0.02+x*0.25, 1.000-y*0.52, tag, fontsize=35, fontweight='bold', va='top')
+xx, yy = np.meshgrid(np.arange(4), np.arange(3), indexing='ij')
+for tag, x in zip(['abc','def','ghi','jkl'], range(4)):
+    fig.text(0.02+x*0.25, 1.00, tag[0], fontsize=35, fontweight='bold', va='top')
+    fig.text(0.02+x*0.25, 0.78, tag[1], fontsize=35, fontweight='bold', va='top')
+    fig.text(0.02+x*0.25, 0.38, tag[2], fontsize=35, fontweight='bold', va='top')
 
 fig.savefig(root/'fig_nc/pdf'/'fig5.pdf', transparent=True)
 #%%

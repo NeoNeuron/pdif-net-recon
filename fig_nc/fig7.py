@@ -107,6 +107,6 @@ ax.set_xlabel('Noise level (in units of standard deviation)', fontsize=24)
 ax.set_yscale('log')
 ax.set_ylim(1e1, 1e6)
 ax.tick_params(axis='y', labelsize=16)
-fig.text(x=-0.043, y=1.2, s='i', ha='center', va='center', fontsize=26, fontweight='bold', transform=ax.transAxes)
+fig.text(x=-0.041, y=1.2, s='i', ha='center', va='center', fontsize=26, fontweight='bold', transform=ax.transAxes)
 fig.savefig(root_path / 'fig_nc/pdf' / f'fig7.pdf', transparent=True)
 #%%
