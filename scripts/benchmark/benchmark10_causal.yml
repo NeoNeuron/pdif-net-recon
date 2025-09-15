@@ -104,7 +104,7 @@ Lcon:
 
 Logistic:
     N: 10
-    T: 1.0e+7
+    T: 1.0e+8
     DT: 1.0e+5
     dt: 1
     order: !!python/tuple
