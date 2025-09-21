@@ -6,11 +6,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import pickle
+import seaborn as sns
 from pathlib import Path
 
 from allensdk.brain_observatory.ecephys.ecephys_session import EcephysSession
 from allensdk.brain_observatory.ecephys.ecephys_project_cache import EcephysProjectCache
-data_directory = Path('./data/neuropixel/')
+data_directory = Path('./data/visual_coding/')
 cache = EcephysProjectCache.from_warehouse(manifest=data_directory/"manifest.json")
 sessions = cache.get_session_table()
 for session_id in sessions[sessions.session_type.eq('brain_observatory_1.1')].index.values:
@@ -88,7 +89,7 @@ for session_id in sessions[sessions.session_type.eq('brain_observatory_1.1')].in
     units_high_snr = session.units[session.units['snr'] > 4]
     units_high_fr = session.units[session.units['firing_rate'] > 0.05]
 
-    units_chosen = session.units[(session.units['snr'] > 4)]# * (session.units['firing_rate'] > 0.05)]
+    units_chosen = session.units[(session.units['snr'] > 4) * (session.units['firing_rate'] > 0.05)]
     # drop abnormal unit
     # units_chosen = units_chosen.drop(950942603)
     print(f'{units_high_snr.shape[0]} units have snr > 4')
@@ -98,6 +99,40 @@ for session_id in sessions[sessions.session_type.eq('brain_observatory_1.1')].in
     # high_snr_unit_ids = units_with_very_high_snr.index.values
     high_snr_unit_ids = units_chosen.index.values
     unit_id = high_snr_unit_ids[0]
+    # maching connectome label to reconstructed networks
+    # # %% Load the Excel file
+    # file_path = '/home/kchen/causal4/data/mouse_connectome/conn_matrix_allen.xlsx'
+    # data = pd.read_excel(file_path)
+    # #%%
+    # tmp = units_chosen['structure_acronym'].values
+    # conn = np.zeros((len(set(tmp)), len(set(tmp))))
+    # areas = list(set(tmp))
+    # for i in range(len(areas)):
+    #     for j in range(len(areas)):
+    #         if areas[i] not in data['Exp Source'].values:
+    #             conn[i, j] = np.nan
+    #             continue
+    #         if i == j:
+    #             conn[i, j] = -12 
+    #             continue
+    #         buff = data[
+    #             data['Exp Source'].eq(areas[i])*          # source
+    #             data['Target'].eq(areas[j]) # target
+    #             ]
+    #         if buff.shape[0] > 0:
+    #             conn[i, j] = buff['LOG NPV (+0.5min 3.06069269616048E-12)'].values[0] # target
+    #         else:
+
+    #             conn[i, j] = np.nan
+    # # Display the first few rows of the data
+    # # np.log10(data.loc['ACAd']).sum()
+    # # np.sum([10**(ele) for ele in data.loc['ACAd'].to_numpy() if ele != 'TN'])
+    # plt.figure()
+    # sns.heatmap(conn, xticklabels=areas, yticklabels=areas, cmap='coolwarm', cbar=True)
+    # plt.title('Connectivity Matrix')
+    # plt.savefig(out_dir/'firing_rate_distribution.png', dpi=300)
+    # plt.close()
+
 
     # %%
     stimulus_names = [

@@ -64,30 +64,31 @@ df_auc = pd.DataFrame(average_auc, index=session_id)
 # df.set_index('session_id', inplace=True)
 df_auc.head()
 # %%
-fig, ax = plt.subplots(2,3,figsize=(10,5))
+fig, ax = plt.subplots(2,3,figsize=(10,7),
+                       gridspec_kw={'top':0.65, 'bottom':0.1,
+                                    'left':0.1, 'right':0.95,
+                                    'hspace':0.6, 'wspace':0.3})
 for label, axi in zip(df_auc.columns, ax.flatten()):
     sns.histplot(df_auc[label], ax=axi, bins=20, binrange=(0.5,1.0), kde=True, ec='w')
     axi.set_xlabel('AUC')
-    axi.set_ylabel('session counts')
-    axi.set_xlim(0.5,1)
-    axi.set_xticks([0.5,0.6, 0.7, 0.8, 0.9,1])
+    axi.set_ylabel('# sessions')
+    axi.set_xlim(0.6,1)
+    axi.set_xticks([0.6,0.8,1])
         # arr_image = plt.imread('../'+stimulus_names_plot[i].split('-')[0]+'.png', format='png')
-    arr_image = plt.imread(root_path / 'figure' / (label+'.png'), format='png')
-    axins = axi.inset_axes([0.05, 0.5, 0.5, 0.4], transform=axi.transAxes)
+    # arr_image = plt.imread(root_path / 'figure' / (label+'.png'), format='png')
+    # axins = axi.inset_axes([0.05, 0.5, 0.5, 0.4], transform=axi.transAxes)
 
-    axins.imshow(arr_image)
-    axins.axis('off')
+    # axins.imshow(arr_image)
+    # axins.axis('off')
     if '_' in label:
-        axi.set_title(label.replace('_', ' '))
+        axi.set_title(label.replace('_', ' '), fontsize=16)
     else:
-        axi.set_title(label+' behavior')
-plt.tight_layout()
-for label, axi in zip('abcdef', ax.flatten()):
-    axi.text(-0.08, 1.4, label, transform=axi.transAxes, fontsize=25, va='top', ha='right', weight='bold')
+        axi.set_title(label+' behavior', fontsize=16)
+ax[0,0].text(-0.08, 2.6, 'a', transform=ax[0,0].transAxes, fontsize=25, va='top', ha='right', weight='bold')
+for label, axi in zip('bcdefg', ax.flatten()):
+    axi.text(-0.08, 1.3, label, transform=axi.transAxes, fontsize=25, va='top', ha='right', weight='bold')
 
-fig.savefig(root_path / 'fig_nc/pdf' / 'fig7.pdf')
-# sns.histplot(df_auc, x='consistency', ax=ax[0], bins=10)
-# sns.histplot(df_auc, x='average_auc', ax=ax[1], bins=10)
+fig.savefig(root_path / 'fig_nc/pdf' / 'fig8.pdf')
 # ax[0].set_xlabel('Min. Consistency')
 # ax[1].set_xlabel('AUC')
 # ax[1].set_xlim(None,1)
@@ -97,3 +98,4 @@ fig.savefig(root_path / 'fig_nc/pdf' / 'fig7.pdf')
 # ax.set_ylim(0,1)
 # ax.grid()
 # sns.boxplot(df, x=2, y=)
+# %%

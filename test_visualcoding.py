@@ -15,8 +15,9 @@ plt.rcParams['axes.spines.top'] = False
 plt.rcParams['axes.spines.right'] = False
 
 from causal4.Causality import CausalityEstimator
-from causal4.utils import Gaussian, match_features, reconstruction_analysis, optimal_delay_estimator
-from causal4.figrc import line_rc, c_inv, fig_path, data_path
+import causal4.utils as c4u
+from causal4.utils import match_features, reconstruction_analysis, optimal_delay_estimator
+from causal4.figrc import line_rc, c_inv, fig_path
 from pathlib import Path
 
 import warnings
@@ -161,9 +162,9 @@ for out_dir in Path('./visualcoding/').iterdir():
         else:
             data = estimator.fetch_data(new_run=True)
         data = data[(data['pre_id'].isin(chosen_unit_set)) & (data['post_id'].isin(chosen_unit_set))].copy()
-        data_matched = match_features(data, N=n_unit)
+        data_matched = match_features(data, N=new_N)
         vrange=(-8,-2)
-        data_recon, data_fig = reconstruction_analysis(data_matched, nbins=60, hist_range=vrange, fit_p0=fit_p0)
+        data_recon, data_fig = reconstruction_analysis(data_matched, nbins=60, hist_range=vrange, fit_p0=fit_p0, algorithm='EM')
         data_fig = data_fig.dropna(axis=1, how='all')
         data_fig_all[stimulus_] = data_fig.copy()
         data_recon['stimulus'] = stimulus_
@@ -181,8 +182,8 @@ for out_dir in Path('./visualcoding/').iterdir():
             pval = data_fig['log_norm_fit_pval'][key]
             if not hasattr(pval, '__len__'):
                 continue
-            gauss1 = c4u.Gaussian(edges, *pval[[1,3]]) * (1-pval[0])
-            gauss2 = c4u.Gaussian(edges, *pval[[2,4]]) * pval[0]
+            gauss1 = c4u.Gaussian(edges, pval[1], pval[3]) * (1-pval[0])
+            gauss2 = c4u.Gaussian(edges, pval[2], pval[4]) * pval[0]
             # print(pval[0])
             ax_hist.plot(edges,gauss1, color=line_rc[key]['color'], ls='--')
             ax_hist.plot(edges,gauss2, color=line_rc[key]['color'], ls='--')
