@@ -65,8 +65,8 @@ for axti, ax_col, spk_fname, key, dt, T, delay, order, vol_fname, th, Trange in 
 
     print(np.fromfile(subfolder/'connect_matrix-p=0.250.dat', dtype=float).reshape(N, N)[0,1])
 
-    img = plt.imread(key+'.png')  # Replace with the actual path to your PNG file
-    axti.imshow(img, aspect='equal')
+    # img = plt.imread(key+'.png')  # Replace with the actual path to your PNG file
+    # axti.imshow(img, aspect='equal')
     axti.axis('off')  # Hide axes if desired
 
     spks = c4u.load_spike_data(subfolder/(spk_fname + '_spike_train.dat'), xrange=(0, Trange))
@@ -84,7 +84,7 @@ for axti, ax_col, spk_fname, key, dt, T, delay, order, vol_fname, th, Trange in 
     ax_col[0].set_xlabel('time (ms)', fontsize=26)
     ax_col[0].set_xlim(0, Trange)
     mask = spks[:,1] == 0
-    ax_col[1].plot(spks[mask,0], spks[mask,1], '|', color='C0', ms=30, mew=3, clip_on=True)
+    ax_col[1].plot(spks[mask,0], spks[mask,1], '|', color='#3532A0', ms=30, mew=3, clip_on=True)
     mask = spks[:,1] == 1
     ax_col[1].plot(spks[mask,0], spks[mask,1], '|', color='C2', ms=30, mew=3, clip_on=True)
     ax_col[1].axhline(0, ls='--', color='k', lw=1, clip_on=True)
