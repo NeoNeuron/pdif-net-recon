@@ -87,26 +87,37 @@ for net_key, ax in zip(net_keys, axs.flatten()):
     ax.set_xticks(np.arange(5)*0.1)
     ax.set_ylim(0.48, 1.0)
     ax.set_yticks([0.5, 0.75, 1.0], ['0.5', '0.75', '1.0'])
-    ax.set_xlabel('Noise level', fontsize=20)
+    ax.set_xlabel(r'Noise level ($\sigma$)', fontsize=20)
     ax.set_ylabel('AUC', fontsize=20)
     sns.despine(ax=ax, trim=True, offset=5)
     ax.tick_params(axis='both', labelsize=16)
-leg = axs[-1,-1].legend(loc=(1.1,0.8),fontsize=20)
+leg = axs[-1,-1].legend(loc=(1.1,0.1),fontsize=20)
 
 for i, letter in enumerate('abcdefgh'):
     fig.text(x=-0.2, y=1.1, s=letter, ha='center', va='center', fontsize=26, fontweight='bold', transform=axs[i//4, i%4].transAxes)
 
 
 ax = fig.subplots(1,1, gridspec_kw={
-    'left': 0.06, 'right': 0.88, 'top': 0.26, 'bottom': 0.08,})
+    'left': 0.06, 'right': 0.88, 'top': 0.26, 'bottom': 0.04,})
 sns.barplot(data=data, x='net', y='cpu_time', hue='causal_measure', palette=colors, ax=ax,
             errorbar='se', capsize=0.4, legend=False, ec='w', lw=2)
-ax.tick_params(axis='x', labelsize=18, rotation=0)
+ax.tick_params(axis='x', labelsize=22, rotation=0)
 ax.set_ylabel('CPU time (seconds)', fontsize=18)
-ax.set_xlabel('Noise level (in units of standard deviation)', fontsize=24)
+ax.set_xlabel('', fontsize=24)
 ax.set_yscale('log')
 ax.set_ylim(1e1, 1e6)
 ax.tick_params(axis='y', labelsize=16)
 fig.text(x=-0.041, y=1.2, s='i', ha='center', va='center', fontsize=26, fontweight='bold', transform=ax.transAxes)
 fig.savefig(root_path / 'fig_nc/pdf' / f'fig7.pdf', transparent=True)
 #%%
+fig, ax = plt.subplots(1,1, gridspec_kw={
+    'left': 0.06, 'right': 0.98, 'top': 0.96, 'bottom': 0.10,}, figsize=(18,4))
+sns.barplot(data=data, x='net', y='wall_time', hue='causal_measure', palette=colors, ax=ax,
+            errorbar='se', capsize=0.4, legend=False, ec='w', lw=2)
+ax.tick_params(axis='x', labelsize=24, rotation=0)
+ax.set_ylabel('Wall time (seconds)', fontsize=24)
+ax.set_xlabel('', fontsize=24)
+ax.set_yscale('log')
+ax.set_ylim(1e0)
+ax.tick_params(axis='y', labelsize=16)
+fig.savefig(root_path / 'fig_nc/pdf' / f'fig_walltime.pdf', transparent=True)
