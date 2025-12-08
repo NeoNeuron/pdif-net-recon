@@ -100,7 +100,7 @@ for i, letter in enumerate('abcdefgh'):
 ax = fig.subplots(1,1, gridspec_kw={
     'left': 0.06, 'right': 0.88, 'top': 0.26, 'bottom': 0.04,})
 sns.barplot(data=data, x='net', y='cpu_time', hue='causal_measure', palette=colors, ax=ax,
-            errorbar='se', capsize=0.4, legend=False, ec='w', lw=2)
+            errorbar='se', capsize=0.4, legend=False, fill=True, saturation=1.0, err_kws={'lw':1.5, 'color':'#AAAAAA'})
 ax.tick_params(axis='x', labelsize=22, rotation=0)
 ax.set_ylabel('CPU time (seconds)', fontsize=18)
 ax.set_xlabel('', fontsize=24)
@@ -113,7 +113,7 @@ fig.savefig(root_path / 'fig_nc/pdf' / f'fig7.pdf', transparent=True)
 fig, ax = plt.subplots(1,1, gridspec_kw={
     'left': 0.06, 'right': 0.98, 'top': 0.96, 'bottom': 0.10,}, figsize=(18,4))
 sns.barplot(data=data, x='net', y='wall_time', hue='causal_measure', palette=colors, ax=ax,
-            errorbar='se', capsize=0.4, legend=False, ec='w', lw=2)
+            errorbar='se', capsize=0.4, legend=False, fill=True, saturation=1.0, err_kws={'lw':1.5, 'color':'#AAAAAA'})
 ax.tick_params(axis='x', labelsize=24, rotation=0)
 ax.set_ylabel('Wall time (seconds)', fontsize=24)
 ax.set_xlabel('', fontsize=24)
