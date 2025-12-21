@@ -1,9 +1,19 @@
 import networkx as nx
+import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FuncFormatter
 @FuncFormatter
 def sci_formatter(x, pos):
     return r'$10^{%d}$'%x
+
+def add_log_minor_ticks(ax, vrange, where='x'):
+    ticks_minor = [np.arange(1,10)*10**i for i in range(*vrange)]
+    ticks_minor = np.log10(np.asarray(ticks_minor).flatten())
+    if where == 'x':
+        ax.set_xticks(ticks_minor, minor=True)
+    elif where == 'y':
+        ax.set_yticks(ticks_minor, minor=True)
+    return ax
 
 def make_graph_diagram(G, ax, pos,
     node_size=2000, font_size=26,

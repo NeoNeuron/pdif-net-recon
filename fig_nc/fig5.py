@@ -114,11 +114,22 @@ for axti, ax_col, spk_fname, key, dt, T, delay, order, vol_fname, th, Trange in 
         ax_col[-1].fill_between(edges[mask], 0, counts[mask], color=color, alpha=0.5)
     ax_col[-1].axvline(tmp['th_svm'], ls='-', color='#F26A9D', lw=4)
     if key == 'Lorenz':
-        ax_col[-1].set_xlim(-11, -4)
         ax_col[-1].set_xticks([-10, -8, -6, -4])
+        add_log_minor_ticks(ax_col[-1], (-11,-4), where='x')
+        ax_col[-1].set_xlim(-11, -4)
     elif key == 'Logistic':
+        add_log_minor_ticks(ax_col[-1], (-7,-4), where='x')
         ax_col[-1].set_xlim(-7, -4)
+    elif key == 'Rcon':
+        ax_col[-1].set_xticks([-4, -3])
+        add_log_minor_ticks(ax_col[-1], (-5,-3), where='x')
+        ax_col[-1].set_xlim(-4.2, -3)
+    elif key == 'RNN':
+        ax_col[-1].set_xticks([-6, -5, -4])
+        add_log_minor_ticks(ax_col[-1], (-7,-3), where='x')
+        ax_col[-1].set_xlim(-6.3, -4)
     ax_col[-1].xaxis.set_major_formatter(sci_formatter)
+    ax_col[-1].tick_params(axis='both', which='major', labelsize=22)
         # format_xticks(ax_col[-1], (-7, -4))
     ax_col[-1].set_ylim(0)
     ax_col[-1].set_xlabel('PTD-TE value', fontsize=26)

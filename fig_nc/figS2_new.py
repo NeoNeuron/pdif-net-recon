@@ -60,14 +60,20 @@ for axi, spk_fname, conn_fname in zip(ax, spk_fnames, conn_fnames):
         axi[1].plot(edges[mask], counts[mask], color=color, lw=5, clip_on=True)
         axi[1].fill_between(edges[mask], 0, counts[mask], color=color, alpha=0.5)
     axi[1].axvline(tmp['th_svm'], ls='-', color='#F26A9D', lw=4)
-    axi[1].set_xlim(-8, -2)
-    axi[1].xaxis.set_major_formatter(sci_formatter)
     axi[1].set_ylim(0)
     axi[1].set_yticks([0,0.5,1.0])
     axi[1].set_xlabel('PTD-TE value', fontsize=26)
     axi[1].set_ylabel('density', fontsize=26)
 
-for x, tag in enumerate('abcd'):
+ax[0,1].xaxis.set_major_formatter(sci_formatter)
+add_log_minor_ticks(ax[0,1], (-7,-3), where='x')
+ax[0,1].set_xlim(-7, -3)
+
+ax[1,1].xaxis.set_major_formatter(sci_formatter)
+add_log_minor_ticks(ax[1,1], (-8,-2), where='x')
+ax[1,1].set_xlim(-8, -2)
+
+for x, tag in enumerate('efgh'):
     fig.text(x*0.24, 0.995, tag, fontsize=35, fontweight='bold', va='top')
 
 fig.savefig(root.parent/'fig_nc/pdf'/'figS2_new.pdf', transparent=True)

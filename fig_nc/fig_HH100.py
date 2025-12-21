@@ -33,7 +33,7 @@ ax = fig.subplots(1, 4,
                      left=0.05, right=0.98,
                      top=0.90, bottom=0.15),)
 
-subfolder = 'HH100'
+subfolder = '../causal4_data/HH100_main'
 spk_fnames = ['HHp=0.25s=0.020f=0.080u=0.150',
               'HHp=0.25s=0.020f=0.080u=0.150',
               'HHp=0.25s=0.020f=0.080u=0.150_noisy']
@@ -74,8 +74,9 @@ for i, (axi, spk_fname) in enumerate(zip(ax[1:], spk_fnames)):
         axi.plot(edges[mask], counts[mask], color=color, lw=5, clip_on=True)
         axi.fill_between(edges[mask], 0, counts[mask], color=color, alpha=0.5)
     axi.axvline(tmp['th_svm'], ls='-', color='#F26A9D', lw=4)
-    axi.set_xlim(-8, -4)
+    add_log_minor_ticks(axi, (-8,-4), where='x')
     axi.xaxis.set_major_formatter(sci_formatter)
+    axi.set_xlim(-8, -4)
     axi.set_ylim(0)
     axi.set_xlabel('PTD-TE value', fontsize=26)
     axi.set_ylabel('density', fontsize=26)
