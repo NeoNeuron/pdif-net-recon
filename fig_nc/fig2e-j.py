@@ -2,11 +2,6 @@
 # Author: Kai Chen
 
 #%%
-from pathlib import Path
-root = Path(__file__).resolve().parents[1]
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
 from causal4.Causality import CausalityEstimator
 from causal4.utils import match_features, reconstruction_analysis_TE
 from causal4.myplot import ReconstructionFigureTE
@@ -95,7 +90,7 @@ def plot_s_vs_ptdte(data_path, ax, spk_fname, ss, dt, order, delay):
     return ax
 
 
-def plot_acf(ax, spk_fname, key, acf_xmax, regen=False):
+def plot_acf(root, ax, spk_fname, key, acf_xmax, regen=False):
     zax = zoomedAxes(ax, (-0.1, acf_xmax/2), (-0.1,0.1), [0.4, 0.5, 0.6, 0.5])
 
     subfolder = key+'3_scan_S'
@@ -132,7 +127,7 @@ def plot_acf(ax, spk_fname, key, acf_xmax, regen=False):
             data = np.load(root / subfolder / fname)
             t_lag = data['t_lag']
             acf = data['acf']
-        zax.plot(t_lag, acf.mean(0), '-', lw=2.5, color=C)
+        zax.plot(t_lag, acf.mean(0), '-', lw=4, color=C)
         zax.axhline(0, ls='--', color='#AAAAAA')
         ax.set_xlabel('time-lag (ms)', fontsize=26)
         ax.set_ylabel('ACF', fontsize=26, labelpad=-20)
@@ -152,11 +147,13 @@ def plot_acf(ax, spk_fname, key, acf_xmax, regen=False):
 
 #%%
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
-fig = plt.figure(figsize=(18,10))
+
+data_path = root / 'raw_data'
+fig = plt.figure(figsize=(20,10))
 ax = fig.subplots(2, 1,
     gridspec_kw=dict(hspace=0.5,
-                     left=0.08, right=0.28,
-                     top=0.90, bottom=0.09),)
+                     left=0.08, right=0.27,
+                     top=0.92, bottom=0.1),)
 
 spk_fname = 'HHp=0.25s=0.020f=0.080u=0.150'
 keys = ['chain', 'confounder']
@@ -164,20 +161,20 @@ ss = np.arange(0.000,0.051,0.003)
 order = (1,1)
 delay = 3
 plot_s_vs_ptdte(
-    root/'HH3_scan_S', ax[0], spk_fname, ss, dt=0.5, order=order, delay=delay)
-plot_acf(ax[1], spk_fname, 'HH', acf_xmax=50)
+    data_path/'HH3_scan_S', ax[0], spk_fname, ss, dt=0.5, order=order, delay=delay)
+plot_acf(data_path, ax[1], spk_fname, 'HH', acf_xmax=50)
 
 ax = fig.subplots(2, 2,
-    gridspec_kw=dict(hspace=0.5, wspace=0.3,
-                     left=0.38, right=0.95,
-                     top=0.90, bottom=0.09),)
+    gridspec_kw=dict(hspace=0.5, wspace=0.6,
+                     left=0.37, right=0.95,
+                     top=0.92, bottom=0.1),)
 for axi, key in zip(ax.T, keys):
     dt = 0.5
     acf_xmax = 50
     subfolder = f'HH3-{key:s}'
     N = 3
     estimator = CausalityEstimator(
-        root/subfolder, spk_fname, N, delay=0, T=1e7, dt=dt, order=(1,1),
+        data_path/subfolder, spk_fname, N, delay=0, T=1e7, dt=dt, order=(1,1),
     )
 
     orders = np.arange(1,10).astype(int)
@@ -187,26 +184,26 @@ for axi, key in zip(ax.T, keys):
     for o_, d_ in zip(oo.flatten(), dd.flatten()):
         estimator.order = (1,o_)
         data = estimator.fetch_data(d_, new_run=True)
-        data = match_features(data, N, root/subfolder/'connect_matrix-p=0.250.npy')
+        data = match_features(data, N, data_path/subfolder/'connect_matrix-p=0.250.npy')
         data01 = data[data['connection'].eq(1)]['TE'].mean()
         # data10 = data[data['pre_id'].eq(1) * data['post_id'].eq(0)]['TE'].values[0]
         data02 = data[data['connection'].eq(0)]['TE'].mean()
         ptdte.append(data01/data02)
     ptdte = np.array(ptdte).reshape(oo.shape)
     pax = axi[0].pcolormesh(oo, dd, np.log10(ptdte), lw=.01, ec='w', vmin=0)#vmax=2)
-    cb = fig.colorbar(pax, ax=axi[0], ticks=[0,1,2], orientation='vertical', label='ratio', pad=0)
+    cb = fig.colorbar(pax, ax=axi[0], ticks=[0,1,2], orientation='vertical', label='ratio',)# pad=0)
     cb.ax.set_yticklabels([r'$10^{0}$', r'$10^{1}$',r'$10^{2}$'])
-    axi[0].set_ylabel('delay (ms)', fontsize=26)
-    axi[0].set_xlabel(r'order $l$', fontsize=26)
-    axi[0].set_xlim(-0.5, 9.5)
-    axi[0].set_ylim(0.5, 9.5)
+    cb.ax.tick_params(labelsize=20)
+    axi[0].set_ylabel('delay (ms)', labelpad=10)
+    axi[0].set_xlabel(r'order $l$', labelpad=4)
+    axi[0].set_ylim(-0.5, 9.5)
+    axi[0].set_xlim(0.5, 9.5)
     axi[0].set_yticks([0, 2, 4, 6, 8])
     axi[0].set_xticks([1, 3, 5, 7, 9])
-    axi[0].axis('scaled')
     if key == 'chain':
-        axi[0].set_title(r'$T^\mathrm{PTD}_{X\to Y} / T^\mathrm{PTD}_{X\to Z}$', fontsize=26, pad=16)
+        axi[0].set_title(r'$T^\mathrm{PTD}_{X\to Y} / T^\mathrm{PTD}_{X\to Z}$')
     else:
-        axi[0].set_title(r'$T^\mathrm{PTD}_{X\to Y} / T^\mathrm{PTD}_{Y\to Z}$', fontsize=26, pad=16)
+        axi[0].set_title(r'$T^\mathrm{PTD}_{X\to Y} / T^\mathrm{PTD}_{Y\to Z}$')
 
     cmap='viridis'
     with open(root / f'data/HH3_{key:s}.pkl', 'rb') as f:
@@ -216,7 +213,7 @@ for axi, key in zip(ax.T, keys):
         S=buff['S']
 
     ax_TE = inset_axes(axi[1], width="100%", height="100%",
-                       bbox_to_anchor=(.65, .25, .4, .5),
+                       bbox_to_anchor=(.65, .28, .4, .5),
                        bbox_transform=axi[1].transAxes, loc='center')
 
     ax_TE.scatter(direct, indirect, s=40, c=S, cmap=cmap, vmax=0.03, vmin=0.01, ec='w', lw=0.1)
@@ -224,7 +221,7 @@ for axi, key in zip(ax.T, keys):
 
     pval = np.polyfit(direct, indirect, deg=1)
     ax_TE.plot(direct, np.polyval(pval, direct), color='#F26A9D', lw=2, zorder=-1)
-    label_fs = 17
+    label_fs = 20
     if key == 'confounder':
         ax_TE.set_xlabel(r'$T_{X\to Y}^\mathrm{PTD}\cdot T_{X\to Z}^\mathrm{PTD}$', fontsize=label_fs, usetex=False)
         ax_TE.set_ylabel(r'$T_{Y\to Z}^\mathrm{PTD}$', fontsize=label_fs, usetex=False)
@@ -233,12 +230,13 @@ for axi, key in zip(ax.T, keys):
         ax_TE.set_ylabel(r'$T_{X\to Z}^\mathrm{PTD}$', fontsize=label_fs, usetex=False)
     # ax_dp.set_title(r'$R^2=%.3f$'%(Linear_R2(direct, indirect, pval)), fontsize=14)
     ax_TE.set_xlim(-2e-12,3.5e-11)
-    ax_TE.xaxis.get_offset_text().set_x(1.3)
-    ax_TE.xaxis.get_offset_text().set_fontsize(12)
-    ax_TE.yaxis.get_offset_text().set_fontsize(12)
+    ax_TE.tick_params(axis='both', labelsize=18)
+    ax_TE.xaxis.get_offset_text().set_x(1.35)
+    ax_TE.xaxis.get_offset_text().set_fontsize(16)
+    ax_TE.yaxis.get_offset_text().set_fontsize(16)
 
     if key == 'chain':
-        axcb = inset_axes(axi[1], width="45%", height="8%",
+        axcb = inset_axes(axi[1], width="60%", height="8%",
                         bbox_to_anchor=(0.66, 0.92, 1, 1),
                         bbox_transform=axi[1].transAxes, loc=3)
         gradient = np.atleast_2d(np.linspace(0, 1, 301))
@@ -246,9 +244,9 @@ for axi, key in zip(ax.T, keys):
         axcb.set_yticks([])
         axcb.set_xticks([0, 150, 300])
         axcb.xaxis.set_ticks_position('top')
-        axcb.set_xticklabels(['$0.01$', '$0.02$', '$0.03$'], fontsize=14)
+        axcb.set_xticklabels(['$0.01$', '$0.02$', '$0.03$'], fontsize=18)
         axcb.xaxis.set_label_position('top')
-        axcb.set_xlabel(r'$S$ $(\mathrm{mS}\cdot\mathrm{cm}^{-2})$', fontsize=16, usetex=False)
+        axcb.set_xlabel(r'$S$ $(\mathrm{mS}\cdot\mathrm{cm}^{-2})$', fontsize=20, usetex=False)
 
     # ax[2].set_title(r'$R^2=%.3f$'%(Linear_R2(S[::2], dp[::2], [pval[0], 0])), fontsize=14)
 
@@ -260,10 +258,12 @@ for axi, key in zip(ax.T, keys):
 
     axi[1].scatter(direct, indirect, s=150, c=S, cmap=cmap, vmax=0.03, vmin=0.01, ec='w', clip_on=False)
     axi[1].ticklabel_format(style='sci', scilimits=(0,0), axis='both', useMathText=True)
+    axi[1].xaxis.get_offset_text().set_fontsize(24)
+    axi[1].yaxis.get_offset_text().set_fontsize(24)
 
     pval = np.polyfit(direct, indirect, deg=1)
     axi[1].plot(direct, np.polyval(pval, direct), color='#F26A9D', lw=3, zorder=-1)
-    label_fs = 25
+    label_fs = 28
     if key == 'confounder':
         axi[1].set_xlabel(r'$\Delta p^{X\to Y}_{0,1}\cdot \Delta p^{X\to Z}_{0,1}$', fontsize=label_fs, usetex=False)
         axi[1].set_ylabel(r'$\Delta p^{Y\to Z}_{0,1}$', fontsize=label_fs, usetex=False)
@@ -291,14 +291,14 @@ for axi, key in zip(ax.T, keys):
     axins.set_xlim(-0.8,1.8)
     axins.set_ylim(-0.8,1.8)
 
-for i, tag in enumerate('ab'):
+for i, tag in enumerate('ef'):
     fig.text(0.02, 0.48+(1-i)*0.5, tag, fontsize=35, fontweight='bold', va='top')
 
-for i, tag in enumerate('cd'):
+for i, tag in enumerate('gi'):
     fig.text(0.35+i*0.34, 0.98, tag, fontsize=35, fontweight='bold', va='top')
 
-for i, tag in enumerate('ef'):
+for i, tag in enumerate('hj'):
     fig.text(0.35+i*0.34, 0.48, tag, fontsize=35, fontweight='bold', va='top')
 
-fig.savefig(root/'fig_nc/pdf'/'fig3.pdf', transparent=True)
+fig.savefig(root/'fig_nc/pdf'/'fig2e-j.pdf', transparent=True)
 #%%

@@ -1,6 +1,13 @@
+from pathlib import Path
+root = Path(__file__).resolve().parents[1]
+import matplotlib as mpl
+rc_path = Path(__file__).with_name("matplotlibrc")
+mpl.rcParams.update(mpl.rc_params_from_file(rc_path, use_default_template=False))
+
 import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
+import seaborn as sns
 from matplotlib.ticker import FuncFormatter
 @FuncFormatter
 def sci_formatter(x, pos):
@@ -80,3 +87,19 @@ def squarefit(x, y):
         return a*x**2
     popt,_ = curve_fit(func, x, y)
     return lambda x: func(x, *popt)
+
+def create_fig1x4():
+    fig = plt.figure(figsize=(20,5))
+    axes = fig.subplots(1, 4, 
+        gridspec_kw=dict(wspace=0.4, hspace=0.5,
+                        left=0.05, right=0.98,
+                        top=0.93, bottom=0.18),)
+    return fig, axes
+
+def create_fig2x4():
+    fig = plt.figure(figsize=(20,10.71))
+    axes = fig.subplots(2, 4, 
+        gridspec_kw=dict(wspace=0.4, hspace=0.5,
+                        left=0.05, right=0.98,
+                        top=0.95, bottom=0.075),)
+    return fig, axes

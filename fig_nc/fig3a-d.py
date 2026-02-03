@@ -2,17 +2,9 @@
 # Author: Kai Chen
 
 #%%
-from pathlib import Path
-root = Path(__file__).resolve().parents[1]
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
 from causal4.Causality import CausalityEstimator
 from causal4.utils import match_features, reconstruction_analysis_TE
-from causal4.myplot import ReconstructionFigureTE
-import networkx as nx
 import causal4.utils as c4u
-import pickle as pkl
 from figrc import *
 
 def get_vfname(fname: str, key:str, sfx:str=None):
@@ -26,12 +18,8 @@ def get_vfname(fname: str, key:str, sfx:str=None):
         fname += sfx
     return fname + '.dat'
 
-#%%
-fig = plt.figure(figsize=(20,5),)
-ax = fig.subplots(1, 4, 
-    gridspec_kw=dict(wspace=0.4, hspace=0.5,
-                     left=0.05, right=0.98,
-                     top=0.90, bottom=0.15),)
+#%
+fig, ax = create_fig1x4()
 
 subfolder = '../causal4_data/HH100_main'
 spk_fnames = ['HHp=0.25s=0.020f=0.080u=0.150',
@@ -46,8 +34,8 @@ spks = c4u.load_spike_data(root/subfolder/(spk_fnames[2] + '_spike_train.dat'), 
 ax[0].plot(spks[:,0], spks[:,1], 'r|', markersize=14, mew=3, clip_on=True, label='raw spikes')
 ax[0].set_xlim(1000, 1100)
 ax[0].set_ylim(0, N)
-ax[0].set_xlabel('time (ms)', fontsize=26)
-ax[0].set_ylabel('neuron ID', fontsize=26)
+ax[0].set_xlabel('time (ms)')
+ax[0].set_ylabel('neuron ID', labelpad=-5)
 # Draw a square box to cover the spikes of bottom 20 neurons
 rect = plt.Rectangle((1000, 55), 100, 30, lw=4, edgecolor='limegreen',
                       facecolor='none', alpha=0.7, zorder=10, clip_on=False)
@@ -78,11 +66,11 @@ for i, (axi, spk_fname) in enumerate(zip(ax[1:], spk_fnames)):
     axi.xaxis.set_major_formatter(sci_formatter)
     axi.set_xlim(-8, -4)
     axi.set_ylim(0)
-    axi.set_xlabel('PTD-TE value', fontsize=26)
-    axi.set_ylabel('density', fontsize=26)
+    axi.set_xlabel('PTD-TE value')
+    axi.set_ylabel('density')
 
 for x, tag in enumerate('abcd'):
     fig.text(x*0.25, 0.995, tag, fontsize=35, fontweight='bold', va='top')
 
-fig.savefig(root/'fig_nc/pdf'/'fig_HH100.pdf', transparent=True)
+fig.savefig(root/'fig_nc/pdf'/'fig3a-d.pdf', transparent=True)
 #%%

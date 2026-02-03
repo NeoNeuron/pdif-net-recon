@@ -2,17 +2,8 @@
 # Author: Kai Chen
 
 #%%
-from pathlib import Path
-root = Path(__file__).resolve().parents[1]
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
 from causal4.Causality import CausalityEstimator
 from causal4.utils import match_features, reconstruction_analysis_TE
-from causal4.myplot import ReconstructionFigureTE
-import networkx as nx
-import causal4.utils as c4u
-import pickle as pkl
 from figrc import *
 
 def get_vfname(fname: str, key:str, sfx:str=None):
@@ -26,13 +17,9 @@ def get_vfname(fname: str, key:str, sfx:str=None):
         fname += sfx
     return fname + '.dat'
 root = root / 'data'
-#%%
+#%
 
-fig = plt.figure(figsize=(20,5),)
-ax = fig.subplots(1, 4, 
-    gridspec_kw=dict(wspace=0.4, hspace=0.5,
-                     left=0.05, right=0.98,
-                     top=0.90, bottom=0.15),)
+fig, ax = create_fig1x4()
 ax = ax.reshape(2,2)
 
 spk_fnames = ['PC_DCN_100_s0.1/PC_DCN_100', 'CA1_PYPV/CA1_PYPV_24']
@@ -62,8 +49,8 @@ for axi, spk_fname, conn_fname in zip(ax, spk_fnames, conn_fnames):
     axi[1].axvline(tmp['th_svm'], ls='-', color='#F26A9D', lw=4)
     axi[1].set_ylim(0)
     axi[1].set_yticks([0,0.5,1.0])
-    axi[1].set_xlabel('PTD-TE value', fontsize=26)
-    axi[1].set_ylabel('density', fontsize=26)
+    axi[1].set_xlabel('PTD-TE value')
+    axi[1].set_ylabel('density')
 
 ax[0,1].xaxis.set_major_formatter(sci_formatter)
 add_log_minor_ticks(ax[0,1], (-7,-3), where='x')
@@ -74,7 +61,7 @@ add_log_minor_ticks(ax[1,1], (-8,-2), where='x')
 ax[1,1].set_xlim(-8, -2)
 
 for x, tag in enumerate('efgh'):
-    fig.text(x*0.24, 0.995, tag, fontsize=35, fontweight='bold', va='top')
+    fig.text(x*0.25, 0.995, tag, fontsize=35, fontweight='bold', va='top')
 
-fig.savefig(root.parent/'fig_nc/pdf'/'figS2_new.pdf', transparent=True)
+fig.savefig(root.parent/'fig_nc/pdf'/'fig3e-h.pdf', transparent=True)
 #%%
