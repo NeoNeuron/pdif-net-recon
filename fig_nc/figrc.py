@@ -3,6 +3,7 @@ root = Path(__file__).resolve().parents[1]
 import matplotlib as mpl
 rc_path = Path(__file__).with_name("matplotlibrc")
 mpl.rcParams.update(mpl.rc_params_from_file(rc_path, use_default_template=False))
+RED, GREEN = '#F49227', '#194955'
 
 import networkx as nx
 import numpy as np

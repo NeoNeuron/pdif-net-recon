@@ -23,17 +23,21 @@ fig, ax = plt.subplots(
     2,1,figsize=(22,5), sharex=True,
     gridspec_kw=dict(hspace=0.25, left=0.05, right=0.50, top=0.90, bottom=0.06))
 ax[0].plot(spk_raw[~mask,0], spk_raw[~mask,1],'|',mec='red', mfc='none', ms=5, label='raw')
-ax[0].plot(spk_filtered[:,0], spk_filtered[:,1], '|', ms=4, mec='k', mfc='none',
+ax[0].plot(spk_filtered[:,0], spk_filtered[:,1], '|', ms=4, mec=GREEN, mfc='none',
          label='after downsampling')
 ax[0].set_xlim(xlim)
 ax[0].set_ylim(0,100)
+ax[0].set_yticks([1,50,100])
+ax[0].tick_params(axis='both', labelsize=22)
 # ax[0].set_xlabel('Time (ms)')
 # ax.legend()
-ax[1].plot(spk_filtered[:,0], spk_filtered[:,1], '|', ms=4, mec='k', mfc='none',
+ax[1].plot(spk_filtered[:,0], spk_filtered[:,1], '|', ms=4, mec=GREEN, mfc='none',
          label='after downsampling')
 ax[1].set_xlim(xlim)
 ax[1].set_ylim(0,100)
+ax[1].set_yticks([1,50,100])
 ax[1].set_xlabel('Time (ms)')
+ax[1].tick_params(axis='both', labelsize=22)
 [axi.set_ylabel('neuron ID') for axi in ax]
 
 import pandas as pd
@@ -45,7 +49,6 @@ datafiles = [
     'fig_PHH_DSra=0.50.pkl',
     ]
 
-RED, GREEN = '#F49227', '#194955'
 for idx, f in enumerate(datafiles):
 
     df = pd.DataFrame(pd.read_pickle(data_path/f))
@@ -65,11 +68,22 @@ for idx, f in enumerate(datafiles):
     ax[idx].set_ylabel('density')
     # print(f"{conn_name_:15s} recon acc : {data['acc_gauss']*100:6.3f} %")
     ax[idx].axvline(data['kmean_th'], ymax=ymax/ax[0].get_ylim()[1], color='#F26A9D',lw=4, label='Threshold')
+    if idx == 0:
+        ax[idx].set_xlim(-7,-4)
+        ax[idx].set_xticks([-6, -5, -4])
+    else:
+        ax[idx].set_xlim(-8,-4)
+        ax[idx].set_xticks([-7, -6, -5, -4])
     ax[idx].xaxis.set_major_formatter(sci_formatter)
+    ax[idx].tick_params(axis='x', which='major', length=6)
+    ax[idx].tick_params(axis='x', which='minor', length=3)
+    ax[idx].tick_params(axis='both', labelsize=22)
+add_log_minor_ticks(ax[0], (-7, -4), where='x')
+add_log_minor_ticks(ax[1], (-8, -4), where='x')
 
 fig.text(0.01, 0.995, 'a', fontsize=35, fontweight='bold', va='top')
 fig.text(0.52, 0.995, 'b', fontsize=35, fontweight='bold', va='top')
 fig.text(0.76, 0.995, 'c', fontsize=35, fontweight='bold', va='top')
 
-fig.savefig('pdf/figS2_downsample.pdf', dpi=300, bbox_inches='tight', transparent=True)
+fig.savefig('pdf/figS4_downsample.pdf', dpi=300, bbox_inches='tight', transparent=True)
 # %%

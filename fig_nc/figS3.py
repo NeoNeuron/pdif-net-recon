@@ -75,6 +75,10 @@ ax[0].set_ylabel('density')
 print(f"{conn_name_:15s} recon acc : {data['acc_gauss']*100:6.3f} %")
 ax[0].axvline(data['kmean_th'], ymax=ymax/ax[0].get_ylim()[1], color='#F26A9D',lw=4, label='Threshold')
 ax[0].xaxis.set_major_formatter(sci_formatter)
+ax[0].set_xlim(-9,-4)
+add_log_minor_ticks(ax[0], (-9, -4), where='x')
+ax[0].tick_params(axis='x', which='major', length=6)
+ax[0].tick_params(axis='x', which='minor', length=3)
 
 # historgram of connection strength
 conn = pd.DataFrame(data_raw[conn_]).loc['conn', 'raw_data']
@@ -89,15 +93,15 @@ axins.bar(edges[:-1], counts, width=edges[1]-edges[0], align='edge', color='gray
 axins.set_xlabel(r'S ($\mathrm{mS}\cdot \mathrm{cm}^{-2})$', fontsize=14)
 axins.set_ylabel('Counts', fontsize=13, rotation=0, y=1.0, labelpad=-15)
 # axins.set_title(conn_name_, fontsize=14)
-# axins.set_yticks([])
+axins.set_xticks([0.025, 0.05], labels=['0.025', '0.05'])
 
 # TE v.s. S
 TE = data['raw_data']
 mask = conn > 0
-ax[1].plot(conn[mask], 10**TE[mask], 'o', mec='k', mfc='none', ms=3, alpha=0.15, clip_on=False)
-ax[1].set_xlabel('S')
+ax[1].plot(conn[mask], 10**TE[mask], 'o', mec=GREEN, mfc='none', ms=3, alpha=0.35, clip_on=False)
+ax[1].set_xlabel(r'S ($\mathrm{mS}\cdot \mathrm{cm}^{-2})$')
 ax[1].set_ylabel('PTD-TE value')
-ax[1].ticklabel_format(style='sci', scilimits=(0,0), axis='y', useMathText=True)
+ax[1].ticklabel_format(style='sci', scilimits=(0,1), axis='y', useMathText=True)
 # quadratic fit
 fit_func = lambda x, a: a*x**2
 pval, _ = curve_fit(fit_func, conn[mask], 10**TE[mask])
@@ -107,10 +111,8 @@ xrange = np.linspace(0, conn[mask].max(), 100)
 ax[1].plot(xrange, fit_func(xrange, pval[0]), color='r', lw=1.5, label=f'$R^2$={R2:.2f}')
 ax[1].set_xlim(0)
 ax[1].set_ylim(0)
-# ax[1].legend(fontsize=14)
 
 for axi, letter in zip(ax.flatten(), 'ab'):
     axi.text(-0.15,1.05,'%s'%letter,fontsize=28,weight='bold', transform=axi.transAxes)
-move_axis_offset(ax[1], ['mS$\cdot$cm$^{-2}$', ''])
-fig.savefig('pdf/figS1_TE_lognormal.pdf', dpi=300, bbox_inches='tight', transparent=True)
+fig.savefig('pdf/figS3_TE_lognormal.pdf', dpi=300, bbox_inches='tight', transparent=True)
 # %%

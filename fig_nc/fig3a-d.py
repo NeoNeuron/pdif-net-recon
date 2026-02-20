@@ -63,6 +63,8 @@ for i, (axi, spk_fname) in enumerate(zip(ax[1:], spk_fnames)):
         axi.fill_between(edges[mask], 0, counts[mask], color=color, alpha=0.5)
     axi.axvline(tmp['th_svm'], ls='-', color='#F26A9D', lw=4)
     add_log_minor_ticks(axi, (-8,-4), where='x')
+    axi.tick_params(axis='x', which='major', length=8)
+    axi.tick_params(axis='x', which='minor', length=4)
     axi.xaxis.set_major_formatter(sci_formatter)
     axi.set_xlim(-8, -4)
     axi.set_ylim(0)

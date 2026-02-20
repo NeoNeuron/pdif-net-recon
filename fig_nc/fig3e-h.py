@@ -55,10 +55,14 @@ for axi, spk_fname, conn_fname in zip(ax, spk_fnames, conn_fnames):
 ax[0,1].xaxis.set_major_formatter(sci_formatter)
 add_log_minor_ticks(ax[0,1], (-7,-3), where='x')
 ax[0,1].set_xlim(-7, -3)
+ax[0,1].tick_params(axis='x', which='major', length=8)
+ax[0,1].tick_params(axis='x', which='minor', length=4)
 
 ax[1,1].xaxis.set_major_formatter(sci_formatter)
 add_log_minor_ticks(ax[1,1], (-8,-2), where='x')
 ax[1,1].set_xlim(-8, -2)
+ax[1,1].tick_params(axis='x', which='major', length=8)
+ax[1,1].tick_params(axis='x', which='minor', length=4)
 
 for x, tag in enumerate('efgh'):
     fig.text(x*0.25, 0.995, tag, fontsize=35, fontweight='bold', va='top')
