@@ -7,22 +7,22 @@ import causal4.myplot as mplt
 from causal4.Causality import CausalityEstimator
 data_path = root / 'raw_data'
 #%%
-for p in np.arange(0.1, 0.91, 0.1):
-    data = c4u.load_spike_data(
-        f'tmp/HHp={p:.2f}s=0.005f=0.080u=0.150_spike_train.dat', xrange=(0, 1000))
-    plt.figure(figsize=(10, 3))
-    plt.plot(data[:,0], data[:,1], '|')
-    # %  Initialize the CausalityEstimator
-    estimator = CausalityEstimator(
-        path='./tmp/',
-        spk_fname=f'HHp={p:.2f}s=0.005f=0.080u=0.150',
-        N=100, T=1e7, n_thread=120, delay=3, order=(1,1))
-    data = estimator.fetch_data(new_run=True)
+# for p in np.arange(0.1, 0.91, 0.1):
+#     data = c4u.load_spike_data(
+#         f'tmp/HHp={p:.2f}s=0.005f=0.080u=0.150_spike_train.dat', xrange=(0, 1000))
+#     plt.figure(figsize=(10, 3))
+#     plt.plot(data[:,0], data[:,1], '|')
+#     # %  Initialize the CausalityEstimator
+#     estimator = CausalityEstimator(
+#         path='./tmp/',
+#         spk_fname=f'HHp={p:.2f}s=0.005f=0.080u=0.150',
+#         N=100, T=1e7, n_thread=120, delay=3, order=(1,1))
+#     data = estimator.fetch_data(new_run=True)
 
-    data_matched = c4u.match_features(data, N=100,
-                                       conn_file=f'./tmp/connect_matrix-p={p:.3f}.npy')
-    data_recon, fig_data = c4u.reconstruction_analysis(data_matched, nbins=100)
-    fig = mplt.reconstruction_illustration(fig_data)
+#     data_matched = c4u.match_features(data, N=100,
+#                                        conn_file=f'./tmp/connect_matrix-p={p:.3f}.npy')
+#     data_recon, fig_data = c4u.reconstruction_analysis(data_matched, nbins=100)
+#     fig = mplt.reconstruction_illustration(fig_data)
 #%%
 estimator = CausalityEstimator(
     path=data_path/'HH100',
@@ -54,12 +54,12 @@ mask = (conn==0) * (~np.eye(100, dtype=bool))
 ax.plot((conn2_chain[mask]+conn2_confounder[mask]), np.sqrt(TE[mask]), 'o', c=GREEN, alpha=0.1)
 ax.ticklabel_format(style='sci', scilimits=(0,0), axis='y', useMathText=True)
 ax.set_xlabel('No. of indirect paths')
-ax.set_ylabel(r'$\sqrt{\text{PTD-TE}}$')
+ax.set_ylabel(r'$\sqrt{\text{PDIF}}$')
 corr = np.corrcoef(conn2_chain[mask]+conn2_confounder[mask], np.sqrt(TE[mask]))[0,1]
 ax.set_title(f"R={corr:.3f}", fontsize=20, pad=-20)
 ax.tick_params(axis='both', labelsize=18)
 ax.yaxis.get_offset_text().set_size(16)
-fig.savefig(root/'fig_nc/pdf/figS7_HH100_PTDTE_indirect_conn.pdf', bbox_inches='tight')
+fig.savefig(root/'fig_nc/pdf/figS7.pdf', bbox_inches='tight')
 # %%
 
 # %%
@@ -92,4 +92,4 @@ ax.set_ylim(0.48, 1)
 ax.tick_params(axis='both', labelsize=18)
 ax.ticklabel_format(style='sci', scilimits=(0,0), axis='x', useMathText=True)
 ax.xaxis.get_offset_text().set_size(16)
-fig.savefig(root/'fig_nc/pdf/figS6_HH100_TE_vs_length.pdf', bbox_inches='tight')
+fig.savefig(root/'fig_nc/pdf/figS6.pdf', bbox_inches='tight')

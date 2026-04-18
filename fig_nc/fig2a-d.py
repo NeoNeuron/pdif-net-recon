@@ -31,7 +31,7 @@ gt = np.load(data_path/'HH3-chain/connect_matrix-p=0.250.npy')
 TE = np.zeros((3,3))
 TE[~np.eye(3, dtype=bool)] = data_matched['TE']
 sns.heatmap(gt, linecolor='#DDDDDD', lw=2, ax=ax[1], square=True, cmap='Oranges', cbar=False)
-sns.heatmap(TE, linecolor='#DDDDDD', lw=2, ax=ax[2], square=True, cmap='Oranges', cbar_kws={'label':'PTD-TE value'})
+sns.heatmap(TE, linecolor='#DDDDDD', lw=2, ax=ax[2], square=True, cmap='Oranges', cbar_kws={'label':'PDIF value'})
 cb_ax = ax[2].figure.axes[-1]
 cb_ax.ticklabel_format(style='sci', scilimits=(0,0), axis='y', useMathText=True)
 cb_ax.tick_params(labelsize=20)
@@ -43,8 +43,8 @@ for axi in ax[1:3]:
     axi.set_yticks(np.arange(3)+0.5, ['X', 'Y', 'Z'], fontsize=26)
     axi.set_xlabel('To')
     axi.set_ylabel('From')
-ax[1].set_title('Ground truth')
-ax[2].set_title('PTD-TE')
+ax[1].set_title('ground truth')
+ax[2].set_title('PDIF')
 #%
 f = np.arange(0.05,0.21,0.01)
 fu = np.arange(1, 5.1, 0.2)*1e-2
@@ -85,7 +85,7 @@ for axis, pos in zip([ax[3].xaxis, ax[3].yaxis], [(0.9,0), (-0.1,0)]):
     off.set_visible(True)
     off.set_fontsize(18)
 
-ax[3].set_title(r'$T^\mathrm{PTD}_{X\to Y} / T^\mathrm{PTD}_{X\to Z}$')
+ax[3].set_title(r'$I_{X\to Y} / I_{X\to Z}$')
 
 for i, tag in enumerate('abcd'):
     fig.text(i*0.25, 0.98, tag,
@@ -116,7 +116,7 @@ gt = np.load(data_path/'HH3-confounder/connect_matrix-p=0.250.npy')
 TE = np.zeros((3,3))
 TE[~np.eye(3, dtype=bool)] = data_matched['TE']
 sns.heatmap(gt, linecolor='#DDDDDD', lw=2, ax=ax[1], square=True, cmap='Oranges', cbar=False)
-sns.heatmap(TE, linecolor='#DDDDDD', lw=2, ax=ax[2], square=True, cmap='Oranges', cbar_kws={'label':'PTD-TE value'})
+sns.heatmap(TE, linecolor='#DDDDDD', lw=2, ax=ax[2], square=True, cmap='Oranges', cbar_kws={'label':'PDIF value'})
 cb_ax = ax[2].figure.axes[-1]
 cb_ax.ticklabel_format(style='sci', scilimits=(0,0), axis='y', useMathText=True)
 cb_ax.tick_params(labelsize=20)
@@ -129,7 +129,7 @@ for axi in ax[1:]:
     axi.set_xlabel('To')
     axi.set_ylabel('From')
 ax[1].set_title('Ground truth')
-ax[2].set_title('PTD-TE')
+ax[2].set_title('PDIF')
 #%
 
 f = np.arange(0.05,0.21,0.01)
@@ -171,7 +171,7 @@ for axis, pos in zip([ax[3].xaxis, ax[3].yaxis], [(0.9,0), (-0.1,0.0)]):
     off.set_visible(True)
     off.set_fontsize(18)
 
-ax[3].set_title(r'$T^\mathrm{PTD}_{X\to Y} / T^\mathrm{PTD}_{Y\to Z}$')
+ax[3].set_title(r'$I_{X\to Y} / I_{Y\to Z}$')
 plt.tight_layout()
 
 for i, tag in enumerate('abcd'):

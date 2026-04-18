@@ -62,15 +62,15 @@ data = pd.DataFrame(data_raw[conn_]).loc['TE']
 # mask = np.ones_like(data['hist_conn'], dtype=bool)
 RED, GREEN = '#F49227', '#194955'
 mask = data['hist_conn']>0
-ax[0].plot(data['edges'][mask], data['hist_conn'][mask], color=RED, lw=5, label='PTD-TE with A_{ij}=1')
+ax[0].plot(data['edges'][mask], data['hist_conn'][mask], color=RED, lw=5, label='PDIF with A_{ij}=1')
 ax[0].fill_between(data['edges'][mask], 0, data['hist_conn'][mask], color=RED, alpha=0.5)
 # mask = np.ones_like(data['hist_disconn'], dtype=bool)
 mask = data['hist_disconn']>0
-ax[0].plot(data['edges'][mask], data['hist_disconn'][mask], color=GREEN, lw=5, label='PTD-TE with A_{ij}=0')
+ax[0].plot(data['edges'][mask], data['hist_disconn'][mask], color=GREEN, lw=5, label='PDIF with A_{ij}=0')
 ax[0].fill_between(data['edges'][mask], 0, data['hist_disconn'][mask], color=GREEN, alpha=0.5)
 ymax = np.hstack((data['hist_conn'], data['hist_disconn'])).max()
 ax[0].set_ylim(0)
-ax[0].set_xlabel('PTD-TE value')
+ax[0].set_xlabel('PDIF value')
 ax[0].set_ylabel('density')
 print(f"{conn_name_:15s} recon acc : {data['acc_gauss']*100:6.3f} %")
 ax[0].axvline(data['kmean_th'], ymax=ymax/ax[0].get_ylim()[1], color='#F26A9D',lw=4, label='Threshold')
@@ -100,13 +100,13 @@ TE = data['raw_data']
 mask = conn > 0
 ax[1].plot(conn[mask], 10**TE[mask], 'o', mec=GREEN, mfc='none', ms=3, alpha=0.35, clip_on=False)
 ax[1].set_xlabel(r'S ($\mathrm{mS}\cdot \mathrm{cm}^{-2})$')
-ax[1].set_ylabel('PTD-TE value')
+ax[1].set_ylabel('PDIF value')
 ax[1].ticklabel_format(style='sci', scilimits=(0,1), axis='y', useMathText=True)
 # quadratic fit
 fit_func = lambda x, a: a*x**2
 pval, _ = curve_fit(fit_func, conn[mask], 10**TE[mask])
 R2 = Linear_R2(conn[mask], 10**TE[mask], np.hstack([pval,[0,0]]))
-print('R^2 for PTD-TE vs S is %0.4f\n'%R2)
+print('R^2 for PDIF vs S is %0.4f\n'%R2)
 xrange = np.linspace(0, conn[mask].max(), 100)
 ax[1].plot(xrange, fit_func(xrange, pval[0]), color='r', lw=1.5, label=f'$R^2$={R2:.2f}')
 ax[1].set_xlim(0)
@@ -114,5 +114,5 @@ ax[1].set_ylim(0)
 
 for axi, letter in zip(ax.flatten(), 'ab'):
     axi.text(-0.15,1.05,'%s'%letter,fontsize=28,weight='bold', transform=axi.transAxes)
-fig.savefig('pdf/figS3_TE_lognormal.pdf', dpi=300, bbox_inches='tight', transparent=True)
+fig.savefig(root / 'fig_nc/pdf/figS3.pdf', dpi=300, bbox_inches='tight', transparent=True)
 # %%

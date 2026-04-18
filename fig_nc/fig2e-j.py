@@ -57,7 +57,7 @@ def plot_s_vs_ptdte(data_path, ax, spk_fname, ss, dt, order, delay):
     #                   r'$T^\mathrm{PTD}_{Y\to X}$',
     #                   r'$T^\mathrm{PTD}_{X\to Z}$'], fontsize=14, loc='lower right')
     ax.set_xlabel(r'$S$ $(\mathrm{mS}\cdot\mathrm{cm}^{-2})$', fontsize=26, usetex=False)
-    ax.set_ylabel('PTD-TE value', fontsize=26)
+    ax.set_ylabel('PDIF value', fontsize=26)
     ax.set_xlim(0, ss[-1])
     ax.set_ylim(0, ffit(ss[-1])*1.3)
     ax.ticklabel_format(style='sci', scilimits=(0,0), axis='y', useMathText=True)
@@ -201,9 +201,9 @@ for axi, key in zip(ax.T, keys):
     axi[0].set_yticks([0, 2, 4, 6, 8])
     axi[0].set_xticks([1, 3, 5, 7, 9])
     if key == 'chain':
-        axi[0].set_title(r'$T^\mathrm{PTD}_{X\to Y} / T^\mathrm{PTD}_{X\to Z}$')
+        axi[0].set_title(r'$I_{X\to Y} / I_{X\to Z}$')
     else:
-        axi[0].set_title(r'$T^\mathrm{PTD}_{X\to Y} / T^\mathrm{PTD}_{Y\to Z}$')
+        axi[0].set_title(r'$I_{X\to Y} / I_{Y\to Z}$')
 
     cmap='viridis'
     with open(root / f'data/HH3_{key:s}.pkl', 'rb') as f:
@@ -223,11 +223,11 @@ for axi, key in zip(ax.T, keys):
     ax_TE.plot(direct, np.polyval(pval, direct), color='#F26A9D', lw=2, zorder=-1)
     label_fs = 20
     if key == 'confounder':
-        ax_TE.set_xlabel(r'$T_{X\to Y}^\mathrm{PTD}\cdot T_{X\to Z}^\mathrm{PTD}$', fontsize=label_fs, usetex=False)
-        ax_TE.set_ylabel(r'$T_{Y\to Z}^\mathrm{PTD}$', fontsize=label_fs, usetex=False)
+        ax_TE.set_xlabel(r'$I_{X\to Y}\cdot I_{X\to Z}$', fontsize=label_fs, usetex=False)
+        ax_TE.set_ylabel(r'$I_{Y\to Z}$', fontsize=label_fs, usetex=False)
     elif key == 'chain':
-        ax_TE.set_xlabel(r'$T_{X\to Y}^\mathrm{PTD}\cdot T_{Y\to Z}^\mathrm{PTD}$', fontsize=label_fs, usetex=False)
-        ax_TE.set_ylabel(r'$T_{X\to Z}^\mathrm{PTD}$', fontsize=label_fs, usetex=False)
+        ax_TE.set_xlabel(r'$I_{X\to Y}\cdot I_{Y\to Z}$', fontsize=label_fs, usetex=False)
+        ax_TE.set_ylabel(r'$I_{X\to Z}$', fontsize=label_fs, usetex=False)
     # ax_dp.set_title(r'$R^2=%.3f$'%(Linear_R2(direct, indirect, pval)), fontsize=14)
     ax_TE.set_xlim(-2e-12,3.5e-11)
     ax_TE.tick_params(axis='both', labelsize=18)
@@ -294,10 +294,10 @@ for axi, key in zip(ax.T, keys):
 for i, tag in enumerate('ef'):
     fig.text(0.02, 0.48+(1-i)*0.5, tag, fontsize=35, fontweight='bold', va='top')
 
-for i, tag in enumerate('gi'):
+for i, tag in enumerate('gh'):
     fig.text(0.35+i*0.34, 0.98, tag, fontsize=35, fontweight='bold', va='top')
 
-for i, tag in enumerate('hj'):
+for i, tag in enumerate('ij'):
     fig.text(0.35+i*0.34, 0.48, tag, fontsize=35, fontweight='bold', va='top')
 
 fig.savefig(root/'fig_nc/pdf'/'fig2e-j.pdf', transparent=True)

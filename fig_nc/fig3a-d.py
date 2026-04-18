@@ -68,7 +68,7 @@ for i, (axi, spk_fname) in enumerate(zip(ax[1:], spk_fnames)):
     axi.xaxis.set_major_formatter(sci_formatter)
     axi.set_xlim(-8, -4)
     axi.set_ylim(0)
-    axi.set_xlabel('PTD-TE value')
+    axi.set_xlabel('PDIF value')
     axi.set_ylabel('density')
 
 for x, tag in enumerate('abcd'):

@@ -49,7 +49,7 @@ for axi, spk_fname, conn_fname in zip(ax, spk_fnames, conn_fnames):
     axi[1].axvline(tmp['th_svm'], ls='-', color='#F26A9D', lw=4)
     axi[1].set_ylim(0)
     axi[1].set_yticks([0,0.5,1.0])
-    axi[1].set_xlabel('PTD-TE value')
+    axi[1].set_xlabel('PDIF value')
     axi[1].set_ylabel('density')
 
 ax[0,1].xaxis.set_major_formatter(sci_formatter)

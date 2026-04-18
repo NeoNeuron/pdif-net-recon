@@ -56,15 +56,15 @@ for idx, f in enumerate(datafiles):
     # TE histogram
     # mask = np.ones_like(data['hist_conn'], dtype=bool)
     mask = data['hist_conn']>0
-    ax[idx].plot(data['edges'][mask], data['hist_conn'][mask], color=RED, lw=5, label='PTD-TE with A_{ij}=1')
+    ax[idx].plot(data['edges'][mask], data['hist_conn'][mask], color=RED, lw=5, label='PDIF with A_{ij}=1')
     ax[idx].fill_between(data['edges'][mask], 0, data['hist_conn'][mask], color=RED, alpha=0.5)
     # mask = np.ones_like(data['hist_disconn'], dtype=bool)
     mask = data['hist_disconn']>0
-    ax[idx].plot(data['edges'][mask], data['hist_disconn'][mask], color=GREEN, lw=5, label='PTD-TE with A_{ij}=0')
+    ax[idx].plot(data['edges'][mask], data['hist_disconn'][mask], color=GREEN, lw=5, label='PDIF with A_{ij}=0')
     ax[idx].fill_between(data['edges'][mask], 0, data['hist_disconn'][mask], color=GREEN, alpha=0.5)
     ymax = np.hstack((data['hist_conn'], data['hist_disconn'])).max()
     ax[idx].set_ylim(0)
-    ax[idx].set_xlabel('PTD-TE value')
+    ax[idx].set_xlabel('PDIF value')
     ax[idx].set_ylabel('density')
     # print(f"{conn_name_:15s} recon acc : {data['acc_gauss']*100:6.3f} %")
     ax[idx].axvline(data['kmean_th'], ymax=ymax/ax[0].get_ylim()[1], color='#F26A9D',lw=4, label='Threshold')
@@ -85,5 +85,5 @@ fig.text(0.01, 0.995, 'a', fontsize=35, fontweight='bold', va='top')
 fig.text(0.52, 0.995, 'b', fontsize=35, fontweight='bold', va='top')
 fig.text(0.76, 0.995, 'c', fontsize=35, fontweight='bold', va='top')
 
-fig.savefig('pdf/figS4_downsample.pdf', dpi=300, bbox_inches='tight', transparent=True)
+fig.savefig(root/'fig_nc/pdf/figS4.pdf', dpi=300, bbox_inches='tight', transparent=True)
 # %%

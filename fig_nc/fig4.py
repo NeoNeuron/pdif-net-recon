@@ -134,7 +134,7 @@ for axti, ax_col, spk_fname, key, dt, T, delay, order, vol_fname, th, Trange in 
     ax_col[-1].tick_params(axis='both', which='major', labelsize=22)
         # format_xticks(ax_col[-1], (-7, -4))
     ax_col[-1].set_ylim(0)
-    ax_col[-1].set_xlabel('PTD-TE value', fontsize=26)
+    ax_col[-1].set_xlabel('PDIF value', fontsize=26)
     ax_col[-1].set_ylabel('density', fontsize=26)
 
 xx, yy = np.meshgrid(np.arange(4), np.arange(3), indexing='ij')

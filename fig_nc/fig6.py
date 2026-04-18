@@ -1,149 +1,101 @@
-# %%
+# statistical analysis for the causal reconstruction results for all Visual Coding data 
+#%%
+import pickle
+# import h5py
 import numpy as np
+import pandas as pd
+# from scipy.ndimage import gaussian_filter1d
 import matplotlib.pyplot as plt
 import seaborn as sns
-import pandas as pd
-import pickle as pkl
-import causal4.utils as c4u
-from causal4.myplot import ReconstructionFigureGeneral
+plt.rcParams['font.size']=15
+plt.rcParams['axes.labelsize']=15
+plt.rcParams['axes.spines.top'] = False
+plt.rcParams['axes.spines.right'] = False
 from pathlib import Path
 root_path = Path(__file__).parents[1]
 from figrc import *
-import yaml
-from sklearn.metrics import roc_auc_score
 
-def get_conn_mat(df, key='connection'):
-    conn_mat = np.zeros((int(df['pre_id'].max()+1),int(df['post_id'].max()+1)))
-    conn_mat[df['pre_id'], df['post_id']] = df[key]
-    return conn_mat
-colors = [
-    # '#335C8C', '#82b6db', '#cbe1ef', '#df1423', '#ca631c', '#5a3e16', '#f9ba80', 
-    # '#2D527C', '#9796C7', '#BEB0D5', '#EBC4CD', '#FDD5A8', '#F3AE8F', '#BE8076',
-    '#2D527C', '#ea3323',  '#ff8b00',  '#febb26',  '#1eb253',  '#017cf3', '#9c78fe',
-]
-with open(Path(__file__).resolve().parents[1] / 'scripts/benchmark/benchmark10_causal.yml', 'r') as yamlfile:
-    pm_causal_set = yaml.load(yamlfile, Loader=yaml.FullLoader)
-for key in pm_causal_set.keys():
-    pm_causal_set[key]['path'] = root_path / pm_causal_set[key]['path']
-
-subnet_indices = np.load(root_path / 'benchmark/N100/subnet_indices.npy')[0]
-
-save_path = root_path / 'results'
-save_path.mkdir(parents=True, exist_ok=True)
-
-net_keys = ['HHEE', 'HHEI', 'HHconEE', 'HHconEI', 'Lorenz', 'Logistic', 'Rcon', 'RNN']
-keys = ['PTD-TE', 'STE', 'GLMCC', 'DDC', 'CCM', 'FDCCM', 'SCCM']
-labels = {'PTD-TE':'TE', 'STE': 'ste', 'GLMCC': 'glmcc_abs',
-          'DDC': 'ddc_abs', 'CCM': 'ccm', 'FDCCM': 'ccm', 'SCCM': 'ccm'}
-heatmap_kws = {'cbar': False, 'square': True}
-buffer = []
-for net_key in net_keys:
-    for subnet_toggle, gfname in enumerate([
-        lambda x: f'recon_df_noise_0_{x:s}_fullnet.pkl',
-        lambda x: f'recon_df_noise_0.3_{x:s}_0.pkl']):
-        for key in keys:
-            if key == 'GLMCC':
-                if net_key in ['HHEE', 'HHEI', 'HHconEE', 'HHconEI', 'Lorenz']:
-                    T = pm_causal_set[net_key]['T'] / 1e3
-                else:
-                    T = pm_causal_set[net_key]['T'] / 1e4
-                dfname = gfname(f'{net_key:s}_T={T:.0f}')
-            else:
-                dfname = gfname(net_key)
-            try:
-                recon_df = pd.read_pickle(save_path / key / dfname)
-                recon, fig_data = c4u._reconstruction_analysis(recon_df, labels[key], 'connection',
-                                                               algorithm='EM', hist_type='linear')
-                if key == 'PTD-TE' and net_key == 'Lorenz':
-                    ReconstructionFigureGeneral(fig_data, causal_hist_with_gt=True)
-                buffer.append({
-                    'net': net_key, 'causal_measure': key, 'subnet_toggle': subnet_toggle,
-                    # 'auc': roc_auc_score(recon_df['connection'], recon_df['log-'+labels[key]]),
-                    'auc': roc_auc_score(recon_df['connection'], recon_df[labels[key]]),
-                    'gt': get_conn_mat(recon, 'connection'),
-                    'recon': get_conn_mat(recon, f'recon-gauss-{labels[key]:s}'),
-                    'cpu_time': recon_df.attrs['cpu_time'],
-                    'wall_time': recon_df.attrs['wall_time'],
-                })
-            except FileNotFoundError:
-                print(f"File not found: {save_path / key / dfname}")
-data = pd.DataFrame(buffer)
-# %%
-fig = plt.figure(figsize=(16,10))
-for i in range(2):
-    ax = fig.subplots(8,8, gridspec_kw={
-        'left': 0.05+i*0.5, 'right': 0.48+i*0.5, 'top': 0.95, 'bottom': 0.28,
-    })
-    # plot ground truth
-    for axi, net in zip(ax[0], net_keys):
-        conn_mat = data[data['net'].eq(net)
-                        * data['causal_measure'].eq('PTD-TE')
-                        * data['subnet_toggle'].eq(i)
-                        ]['gt'].values[0]
-        if i == 1:
-            conn_mat = conn_mat[subnet_indices][:, subnet_indices]
-        print(net, conn_mat.mean(), conn_mat.shape)
-        sns.heatmap(conn_mat, ax=axi, **heatmap_kws, cmap='Greens')
-        if net == 'Rcon':
-            axi.set_title('Rössler', fontweight='bold', fontsize=12)
-        elif net == 'Gaussian':
-            axi.set_title('LRNN', fontweight='bold', fontsize=12)
-        else:
-            axi.set_title(net, fontweight='bold', fontsize=12)
-    ax[0,0].set_ylabel('ground\ntruth', fontsize=15)
-
-    for ax_row, key in zip(ax[1:], keys):
-        # if key not in ['PTD-TE', 'GLMCC']:
-        #     continue
-        for axi, net in zip(ax_row, net_keys):
-            buff = data[data['net'].eq(net)
-                        * data['causal_measure'].eq(key)
-                        * data['subnet_toggle'].eq(i)
-                        ]
-            if len(buff) == 0:
-                continue
-            conn_mat = buff['gt'].values[0]
-            recon_mat = buff['recon'].values[0]
-            if i == 1:
-                conn_mat = conn_mat[subnet_indices][:, subnet_indices]
-                recon_mat = recon_mat[subnet_indices][:, subnet_indices]
-            sns.heatmap(recon_mat, ax=axi, **heatmap_kws, cmap='Oranges')
-            inconsistent_mask = conn_mat != recon_mat  # Find inconsistent blocks
-            for y, x in zip(*np.where(inconsistent_mask)):  # Add transparent squares
-                axi.add_patch(plt.Rectangle((x, y), 1, 1, fill=False, edgecolor='#00BAFF', lw=1.5, alpha=1.0))
-        ax_row[0].set_ylabel(key, rotation=90, fontsize=15)
-        # break
-
-    for axi in ax.flatten():
-        axi.set_xticks([])
-        axi.set_yticks([])
-        axi.spines['top'].set_visible(False)
-        axi.spines['right'].set_visible(False)
-        axi.spines['left'].set_visible(False)
-        axi.spines['bottom'].set_visible(False)
-
-    auc_df = data[data['subnet_toggle'].eq(i)].copy()
-    # auc_df['auc'] = auc_df.apply(lambda x: np.maximum(x['auc'], 0.510), axis=1)
-    axb = fig.subplots(1,1, gridspec_kw={
-        'left': 0.05+i*0.5, 'right': 0.48+i*0.5, 'top': 0.20, 'bottom': 0.05,
-    })
-    # ax = auc_df.loc[['HHEE', 'HHEI', 'HHconEE', 'HHconEI', 'Lorenz', 'Logistic', 'Rcon', 'RNN']].plot.bar(color=colors, width=0.7, ec='w', ax=axb)
-    sns.barplot(
-        data=auc_df, x='net', y='auc', hue='causal_measure', ec='w',
-        order=net_keys, palette=colors, ax=axb)
-    axb.set_xticklabels(['HHEE', 'HHEI', 'HHconEE', 'HHconEI', 'Lorenz', 'Logistic', 'Rössler', 'RNN'],)
-    axb.tick_params(axis='x', labelsize=13, rotation=0)
-    axb.set_ylabel('AUC', fontsize=20)
-    axb.set_xlabel('')
-    axb.set_ylim(0.3, 1.0)
-    axb.set_yticks([0.4, 0.6, 0.8, 1.0])
-    axb.legend(loc='lower left', bbox_to_anchor=(0.03, 1.05), fontsize=10, ncols=7, columnspacing=0.5)
-    sns.despine(ax=axb)
-
-fig.text(x=0.02, y=0.97, s='a', ha='center', va='center', fontsize=24, fontweight='bold')
-fig.text(x=0.02, y=0.24, s='b', ha='center', va='center', fontsize=24, fontweight='bold')
-fig.text(x=0.52, y=0.97, s='c', ha='center', va='center', fontsize=24, fontweight='bold')
-fig.text(x=0.52, y=0.24, s='d', ha='center', va='center', fontsize=24, fontweight='bold')
-fig.savefig(root_path / 'fig_nc/pdf' / f'fig6_new.pdf', transparent=True)
-
+import warnings
+warnings.filterwarnings('ignore')
 #%%
+session_id=[]
+    #   'consistency':[],
+    #   'consistency_binary':[],
+    #   'inconsistent_ratio':[],
+average_auc = []
+for out_dir in (root_path/ 'visualcoding').iterdir():
+    if not out_dir.is_dir():
+        continue
+    session_id.append(int(out_dir.stem))
+    units = pd.read_pickle(out_dir / f"units.pkl")
+    n_unit = len(units)
+    # with open(out_dir/'allen-data-ref=5-gap=250-sfx=0-K=1_5-bin=1.00-delay=0.00.pkl', 'rb') as f:
+    with open(out_dir/'allen-data-ref=5-gap=250-sfx=0-K=1_5-bin=1.00.pkl', 'rb') as f:
+        data_fig_all = pickle.load(f)
+
+    # df['consistency'].append(data_fig_all['consistency']['TE'].min())
+    # df['consistency_binary'].append(data_fig_all['consistency_binary']['TE'].min())
+    # df['inconsistent_ratio'].append(data_fig_all['drifting_gratings']['hist_inconsist']['TE'].sum()*(np.diff(data_fig_all['drifting_gratings']['edges']['TE'])[0]))
+    average_auc.append(
+        {'drifting_gratings': data_fig_all['drifting_gratings']['auc_gauss']['TE'],
+         'static_gratings': data_fig_all['static_gratings']['auc_gauss']['TE'],
+         'natural_scenes': data_fig_all['natural_scenes']['auc_gauss']['TE'],
+         'natural_movie': data_fig_all['natural_movie']['auc_gauss']['TE'],
+         })
+
+for out_dir in (root_path / 'visualbehavior').iterdir():
+    if not out_dir.is_dir():
+        continue
+    session_id.append(int(out_dir.stem))
+    units = pd.read_pickle(out_dir / f"units.pkl")
+    n_unit = len(units)
+    # with open(out_dir/'allen-data-ref=5-gap=250-sfx=250-K=1_5-bin=1.00-delay=0.00.pkl', 'rb') as f:
+    with open(out_dir/'allen-data-ref=5-gap=250-sfx=250-K=1_5-bin=1.00.pkl', 'rb') as f:
+        data_fig_all = pickle.load(f)
+
+    # df['consistency'].append(data_fig_all['consistency']['TE'][1,0])
+    # df['consistency_binary'].append(data_fig_all['consistency_binary']['TE'][1,0])
+    # df['inconsistent_ratio'].append(data_fig_all['active']['hist_inconsist']['TE'].sum()*(np.diff(data_fig_all['active']['edges']['TE'])[0]))
+    average_auc.append(
+        {'active': data_fig_all['active']['auc_gauss']['TE'],
+         'passive': data_fig_all['passive']['auc_gauss']['TE']})
+    
+df_auc = pd.DataFrame(average_auc, index=session_id)
+# df.set_index('session_id', inplace=True)
+df_auc.head()
+# %%
+fig, ax = plt.subplots(2,3,figsize=(10,7),
+                       gridspec_kw={'top':0.65, 'bottom':0.1,
+                                    'left':0.1, 'right':0.95,
+                                    'hspace':0.6, 'wspace':0.3})
+for label, axi in zip(df_auc.columns, ax.flatten()):
+    sns.histplot(df_auc[label], ax=axi, bins=20, binrange=(0.5,1.0), kde=True, ec='w')
+    axi.set_xlabel('AUC')
+    axi.set_ylabel('# sessions')
+    axi.set_xlim(0.6,1)
+    axi.set_xticks([0.6,0.8,1])
+        # arr_image = plt.imread('../'+stimulus_names_plot[i].split('-')[0]+'.png', format='png')
+    # arr_image = plt.imread(root_path / 'figure' / (label+'.png'), format='png')
+    # axins = axi.inset_axes([0.05, 0.5, 0.5, 0.4], transform=axi.transAxes)
+
+    # axins.imshow(arr_image)
+    # axins.axis('off')
+    if '_' in label:
+        axi.set_title(label.replace('_', ' '), fontsize=16)
+    else:
+        axi.set_title(label+' behavior', fontsize=16)
+ax[0,0].text(-0.08, 2.6, 'a', transform=ax[0,0].transAxes, fontsize=25, va='top', ha='right', weight='bold')
+for label, axi in zip('bcdefg', ax.flatten()):
+    axi.text(-0.08, 1.3, label, transform=axi.transAxes, fontsize=25, va='top', ha='right', weight='bold')
+
+fig.savefig(root_path / 'fig_nc/pdf' / 'fig6.pdf')
+# ax[0].set_xlabel('Min. Consistency')
+# ax[1].set_xlabel('AUC')
+# ax[1].set_xlim(None,1)
+
+# ax.set_ylabel('values')
+# ax.set_xticklabels(['consistency', 'consistency(bin)', 'inconsistency\nratio', 'auc(TE)'], rotation=0)
+# ax.set_ylim(0,1)
+# ax.grid()
+# sns.boxplot(df, x=2, y=)
+# %%
