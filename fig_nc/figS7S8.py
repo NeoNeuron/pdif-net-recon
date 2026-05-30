@@ -59,9 +59,7 @@ corr = np.corrcoef(conn2_chain[mask]+conn2_confounder[mask], np.sqrt(TE[mask]))[
 ax.set_title(f"R={corr:.3f}", fontsize=20, pad=-20)
 ax.tick_params(axis='both', labelsize=18)
 ax.yaxis.get_offset_text().set_size(16)
-fig.savefig(root/'fig_nc/pdf/figS7.pdf', bbox_inches='tight')
-# %%
-
+fig.savefig(root/'fig_nc/pdf/figS8.pdf', bbox_inches='tight')
 # %%
 auc = []
 acc = []
@@ -92,4 +90,4 @@ ax.set_ylim(0.48, 1)
 ax.tick_params(axis='both', labelsize=18)
 ax.ticklabel_format(style='sci', scilimits=(0,0), axis='x', useMathText=True)
 ax.xaxis.get_offset_text().set_size(16)
-fig.savefig(root/'fig_nc/pdf/figS6.pdf', bbox_inches='tight')
+fig.savefig(root/'fig_nc/pdf/figS7.pdf', bbox_inches='tight')
