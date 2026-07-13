@@ -123,10 +123,24 @@ Trange = 50
 _plot_figures(key, spk_fname, vol_fname, dt, T, order, delay, ths, Trange, 'ABCDE', axes0)
 
 axes01 = fig.subplots(1, 1, 
-    gridspec_kw=dict(left=0.94, right=0.98,
+    gridspec_kw=dict(left=0.94, right=0.99,
                      top=0.95, bottom=0.58))
 
-ths = np.arange(2.5, 15.1, 2.5)
+N = 100
+subfolder = root / f'benchmark/N100/{key:s}'
+if (subfolder/(vol_fname + '.npy')).exists():
+    voltages = np.load(subfolder/(vol_fname + '.npy'), mmap_mode='r')
+    voltage_dt = voltages[1,0] - voltages[0,0]
+    Tn = int(Trange / voltage_dt)
+    voltages = voltages[:Tn, :]
+elif (subfolder/(vol_fname + '.dat')).exists():
+    voltages = c4u.fetch_voltage(subfolder/(vol_fname + '.dat'), N=N, voltage_range=(0, Trange))
+# counts, bins = np.histogram(voltages[:,1:].flatten(), bins=100, density=True)
+# cum_counts = np.cumsum(counts)*(bins[1]-bins[0])
+ths = np.arange(2.5, 17.6, 2.5)
+# percentages = np.array([cum_counts[np.nonzero(bins > th)[0][0]] for th in ths])
+dev_from_mean = (ths - voltages[:,1:].mean())/voltages[:,1:].std()
+
 acc_list, auc_list = [], []
 for th in ths:
     subfolder = root / f'benchmark/N100/{key:s}'
@@ -142,13 +156,14 @@ for th in ths:
     acc_list.append(df_fig['acc_svm']['TE'])
     auc_list.append(df_fig['auc_svm']['TE'])
     
-axes01.plot(ths, auc_list, marker='o', label='accuracy', ms=8, c=GREEN, clip_on=False)
-axes01.set_xlabel(r'$x^\mathrm{th}$', fontsize=26)
+axes01.plot(dev_from_mean, auc_list, marker='o', label='accuracy', ms=8, c=GREEN, clip_on=False)
+axes01.set_xlabel(r'$(x^\mathrm{th}-\bar{x})/\sigma_{x}$', fontsize=26)
 axes01.set_ylabel('AUC', fontsize=26)
-axes01.set_xticks([0,15])
-axes01.set_xlim(0, 15)
+# axes01.set_xticks([0.7,1.0], [70, 100])
+axes01.set_xlim(0.)
 axes01.set_ylim(0.5, 1)
 axes01.text(-0.5, 1.11, 'F', fontsize=35, va='top', transform=axes01.transAxes)
+axes01.grid()
 
 axes1 = fig.subplots(3, 5, 
     gridspec_kw=dict(wspace=0.5, hspace=0.7,
@@ -168,10 +183,22 @@ Trange = 600
 _plot_figures(key, spk_fname, vol_fname, dt, T, order, delay, ths, Trange, 'GHIJK', axes1)
 
 axes11 = fig.subplots(1, 1, 
-    gridspec_kw=dict(left=0.94, right=0.98,
+    gridspec_kw=dict(left=0.94, right=0.99,
                      top=0.44, bottom=0.07))
 
+subfolder = root / f'benchmark/N100/{key:s}'
+if (subfolder/(vol_fname + '.npy')).exists():
+    voltages = np.load(subfolder/(vol_fname + '.npy'), mmap_mode='r')
+    voltage_dt = voltages[1,0] - voltages[0,0]
+    Tn = int(Trange / voltage_dt)
+    voltages = voltages[:Tn, :]
+elif (subfolder/(vol_fname + '.dat')).exists():
+    voltages = c4u.fetch_voltage(subfolder/(vol_fname + '.dat'), N=N, voltage_range=(0, Trange))
+# counts, bins = np.histogram(voltages[:,1:].flatten(), bins=100, density=True)
+# cum_counts = np.cumsum(counts)*(bins[1]-bins[0])
 ths = np.arange(0.10, 0.41, 0.05)
+# percentages = np.array([cum_counts[np.nonzero(bins > th)[0][0]] for th in ths])
+dev_from_mean = (ths - voltages[:,1:].mean())/voltages[:,1:].std()
 acc_list, auc_list = [], []
 for th in ths:
     subfolder = root / f'benchmark/N100/{key:s}'
@@ -187,14 +214,110 @@ for th in ths:
     acc_list.append(df_fig['acc_svm']['TE'])
     auc_list.append(df_fig['auc_svm']['TE'])
 
-axes11.plot(ths, auc_list, marker='o', label='accuracy', ms=8, c=GREEN, clip_on=False)
+axes11.plot(dev_from_mean, auc_list, marker='o', label='accuracy', ms=8, c=GREEN, clip_on=False)
+axes11.set_xlabel(r'$(x^\mathrm{th}-\bar{x})/\sigma_{x}$', fontsize=26)
+axes11.set_ylabel('AUC', fontsize=26)
+# axes11.set_xticks([0.6,1.0], [60, 100])
+axes11.set_xlim(0,)
+axes11.set_ylim(0.5, 1)
+axes11.text(-0.5, 1.11, 'L', fontsize=35, va='top', transform=axes11.transAxes)
+axes11.grid()
+
+
+fig.savefig(root/'fig_nc/pdf'/'figS6.pdf', transparent=True)
+#%%
+key = 'Rcon'
+spk_fname = lambda th: f'Rconp=0.25s=0.002_th={th:.2f}ref=5.00'
+vol_fname = 'Rconp=0.25s=0.002_x'
+dt = 3.0
+T = 1e7
+order = (5,5)
+delay = 0
+Trange = 50
+
+
+subfolder = root / f'benchmark/N100/{key:s}'
+if (subfolder/(vol_fname + '.npy')).exists():
+    voltages = np.load(subfolder/(vol_fname + '.npy'), mmap_mode='r')
+    voltage_dt = voltages[1,0] - voltages[0,0]
+    Tn = int(Trange / voltage_dt)
+    voltages = voltages[:Tn, :]
+elif (subfolder/(vol_fname + '.dat')).exists():
+    voltages = c4u.fetch_voltage(subfolder/(vol_fname + '.dat'), N=N, voltage_range=(0, Trange))
+counts, bins = np.histogram(voltages[:,1:].flatten(), bins=100, density=True)
+cum_counts = np.cumsum(counts)*(bins[1]-bins[0])
+ths = np.arange(-20.0, 20.1, 2.5)
+percentages = np.array([cum_counts[np.nonzero(bins > th)[0][0]] for th in ths])
+
+fig, axes01 = plt.subplots(1, 1)
+acc_list, auc_list = [], []
+for th in ths:
+    subfolder = root / f'benchmark/N100/{key:s}'
+    N = 100
+    estimator = CausalityEstimator(
+        subfolder, spk_fname(th), N, delay=delay, T=T, dt=dt,
+        n_thread=128, order=order,
+    )
+    data = estimator.fetch_data(new_run=True)
+    data_matched = match_features(data, N, subfolder/'connect_matrix-p=0.250.dat')
+    df_recon, df_fig = reconstruction_analysis_TE(data_matched, nbins=50, algorithm='EM')
+    print('acc: %.4f, auc: %.4f'%(df_fig['acc_svm']['TE'], df_fig['auc_svm']['TE']))
+    acc_list.append(df_fig['acc_svm']['TE'])
+    auc_list.append(df_fig['auc_svm']['TE'])
+    
+axes01.plot(percentages, auc_list, marker='o', label='accuracy', ms=8, c=GREEN, clip_on=False)
+axes01.set_xlabel(r'$x^\mathrm{th}$', fontsize=26)
+axes01.set_ylabel('AUC', fontsize=26)
+axes01.set_xticks([0, 0.5, 1.0])
+axes01.set_xlim(0, 1)
+axes01.set_ylim(0.5, 1)
+axes01.text(-0.5, 1.11, 'F', fontsize=35, va='top', transform=axes01.transAxes)
+#%%
+
+key = 'RNN'
+spk_fname = lambda th: f'RNNp=0.25s=0.030tau=20ref=10_th={th:.2f}ref=3.00'
+vol_fname = 'RNNp=0.25s=0.030tau=20ref=10_voltage'
+dt = 5.0
+T = 1e8
+order = (5,1)
+delay = 16
+Trange = 600
+
+subfolder = root / f'benchmark/N100/{key:s}'
+if (subfolder/(vol_fname + '.npy')).exists():
+    voltages = np.load(subfolder/(vol_fname + '.npy'), mmap_mode='r')
+    voltage_dt = voltages[1,0] - voltages[0,0]
+    Tn = int(Trange / voltage_dt)
+    voltages = voltages[:Tn, :]
+elif (subfolder/(vol_fname + '.dat')).exists():
+    voltages = c4u.fetch_voltage(subfolder/(vol_fname + '.dat'), N=N, voltage_range=(0, Trange))
+counts, bins = np.histogram(voltages[:,1:].flatten(), bins=100, density=True)
+cum_counts = np.cumsum(counts)*(bins[1]-bins[0])
+ths = np.arange(-0.50, 0.51, 0.05)
+percentages = np.array([cum_counts[np.nonzero(bins > th)[0][0]] for th in ths])
+
+fig, axes11 = plt.subplots(1, 1)
+acc_list, auc_list = [], []
+for th in ths:
+    subfolder = root / f'benchmark/N100/{key:s}'
+    N = 100
+    estimator = CausalityEstimator(
+        subfolder, spk_fname(th), N, delay=delay, T=T, dt=dt,
+        n_thread=128, order=order,
+    )
+    data = estimator.fetch_data(new_run=True)
+    data_matched = match_features(data, N, subfolder/'connect_matrix-p=0.250.dat')
+    df_recon, df_fig = reconstruction_analysis_TE(data_matched, nbins=50, algorithm='EM')
+    print('acc: %.4f, auc: %.4f'%(df_fig['acc_svm']['TE'], df_fig['auc_svm']['TE']))
+    acc_list.append(df_fig['acc_svm']['TE'])
+    auc_list.append(df_fig['auc_svm']['TE'])
+
+axes11.plot(percentages, auc_list, marker='o', label='accuracy', ms=8, c=GREEN, clip_on=False)
 axes11.set_xlabel(r'$x^\mathrm{th}$', fontsize=26)
 axes11.set_ylabel('AUC', fontsize=26)
-axes11.set_xticks([0,0.4])
-axes11.set_xlim(0, 0.4)
+axes11.set_xticks([0,0.2,0.4,0.6,0.8,1.0])
+axes11.set_xlim(0, 1.0)
 axes11.set_ylim(0.5, 1)
 axes11.text(-0.5, 1.11, 'L', fontsize=35, va='top', transform=axes11.transAxes)
 
-
-fig.savefig(root/'fig_nc/pdf'/'figS8.pdf', transparent=True)
-#%%
+# %%

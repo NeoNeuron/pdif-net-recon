@@ -51,14 +51,14 @@ def binarize_with_noise(key, val, threshold):
     )
     gc.collect()
 
-thresholds = np.arange(0, 0.41, 0.05)
+thresholds = np.arange(-0.5, 0.51, 0.05)
 pool = Pool(processes=len(pm_causal_set), maxtasksperchild=1)
 results = [pool.apply_async(binarize_with_noise, args=('RNN', pm_causal_set['RNN'], threshold))
            for threshold in thresholds]
 pool.close()
 pool.join()
 # %%
-thresholds = np.arange(0, 15.1, 2.5)
+thresholds = np.arange(-20, 20.1, 2.5)
 pool = Pool(processes=len(pm_causal_set), maxtasksperchild=1)
 results = [pool.apply_async(binarize_with_noise, args=('Rcon', pm_causal_set['Rcon'], threshold))
            for threshold in thresholds]
