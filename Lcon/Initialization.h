@@ -92,8 +92,7 @@ void Assign_CS()
 	for (int i = 0; i < N; i++) {
 		CS[i] = new double[N];
 		for (int j = 0; j < N; j++) {
-			if (Connect_Matrix[i][j] == 1)
-				CS[i][j] = S[0];
+			CS[i][j] = (Connect_Matrix[i][j] == 1) ? S[0] : 0;
 		}
 	}
 }
