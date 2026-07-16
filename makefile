@@ -1,8 +1,10 @@
 # define compiler and path of libs
 # macOS (Darwin) needs explicit paths for Homebrew's libomp/eigen/boost, since
 # none of them sit on the compiler's default search path the way apt's do on
-# Linux; MSYS2/MinGW-w64 on Windows reports a non-Darwin uname and its pacman
-# packages land on the default search path too, so it rides the Linux branch.
+# Linux. MSYS2/MinGW-w64 on Windows reports a MINGW64_NT-* uname; its pacman
+# packages land on the default search path like apt's do, but its boost
+# package names the library with a "-mt" (multi-threaded) suffix instead of
+# the plain name Ubuntu/Homebrew use.
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Darwin)
     OMPFLAGS   = -Xpreprocessor -fopenmp -I$(shell brew --prefix libomp)/include
@@ -10,6 +12,12 @@ ifeq ($(UNAME_S),Darwin)
     EIGENFLAGS = -I$(shell brew --prefix eigen)/include
     BOOSTFLAGS = -I$(shell brew --prefix boost)/include
     BOOSTLIBS  = -L$(shell brew --prefix boost)/lib -lboost_program_options
+else ifneq (,$(findstring MINGW,$(UNAME_S)))
+    OMPFLAGS   = -fopenmp
+    OMPLIBS    = -fopenmp
+    EIGENFLAGS =
+    BOOSTFLAGS =
+    BOOSTLIBS  = -lboost_program_options-mt
 else
     OMPFLAGS   = -fopenmp
     OMPLIBS    = -fopenmp
