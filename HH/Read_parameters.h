@@ -101,7 +101,7 @@ void Read_parameters(po::variables_map& vm)
 
 	TrialID = vm["TrialID"].as<int>();
 	// initialize folder
-	_mkdir(file);
+	make_dir_recursive(file);
 }
 
 

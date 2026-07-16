@@ -1,7 +1,26 @@
 # define compiler and path of libs
-CPPFLAGS = --std=c++11 -w -I $(DIR_INC)
-CXXFLAGS = -fopenmp -g -O2 
-LDLIBS = -lboost_program_options -fopenmp
+# macOS (Darwin) needs explicit paths for Homebrew's libomp/eigen/boost, since
+# none of them sit on the compiler's default search path the way apt's do on
+# Linux; MSYS2/MinGW-w64 on Windows reports a non-Darwin uname and its pacman
+# packages land on the default search path too, so it rides the Linux branch.
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Darwin)
+    OMPFLAGS   = -Xpreprocessor -fopenmp -I$(shell brew --prefix libomp)/include
+    OMPLIBS    = -L$(shell brew --prefix libomp)/lib -lomp
+    EIGENFLAGS = -I$(shell brew --prefix eigen)/include
+    BOOSTFLAGS = -I$(shell brew --prefix boost)/include
+    BOOSTLIBS  = -L$(shell brew --prefix boost)/lib -lboost_program_options
+else
+    OMPFLAGS   = -fopenmp
+    OMPLIBS    = -fopenmp
+    EIGENFLAGS =
+    BOOSTFLAGS =
+    BOOSTLIBS  = -lboost_program_options
+endif
+# c++14 (not c++11): current Homebrew Eigen (5.x) requires c++14 to compile;
+# c++14 is a strict superset of c++11 so this doesn't affect Linux/Windows.
+CPPFLAGS = --std=c++14 -w -I $(DIR_INC) $(OMPFLAGS) $(EIGENFLAGS) $(BOOSTFLAGS)
+LDLIBS = $(BOOSTLIBS) $(OMPLIBS)
 # define variable path
 DIR_INC = include
 DIR_SRC = HH Causality HHcon Lorenz Lcon Rossler Rcon Logistic FN ML 

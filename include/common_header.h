@@ -8,23 +8,33 @@
 #include <cmath>
 #include <ctime>
 #include <cstring>
+#ifndef __APPLE__
 #include <malloc.h>
+#endif
 #include <omp.h>
 #include <algorithm>
 #include <fstream>
 #include <random>
 
-// Fast code for exp(x) in double precision
+// Fast code for exp(x) in double precision.
+// fmath's expd() is hand-written in x86 SSE2 intrinsics, so it only exists on
+// x86/x64; on other architectures (e.g. ARM64/Apple Silicon) fall back to the
+// standard library exp() below instead of pulling in fmath.hpp's x86intrin.h.
+#if defined(__x86_64__) || defined(__i386__) || defined(_M_X64) || defined(_M_IX86)
+#define FMATH_EXPD_AVAILABLE
 #include "fmath.hpp"
+#endif
 //#define exp(x) fmath::expd(x)
 
 template<typename Ty>
 inline Ty my_expd(const Ty &x)
 { return exp(x); }
 
+#ifdef FMATH_EXPD_AVAILABLE
 template<>
 inline double my_expd(const double &x)
 { return fmath::expd(x); }
+#endif
 
 #define exp(x) my_expd(x)
 

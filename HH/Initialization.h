@@ -174,7 +174,7 @@ void Record_connect_matrix()
 
 		string output_filename = oss.str();
 		ofstream fp = save_npy_header<double>(
-			output_filename, {N, N});
+			output_filename, {(size_t)N, (size_t)N});
 		for (int i = 0; i < N; i++)
 			fp.write(reinterpret_cast<const char*>(Connect_Matrix[i]), N * sizeof(double));
 		fp.close();
@@ -187,7 +187,7 @@ void Record_connect_matrix()
 			if (random_S != 0) {
 				output_filename.erase(output_filename.end() - 4, output_filename.end());
 				output_filename.append("_strength.npy");
-				ofstream fp = save_npy_header<double>(output_filename, {N, N});
+				ofstream fp = save_npy_header<double>(output_filename, {(size_t)N, (size_t)N});
 				for (int i = 0; i < N; i++)
 					fp.write(reinterpret_cast<const char*>(CS[i]), N * sizeof(double));
 				fp.close();

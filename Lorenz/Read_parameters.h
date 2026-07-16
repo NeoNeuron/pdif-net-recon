@@ -102,7 +102,7 @@ void Read_parameters(po::variables_map& vm)
 	// sprintf(ch, "%d", N), strcat(file, ch), strcat(file, "/");
 
 	// initialize folder
-	_mkdir(file);
+	make_dir_recursive(file);
 }
 
 
