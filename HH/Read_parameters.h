@@ -1,4 +1,5 @@
 #include "mkdir.h"
+#include "npy_io.h"
 
 void Read_parameters(po::variables_map& vm)
 {
@@ -20,7 +21,13 @@ void Read_parameters(po::variables_map& vm)
     Nu = vm["Nu"].as<double>();
 	// full-version config toggle:
     full_toggle = vm["full_mode"].as<int>();
+	if (full_toggle < 0 || full_toggle > 2)
+	{
+		fprintf(stderr, "Error in Read_parameters()! full_mode=%d, must be 0 (random), 1 (full CLI list via --conn_matrix), or 2 (load from --conn_matrix_file).\n", full_toggle);
+		exit(1);
+	}
     overwrite_conn = vm["overwrite_conn"].as<int>();
+    strcpy(fi_conn_matrix, vm["conn_matrix_file"].as<string>().c_str());
 
 	// f
 	f = new double[N]{0};
@@ -42,7 +49,7 @@ void Read_parameters(po::variables_map& vm)
 	}
 
 	// CS
-	if (full_toggle) {
+	if (full_toggle == 1) {
         vector<double> conn_buff;
         str2vec(vm["conn_matrix"].as<string>(), conn_buff);
 		// Create the read the connect_matrix
@@ -51,6 +58,40 @@ void Read_parameters(po::variables_map& vm)
 			Connect_Matrix[i] = new double[N];
 			for (int j = 0; j < N; j++)
 				Connect_Matrix[i][j] = conn_buff[i*N+j];
+		}
+	} else if (full_toggle == 2) {
+		if (fi_conn_matrix[0] == '\0') {
+			fprintf(stderr, "Error in Read_parameters()! full_mode=2 requires --conn_matrix_file to be set.\n");
+			exit(1);
+		}
+		vector<size_t> shape;
+		vector<double> conn_buff = load_npy<double>(fi_conn_matrix, shape);
+		if (shape.size() != 2 || (int)shape[0] != N || (int)shape[1] != N) {
+			fprintf(stderr, "Error in Read_parameters()! conn_matrix_file '%s' has shape (", fi_conn_matrix);
+			for (size_t s : shape)
+				fprintf(stderr, "%zu ", s);
+			fprintf(stderr, "), expected (%d, %d).\n", N, N);
+			exit(1);
+		}
+
+		Connect_Matrix = new double *[N];
+		CS = new double *[N];
+		for (int i = 0; i < N; i++) {
+			Connect_Matrix[i] = new double[N];
+			CS[i] = new double[N];
+			for (int j = 0; j < N; j++) {
+				double w = conn_buff[i*N+j];
+				if (w < 0) {
+					fprintf(stderr, "Error in Read_parameters()! conn_matrix_file '%s' has negative weight %.6g at (%d, %d). CS must be non-negative; E/I type comes from the presynaptic index, not the weight's sign.\n", fi_conn_matrix, w, i, j);
+					exit(1);
+				}
+				Connect_Matrix[i][j] = (w != 0) ? 1 : 0;
+				CS[i][j] = w;
+			}
+		}
+
+		if (random_S != 0) {
+			printf("NOTE: full_mode=2 loads CS directly from conn_matrix_file; random_S=%d is ignored.\n", random_S);
 		}
 	}
 

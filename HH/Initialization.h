@@ -518,7 +518,9 @@ void Initialization(std::mt19937 &rng_conn, std::mt19937 &rng_dym)
 		neu_common.Poisson_input_num = -1;
 		// neu[i].Poisson_input_num = 1;    // Uncomment for EPSP calibration
 	}
-	if (full_toggle) {
+	if (full_toggle == 2) {
+		// Connect_Matrix & CS already populated in Read_parameters() from conn_matrix_file
+	} else if (full_toggle) {
 		Assign_CS(rng_conn);
 	} else {
 		Create_connect_matrix(rng_conn);
