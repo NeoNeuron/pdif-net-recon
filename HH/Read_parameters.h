@@ -20,6 +20,7 @@ void Read_parameters(po::variables_map& vm)
     Nu = vm["Nu"].as<double>();
 	// full-version config toggle:
     full_toggle = vm["full_mode"].as<int>();
+    overwrite_conn = vm["overwrite_conn"].as<int>();
 
 	// f
 	f = new double[N]{0};

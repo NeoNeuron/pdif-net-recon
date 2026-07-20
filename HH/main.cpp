@@ -51,6 +51,7 @@ int main(int argc,char **argv) {
     ("fE",          po::value<double>()->default_value(0.1), "Homogeneous FFWD Poisson strength for E neuron, if full_mode off.")
     ("fI",          po::value<double>()->default_value(0.1), "Homogeneous FFWD Poisson strength for I neuron, if full_mode off.")
     ("conn_matrix", po::value<string>()->default_value(""), "row-wise connectivity matrix, separated by space.")
+    ("overwrite_conn", po::value<int>()->default_value(0), "0: error and exit if the connect_matrix/_strength .npy output already exists. 1: allow overwriting it.")
     ("P_c",         po::value<double>()->default_value(0.25), "Erdos-Renyi connecting probability.")
     ("random_S",    po::value<int>()->default_value(0), "random mode of recurrent coupling strength (0-none 1-uniform 2-gauss 3-exponential 4-lognormal)")
     ("random_Nu",   po::value<int>()->default_value(0), "random mode of ffwd Poisson frequency (0-none 1-uniform 2-gauss 3-exponential 4-lognormal)")

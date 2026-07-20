@@ -153,47 +153,81 @@ void Assign_CS(std::mt19937 &rng)
 	}
 }
 
+void Get_connect_matrix_filenames(string &conn_fn, string &strength_fn)
+{
+	// Format output filename using std::ostringstream with controlled precision
+	ostringstream oss;
+	oss << file;
+	oss << "connect_matrix-p=" << fixed << setprecision(3) << P_c;
+	if (random_S == 1)
+		oss << "-U";
+	else if (random_S == 2)
+		oss << "-G";
+	else if (random_S == 3)
+		oss << "-E";
+	else if (random_S == 4)
+		oss << "-LN";
+	oss << ".npy";
+
+	conn_fn = oss.str();
+	strength_fn = conn_fn;
+	strength_fn.erase(strength_fn.end() - 4, strength_fn.end());
+	strength_fn.append("_strength.npy");
+}
+
+// Checks whether writing the connectivity output would clobber an existing
+// file. Must run before any expensive setup (library loading, neuron state
+// allocation) so a doomed run fails immediately. Exits the process with
+// status 1 if a conflict exists and overwrite_conn == 0.
+void Check_connect_matrix_overwrite()
+{
+	if (!(record_data[0] || record_data[1]))
+		return;
+
+	string conn_fn, strength_fn;
+	Get_connect_matrix_filenames(conn_fn, strength_fn);
+	bool strength_in_play = (random_S != 0 || full_toggle == 2);
+
+	vector<string> conflicts;
+	if (fileExists(conn_fn))
+		conflicts.push_back(conn_fn);
+	if (strength_in_play && fileExists(strength_fn))
+		conflicts.push_back(strength_fn);
+
+	if (conflicts.empty())
+		return;
+
+	if (!overwrite_conn) {
+		std::cerr << "\033[31mERROR: connectivity output file(s) already exist and --overwrite_conn=0:\033[0m" << std::endl;
+		for (const string &f : conflicts)
+			std::cerr << "  " << f << std::endl;
+		std::cerr << "Pass --overwrite_conn=1 to allow overwriting." << std::endl;
+		exit(1);
+	}
+
+	for (const string &f : conflicts)
+		std::cout << "NOTE: overwriting existing connectivity file: " << f << std::endl;
+}
+
 void Record_connect_matrix()
 {
 	if (record_data[0] || record_data[1])
 	{
-		// Format output filename using std::ostringstream with controlled precision
-		ostringstream oss;
-		oss << file;
-		oss << "connect_matrix-p=" << fixed << setprecision(3) << P_c;
-			// << ".." << scientific << setprecision(2) << Tmax << "-";
-		if (random_S == 1)
-			oss << "-U";
-		else if (random_S == 2)
-			oss << "-G";
-		else if (random_S == 3)
-			oss << "-E";
-		else if (random_S == 4)
-			oss << "-LN";
-		oss << ".npy";
+		string output_filename, strength_filename;
+		Get_connect_matrix_filenames(output_filename, strength_filename);
 
-		string output_filename = oss.str();
 		ofstream fp = save_npy_header<double>(
 			output_filename, {(size_t)N, (size_t)N});
 		for (int i = 0; i < N; i++)
 			fp.write(reinterpret_cast<const char*>(Connect_Matrix[i]), N * sizeof(double));
 		fp.close();
 
-		if (fileExists(output_filename)) {
-			std::cerr << "\033[31mWARNING: Connectivity matrix ";
-			std::cerr << output_filename << " already exists!\033[0m";
-			std::cerr << std::endl;
-		} else {
-			if (random_S != 0) {
-				output_filename.erase(output_filename.end() - 4, output_filename.end());
-				output_filename.append("_strength.npy");
-				ofstream fp = save_npy_header<double>(output_filename, {(size_t)N, (size_t)N});
-				for (int i = 0; i < N; i++)
-					fp.write(reinterpret_cast<const char*>(CS[i]), N * sizeof(double));
-				fp.close();
-			}
+		if (random_S != 0 || full_toggle == 2) {
+			ofstream fp2 = save_npy_header<double>(strength_filename, {(size_t)N, (size_t)N});
+			for (int i = 0; i < N; i++)
+				fp2.write(reinterpret_cast<const char*>(CS[i]), N * sizeof(double));
+			fp2.close();
 		}
-
 	}
 
 	// Print the connectivity matrix;
@@ -395,6 +429,8 @@ void Initial_library_trace()
 
 void Initialization(std::mt19937 &rng_conn, std::mt19937 &rng_dym)
 {
+	Check_connect_matrix_overwrite();
+
 	if (Lib_method)
 		Initialize_library();
 
