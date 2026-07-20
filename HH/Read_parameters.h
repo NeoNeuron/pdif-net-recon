@@ -1,8 +1,7 @@
 #include "mkdir.h"
 #include "npy_io.h"
 
-void Read_parameters(po::variables_map& vm)
-{
+void Read_parameters(po::variables_map& vm) {
 	char ch[100];
 	NE = vm["NE"].as<int>();
 	NI = vm["NI"].as<int>();
@@ -31,9 +30,16 @@ void Read_parameters(po::variables_map& vm)
 
 	// f
 	f = new double[N]{0};
-	if (full_toggle) { // load f for all neurons.
-        vector<double> f_buff;
-        str2vec(vm["f"].as<string>(), f_buff);
+    vector<double> f_buff;
+    str2vec(vm["f"].as<string>(), f_buff);
+	bool have_full_f = ((int)f_buff.size() >= N);
+
+	if (full_toggle == 1 && !have_full_f) {
+		fprintf(stderr, "Error in Read_parameters()! --f has %zu entries, need at least %d (one per neuron) when full_mode=1.\n", f_buff.size(), N);
+		exit(1);
+	}
+
+	if (full_toggle && have_full_f) { // load f for all neurons, entry-by-entry.
 		for (int i=0; i<N; i++) {
             f[i] = f_buff[i];
             printf("%.2f\t", f[i]);
