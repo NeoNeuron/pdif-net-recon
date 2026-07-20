@@ -98,6 +98,17 @@ int main(int argc,char **argv) {
 	seed_dym  = seed_buff[1];  // Initialization & Poisson
   std::mt19937 rng_conn(seed_conn), rng_dym(seed_dym);
 
+  // vm["f"] can't distinguish "typed on this command line" from "inherited
+  // from the ini's blanket default" (both look like an explicit, non-defaulted
+  // value to boost::program_options once the config file sets it). Scan argv
+  // directly so full_mode=2 can tell the two apart.
+  f_given_on_cli = false;
+  for (int i = 1; i < argc; i++) {
+    string arg(argv[i]);
+    if (arg == "--f" || arg.rfind("--f=", 0) == 0)
+      f_given_on_cli = true;
+  }
+
 	Read_parameters(vm);
 	out_put_filename();
 	Initialization(rng_conn, rng_dym);

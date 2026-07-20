@@ -38,6 +38,10 @@ void Read_parameters(po::variables_map& vm) {
 		fprintf(stderr, "Error in Read_parameters()! --f has %zu entries, need at least %d (one per neuron) when full_mode=1.\n", f_buff.size(), N);
 		exit(1);
 	}
+	if (full_toggle == 2 && f_given_on_cli && !have_full_f) {
+		fprintf(stderr, "Error in Read_parameters()! --f was given explicitly with %zu entries, need at least %d (one per neuron) when full_mode=2. Omit --f entirely to fall back to homogeneous fE/fI instead.\n", f_buff.size(), N);
+		exit(1);
+	}
 
 	if (full_toggle && have_full_f) { // load f for all neurons, entry-by-entry.
 		for (int i=0; i<N; i++) {

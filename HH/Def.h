@@ -44,6 +44,7 @@ double I_const_input;         // constant input current
 
 int full_toggle;			// toggle for full-version config.
 int overwrite_conn;		// 0: error if connect_matrix output already exists, 1: allow overwrite
+bool f_given_on_cli;		// true if --f was literally typed on this invocation's command line (vs. inherited from the ini's blanket default)
 double Nu;               // Feedforward Poisson rate
 double* f;				 // Feedforward Poisson strength (neuron-wise)
 double fE=NAN, fI=NAN;				 // Homogeneous feedforward Poisson strength (E/I)
