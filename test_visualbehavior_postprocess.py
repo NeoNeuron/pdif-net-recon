@@ -17,6 +17,11 @@ from pathlib import Path
 import warnings
 warnings.filterwarnings('ignore')
 key_map = {'TE': 'TE', 'MI': 'sum(MI)', 'CC': 'sum(CC2)', 'GC': 'GC'}
+# set True to postprocess the shuffle-ablation results instead of the real-data results
+shuffle_toggle = False
+fig_suffix = "ref=5-gap=250-sfx=250-K=1_5-bin=1.00"
+if shuffle_toggle:
+    fig_suffix += "-shuffle"
 #%%
 df = {'session_id':[],
       'consistency':[],
@@ -32,9 +37,9 @@ for out_dir in Path('./visualbehavior/').iterdir():
     units = pd.read_pickle(out_dir / f"units.pkl")
     n_unit = len(units)
     # results using fixed delay 0.00ms
-    # with open(out_dir/'allen-data-ref=5-gap=250-sfx=250-K=1_5-bin=1.00-delay=0.00.pkl', 'rb') as f:
+    # with open(out_dir/f'allen-data-{fig_suffix}-delay=0.00.pkl', 'rb') as f:
     # results using optimal delay
-    with open(out_dir/'allen-data-ref=5-gap=250-sfx=250-K=1_5-bin=1.00.pkl', 'rb') as f:
+    with open(out_dir/f'allen-data-{fig_suffix}.pkl', 'rb') as f:
         data_fig_all = pickle.load(f)
 
     df['consistency'].append(data_fig_all['consistency']['TE'][1,0])

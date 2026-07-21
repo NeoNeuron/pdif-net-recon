@@ -15,6 +15,11 @@ from pathlib import Path
 
 import warnings
 warnings.filterwarnings('ignore')
+# set True to postprocess the shuffle-ablation results instead of the real-data results
+shuffle_toggle = False
+fig_suffix = "ref=5-gap=250-sfx=0-K=1_5-bin=1.00"
+if shuffle_toggle:
+    fig_suffix += "-shuffle"
 #%%
 df = {'session_id':[],
       'consistency':[],
@@ -29,8 +34,8 @@ for out_dir in Path('./visualcoding/').iterdir():
     df['session_id'].append(session_id)
     units = pd.read_pickle(out_dir / f"units.pkl")
     n_unit = len(units)
-    # with open(out_dir/'allen-data-ref=5-gap=250-sfx=0-K=1_5-bin=1.00-delay=0.00.pkl', 'rb') as f:
-    with open(out_dir/'allen-data-ref=5-gap=250-sfx=0-K=1_5-bin=1.00.pkl', 'rb') as f:
+    # with open(out_dir/f'allen-data-{fig_suffix}-delay=0.00.pkl', 'rb') as f:
+    with open(out_dir/f'allen-data-{fig_suffix}.pkl', 'rb') as f:
         data_fig_all = pickle.load(f)
 
     df['consistency'].append(data_fig_all['consistency']['TE'].min())

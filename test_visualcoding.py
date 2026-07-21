@@ -63,10 +63,14 @@ for out_dir in Path('./visualcoding/').iterdir():
     dt = 1
     delay = 0
     suffix = 0
+    # ablation test: shuffle spike trains to destroy causal structure (null control)
+    shuffle_toggle = True
 
     fig_suffix = f"ref={t_ref:.0f}-gap={gap_width:.0f}-sfx={suffix:.0f}-K={order[0]:d}_{order[1]:d}-bin={dt:.2f}"
     if not heter_delay_toggle:
         fig_suffix += f"-delay={delay:.2f}"
+    if shuffle_toggle:
+        fig_suffix += "-shuffle"
 
     #! ====================
     #! Draw histogram of causal values for each stimuli
@@ -95,7 +99,8 @@ for out_dir in Path('./visualcoding/').iterdir():
         DT = 2e4,
         dt = dt,
         delay = delay,
-        path = str(out_dir)+'/'
+        path = str(out_dir)+'/',
+        shuffle = shuffle_toggle,
     )
     estimator = CausalityEstimator(**pm, n_thread=60)
     #%%
