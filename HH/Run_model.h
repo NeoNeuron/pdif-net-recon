@@ -331,7 +331,7 @@ void Run_model()
 		exit(0);
 	}
 
-	double t = neu[0].t, last_record_t = neu[0].t, tt_fftw = 0, t_lib = 0, t_fp = 0;
+	double t = neu[0].t, last_record_t = neu[0].t, last_record_I_t = neu[0].t, tt_fftw = 0, t_lib = 0, t_fp = 0;
 	T_Max += neu[0].t;
 	double s = -100, ss = neu[0].v;
 	double I_th;
@@ -377,7 +377,30 @@ void Run_model()
 				}
 		}
 
-		//if (record_data[1] && t > Record_v_start && t <= Record_v_end && t - last_record_t >= 0.5 - 1e-8) 
+		if ((Record_IE || Record_II) && t > Record_I_start && t <= Record_I_end && t - last_record_I_t >= T_step - 1e-5)
+		{
+			last_record_I_t = t;
+			if (Record_IE)
+			{
+				fwrite(&t, sizeof(double), 1, FP_IE);
+				for (int id = 0; id < N; id++)
+				{
+					double I_E = -(neu[id].G_f + neu[id].G_se) * (neu[id].v - V_G_E);
+					fwrite(&I_E, sizeof(double), 1, FP_IE);
+				}
+			}
+			if (Record_II)
+			{
+				fwrite(&t, sizeof(double), 1, FP_II);
+				for (int id = 0; id < N; id++)
+				{
+					double I_I = -neu[id].G_si * (neu[id].v - V_G_I);
+					fwrite(&I_I, sizeof(double), 1, FP_II);
+				}
+			}
+		}
+
+		//if (record_data[1] && t > Record_v_start && t <= Record_v_end && t - last_record_t >= 0.5 - 1e-8)
 		//{
 		//	last_record_t = t;
 		//	fwrite(&t, sizeof(double), 1, FP1);

@@ -132,6 +132,14 @@ void Read_parameters(po::variables_map& vm) {
     Record_v_start = vlim_buff[0];
     Record_v_end = vlim_buff[1];
 
+    Record_IE = vm["record_IE"].as<int>();
+    Record_II = vm["record_II"].as<int>();
+
+    vector<double> Ilim_buff;
+    str2vec(vm["record_Ilim"].as<string>(), Ilim_buff);
+    Record_I_start = Ilim_buff[0];
+    Record_I_end = Ilim_buff[1];
+
     strcpy(file, vm["record_path"].as<string>().c_str());
     strcpy(fi_neu_state, vm["state_path"].as<string>().c_str());
     strcpy(save_mode, vm["save_mode"].as<string>().c_str());
@@ -273,7 +281,18 @@ void out_put_filename()
 		FP1 = fopen(str1, open_mode);
 	}
 
-	if (Power_spectrum)				
+	if (Record_IE)
+	{
+		strcpy(str1, file), strcat(str1, str), strcat(str1, "_IE.dat");
+		FP_IE = fopen(str1, open_mode);
+	}
+	if (Record_II)
+	{
+		strcpy(str1, file), strcat(str1, str), strcat(str1, "_II.dat");
+		FP_II = fopen(str1, open_mode);
+	}
+
+	if (Power_spectrum)
 	{
 		char ch[200];
 		strcpy(ch, file), strcat(ch, "fftw_"), strcat(ch, str), strcat(ch, ".dat");
@@ -292,7 +311,7 @@ void out_put_filename()
 		FP_fire_pattern = fopen(ch, "wb");
 	}
 
-	if (record_data[0] || record_data[1] || Power_spectrum || RecordFP)
+	if (record_data[0] || record_data[1] || Power_spectrum || RecordFP || Record_IE || Record_II)
 	{
 		if (NE == N)
 			printf("file:NE=%d    %s\n", N, str);

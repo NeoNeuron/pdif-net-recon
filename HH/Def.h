@@ -59,9 +59,11 @@ int Lyapunov;                     // compute largest lyapunov exponnet
 int Power_spectrum;				  // record v for power spectrum	
 int Estimate_RK4_call;					// compare the efficiency
 int record_data[2];				// save data or not
+int Record_IE, Record_II;			// toggle for recording E/I input current, mirrors RecordFP/Power_spectrum
 char file[200],file1[200];				  // Record data path & Library path
 char lib_name[200];				// lib name	
 double Record_v_start, Record_v_end;
+double Record_I_start, Record_I_end;	// time window for E/I current recording, independent of Record_v_start/Record_v_end
 char filename[300] = "";		   // out put file name	
 int RecordFP = 0;					// record fire pattern 0101000101
 int TrialID = 0;			   // Default: 0.  for multiple trials with fixed CS and change Poisson seeds 
@@ -100,6 +102,7 @@ struct neuron *neu;
 //		Record firing time and voltage
 //-----------------------------------------------------------------------------
 FILE *FP,*FP1, *FP_FFTW, *FP_fire_pattern;
+FILE *FP_IE, *FP_II;
 FILE *ffp, *ffp1; // for test
 FILE *fp_v;  // usd when build the library, trace of V 
 int library_v_trace = 0;

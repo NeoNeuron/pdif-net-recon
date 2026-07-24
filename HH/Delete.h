@@ -11,10 +11,14 @@ void Delete()
 	delete[] neu;
 
 	if (record_data[0])
-		fclose(FP); 
+		fclose(FP);
 	if (record_data[1])
 		fclose(FP1);
-	
+	if (Record_IE)
+		fclose(FP_IE);
+	if (Record_II)
+		fclose(FP_II);
+
 	if (Power_spectrum)
 		fclose(FP_FFTW);
 	if (RecordFP)
