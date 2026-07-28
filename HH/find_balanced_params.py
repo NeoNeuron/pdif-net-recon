@@ -524,6 +524,114 @@ def mode_fixedpoint(n_iter=8, damping=0.5, J_E=None, J_I=None):
     return history
 
 
+def gamma_ratio_metric(spk, t_range, band=(2.0, 300.0), smooth_bins=201):
+    """Peak / median power in `band` Hz of the population rate spectrum.
+
+    Same computation as run_balanced_EINet.check(); pulled in here so the
+    rec_frac sweep can screen candidates for the population (ING-like) rhythm
+    that motivated dropping REC_FRAC from 0.5 to 0.1 in the first place (see
+    module docstring on REC_FRAC). >5 means the raster will visibly stripe.
+    """
+    pr, _ = np.histogram(spk[:, 0], bins=np.arange(t_range[0], t_range[1] + 1, 1.0))
+    x = pr.astype(float) - pr.mean()
+    if x.size < smooth_bins or not np.any(x):
+        return np.nan
+    f = np.fft.rfftfreq(len(x), d=1e-3)
+    P = np.convolve(np.abs(np.fft.rfft(x)) ** 2, np.ones(smooth_bins) / smooth_bins, "same")
+    sel = (f > band[0]) & (f < band[1])
+    if not sel.any() or np.median(P[sel]) <= 0:
+        return np.nan
+    return float(P[sel].max() / np.median(P[sel]))
+
+
+def targets_for_rec_frac(rec_frac, g_E=G_E_TARGET):
+    """(g_se_target, g_f_target) splitting g_E between recurrent and feedforward."""
+    return g_E * rec_frac, g_E * (1 - rec_frac)
+
+
+def fixedpoint_for_rec_frac(rec_frac, n_iter=8, damping=0.5, J_E=None, J_I=None,
+                            t_max=FIXPOINT_T_MAX, out_root=None, verbose=True):
+    """Like mode_fixedpoint, but targeting an arbitrary recurrent-excitation
+    fraction instead of the module-level REC_FRAC. g_I_target (hence J_I's
+    target) does not depend on rec_frac -- only the E/I *rate* balance does,
+    and that is fixed by V_EFF_TARGET/G_E_TARGET -- so only f and the g_se
+    correction step change.
+    """
+    g_se_target, g_f_target = targets_for_rec_frac(rec_frac)
+    f = g_f_target / (NU * INT_E)
+    if J_E is None or J_I is None:
+        J_E, J_I = J_from_rate(10.0)
+        J_E /= max(rec_frac, 1e-3) / REC_FRAC   # rough seed scaling toward the new split
+    out_root = out_root or (OUT_ROOT / "recfrac" / f"rf{rec_frac:.2f}")
+    history = []
+    for it in range(n_iter):
+        res = evaluate(J_E, J_I, f, NU, t_max, out_root / f"it{it:02d}")
+        res.update({"iter": it, "rec_frac_target": rec_frac, "f": f})
+        history.append(res)
+        if verbose:
+            print(f"  rf={rec_frac:.2f} [{it}] J_E={J_E:.4f} J_I={J_I:.4f} "
+                  f"rate={res['rate_all']:.1f} g_se={res['g_se']:.3f} "
+                  f"(target {g_se_target:.3f}) g_si={res['g_si']:.3f} "
+                  f"ratio={res['g_ratio']:.2f} v_eff={res['v_eff']:.1f} "
+                  f"balanced={res['balanced']}")
+        if res["balanced"] and np.isfinite(res.get("g_se", np.nan)) \
+                and abs(res["g_se"] - g_se_target) < 0.15 * g_se_target:
+            break
+        if not np.isfinite(res.get("g_se", np.nan)) or res["g_se"] <= 0:
+            J_E *= 1.6
+            continue
+        J_E *= (g_se_target / res["g_se"]) ** damping
+        J_I *= (G_I_TARGET / max(res["g_si"], 1e-6)) ** damping
+        J_E, J_I = float(np.clip(J_E, 1e-3, 50)), float(np.clip(J_I, 1e-3, 100))
+    return J_E, J_I, f, history
+
+
+def mode_recfrac_sweep(rec_fracs=(0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5),
+                       n_iter=8, check_t_max=2e4, out_name="recfrac_sweep.json"):
+    """For each candidate recurrent-excitation fraction, find (J_E, J_I) hitting
+    the same v_eff/g_ratio balance target as REC_FRAC=0.1, then run a longer
+    check measuring the decorrelation metrics (pair_corr, gamma_ratio) that a
+    higher rec_frac degrades. Smaller J_I/J_E needs a *larger* rec_frac (see
+    fixedpoint_for_rec_frac docstring / module docstring derivation), so this
+    reports how far rec_frac can rise before the network re-synchronises.
+    """
+    results = []
+    for rf in rec_fracs:
+        J_E, J_I, f, hist = fixedpoint_for_rec_frac(rf, n_iter=n_iter)
+        fp = hist[-1]
+        out_dir = OUT_ROOT / "recfrac" / f"rf{rf:.2f}_check"
+        check = evaluate(J_E, J_I, f, NU, check_t_max, out_dir, cleanup=False)
+        spk = load_spikes(out_dir, (BURN_IN, check_t_max))
+        gamma = gamma_ratio_metric(spk, (BURN_IN, check_t_max))
+        row = {
+            "rec_frac_target": rf, "J_E": J_E, "J_I": J_I, "J_ratio": J_I / J_E,
+            "f": f, "fixedpoint_iters": len(hist), "fixedpoint_converged": bool(fp["balanced"]),
+            "rate_all": check["rate_all"], "isi_cv": check["isi_cv"],
+            "pair_corr": check["pair_corr"], "gamma_ratio": gamma,
+            "g_E": check["g_E"], "g_se": check["g_se"], "g_si": check["g_si"],
+            "g_ratio": check["g_ratio"], "v_eff": check["v_eff"], "v_clean": check["v_clean"],
+            "balanced": check["balanced"],
+            "decorrelated": bool(check["balanced"] and np.isfinite(gamma) and gamma < 5.0
+                                 and np.isfinite(check["pair_corr"]) and check["pair_corr"] < 0.1),
+        }
+        print(f"rf={rf:.2f}: J_ratio={row['J_ratio']:.2f} rate={row['rate_all']:.1f} Hz "
+              f"CV={row['isi_cv']:.2f} corr={row['pair_corr']:.4f} gamma={gamma:.2f} "
+              f"balanced={row['balanced']} decorrelated={row['decorrelated']}")
+        results.append(row)
+        for pat in ("*_voltage.dat", "*_IE.dat", "*_II.dat", "*_state.dat"):
+            for p in out_dir.glob(pat):
+                p.unlink()
+    _save(results, OUT_ROOT / out_name)
+    good = [r for r in results if r["decorrelated"]]
+    if good:
+        best = min(good, key=lambda r: r["J_ratio"])
+        print(f"\nsmallest J_ratio still decorrelated: rec_frac={best['rec_frac_target']:.2f} "
+              f"J_E={best['J_E']:.4f} J_I={best['J_I']:.4f} J_ratio={best['J_ratio']:.2f}")
+    else:
+        print("\nno candidate met both the balance and decorrelation criteria")
+    return results
+
+
 def mode_validate(J_E, J_I, t_max=1e5, seed=CONN_SEED):
     """Long production-length run with the full metric set."""
     f = f_from_Nu(NU)
@@ -561,7 +669,7 @@ def _report(results):
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("mode", choices=["sweep", "fixedpoint", "validate"])
+    ap.add_argument("mode", choices=["sweep", "fixedpoint", "validate", "recfrac"])
     ap.add_argument("--n-proc", type=int, default=8)
     ap.add_argument("--J-E", type=float, default=None)
     ap.add_argument("--J-I", type=float, default=None)
@@ -574,6 +682,8 @@ if __name__ == "__main__":
         mode_sweep(n_proc=args.n_proc)
     elif args.mode == "fixedpoint":
         mode_fixedpoint(n_iter=args.n_iter, J_E=args.J_E, J_I=args.J_I)
+    elif args.mode == "recfrac":
+        mode_recfrac_sweep(n_iter=args.n_iter)
     else:
         if args.J_E is None or args.J_I is None:
             ap.error("validate needs --J-E and --J-I")

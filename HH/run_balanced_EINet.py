@@ -14,24 +14,30 @@ neuron also gets its own independent Poisson drive at rate Nu.
 
 Parameters and what they buy (all validated at T_Max = 1e5 ms)
 --------------------------------------------------------------
-    Jee = Jie =  0.3553      fE = fI = 0.2333       Nu = 0.9 kHz
-    Jei = Jii = -8.3810      K = 40, T_step = 0.05
+    Jee = Jie =  1.1799      fE = fI = 0.4200       Nu = 0.5 kHz
+    Jei = Jii = -9.7427      K = 40, T_step = 0.05
 
-    rate            11.26 Hz (E) / 10.85 Hz (I), no silent neurons
-    ISI CV          0.800                   irregular single-neuron firing
-    pairwise corr   0.0055 (20 ms bins)     asynchronous
-    g_E / g_I       0.348 / 2.040 mS/cm^2   high-conductance (leak G_L = 0.3)
-    v_eff          -66.8 mV                 ~12 mV below spike initiation, so
+    rate            12.35 Hz (E) / 11.83 Hz (I), no silent neurons
+    ISI CV          0.793                   irregular single-neuron firing
+    pairwise corr   0.0092 (20 ms bins)     asynchronous
+    g_E / g_I       0.447 / 2.573 mS/cm^2   high-conductance (leak G_L = 0.3)
+    v_eff          -66.9 mV                 ~12 mV below spike initiation, so
                                             firing is fluctuation-driven
-    gamma_ratio     2.37                    no population rhythm (was 8.5
-                                            before decorrelation)
+    gamma_ratio     3.54                    no population rhythm
 
 Note on the coupling values: E and I cells are identical in simHH (V_th, G_Na,
 G_K, T_ref are compile-time constants), and the balance targets are symmetric,
 so Jie=Jee, Jii=Jei and fI=fE are forced -- these are not four and two free
-numbers but two and one.  Jei/Jee ~ 23.6 looks lopsided but is expected: at
-v ~ -67 mV the inhibitory driving force (v-V_I ~ 13 mV) is far smaller than the
-excitatory one (V_E-v ~ 67 mV), and only 10% of the excitation is recurrent.
+numbers but two and one.  Jei/Jee ~ 8.3 is still lopsided (at v ~ -67 mV the
+inhibitory driving force v-V_I ~ 13 mV is far smaller than the excitatory one
+V_E-v ~ 67 mV) but well down from an earlier 23.6:1 parameterisation, which
+used only REC_FRAC=0.1 (10% of excitation recurrent, 90% feedforward) and so
+needed almost all of g_I to come from a comparatively tiny J_E.  Raising the
+recurrent-excitation fraction to REC_FRAC=0.35 (see
+HH/find_balanced_params.py mode_recfrac_sweep) lets J_E carry more of g_E and
+brings the ratio down; rec_frac=0.40 and above re-synchronise the network
+(gamma_ratio crosses 5 between 0.35 and 0.40), so 0.35 is the smallest J_I/J_E
+still meeting the decorrelation criteria (pair_corr<0.1, gamma_ratio<5).
 
 Usage
 -----
@@ -62,14 +68,14 @@ K = 40                 # in-degree from EACH population
 CONN_SEED = 0          # pins the connectivity graph
 T_STEP = 0.05          # ms; 0.2 is too coarse at g_total ~ 2.7 mS/cm^2
 
-JEE = JIE = 0.3553     # E->E, E->I    (magnitudes; sign comes from cell type)
-JEI = JII = 8.3810     # I->E, I->I
-FE = FI = 0.2333333333333333   # feedforward Poisson strength
-NU = 0.9               # feedforward Poisson rate, kHz
+JEE = JIE = 1.1799     # E->E, E->I    (magnitudes; sign comes from cell type)
+JEI = JII = 9.7427     # I->E, I->I
+FE = FI = 0.42         # feedforward Poisson strength
+NU = 0.5               # feedforward Poisson rate, kHz
 
 # expected values at these parameters, used by --check
-EXPECTED = dict(rate=11.2, isi_cv=0.80, pair_corr=0.0055, g_E=0.348,
-                g_ratio=5.86, v_eff=-66.8)
+EXPECTED = dict(rate=12.2, isi_cv=0.79, pair_corr=0.0092, g_E=0.447,
+                g_ratio=5.75, v_eff=-66.9)
 
 
 def build_connectivity(seed=CONN_SEED, Jee=JEE, Jie=JIE, Jei=JEI, Jii=JII):

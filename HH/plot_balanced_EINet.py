@@ -30,16 +30,16 @@ import numpy as np
 from HH.find_balanced_params import (
     BURN_IN, G_L, E_L, G_RATIO, G_RATIO_TOL, INT_E, K, N, NE, NI, OUT_ROOT,
     SPIKE_MASK_V, T_STEP, V_E, V_I, _read_trace, conductance_metrics, evaluate,
-    f_from_Nu, generate_connectivity, load_spikes, run_sim, spike_metrics,
+    generate_connectivity, load_spikes, run_sim, spike_metrics,
 )
 from HH.run_balanced_EINet import DEFAULT_OUT as BALANCED_RUN_DIR
+from HH.run_balanced_EINet import JEE as J_E, JEI as J_I, FE as F_FIXED, NU as NU_REF
 
-# validated parameters (data/EINet/balanced_search/best_params.json).
-# Decorrelated set: recurrent fraction 0.1, chosen to remove the 76 Hz ING
-# rhythm that striped the raster at the earlier 0.5 (see HH/reduce_correlation.py).
-J_E, J_I = 0.3553, 8.381
-NU_REF = 0.9
-F_FIXED = f_from_Nu(NU_REF)   # 0.2333; holds g_f at its target for this Nu
+# validated parameters, single-sourced from HH/run_balanced_EINet.py (rec_frac
+# 0.35, J_I/J_E ~ 8.3 -- see that module's docstring and
+# HH/find_balanced_params.py mode_recfrac_sweep for how it was found).  NOT
+# f_from_Nu(NU_REF): that helper assumes find_balanced_params' module-level
+# REC_FRAC=0.1 and would give the wrong f for this rec_frac=0.35 point.
 
 FIG_DIR = OUT_ROOT / "figures"
 WIN_MS = 500.0        # length of the example trace shown in fig 1
@@ -262,6 +262,45 @@ def figure_balance_saved(data_dir=BALANCED_RUN_DIR, out_name="balance_from_run.p
     }
     print(json.dumps(stats, indent=2))
     return stats
+
+
+# ------------------------------------------------------------- figure 1c
+def figure_raster_saved(data_dir, out_name="raster.png", window_ms=1000.0,
+                        burn_in=BURN_IN, title=None):
+    """Population raster from an EXISTING run's spike train. Pure plotting: no
+    simHH call, just reads *_spike_train.dat already on disk (e.g. the
+    per-Nu run directories left by scan_nu, or run_balanced_EINet's own
+    output directory). Shows the last `window_ms` before the end of the
+    recording (after `burn_in`).
+    """
+    data_dir = Path(data_dir)
+    spk_all = load_spikes(data_dir, (burn_in, np.inf))
+    if spk_all.size == 0:
+        raise RuntimeError(f"no spikes in {data_dir} after burn_in={burn_in}")
+    t_end = float(spk_all[:, 0].max())
+    t0 = max(burn_in, t_end - window_ms)
+    spk = spk_all[spk_all[:, 0] >= t0]
+
+    fig, ax = plt.subplots(figsize=(9, 4.5))
+    ax.plot(spk[spk[:, 1] < NE, 0], spk[spk[:, 1] < NE, 1], "|", ms=2.5,
+            color="#c0392b", alpha=0.7, label="E")
+    ax.plot(spk[spk[:, 1] >= NE, 0], spk[spk[:, 1] >= NE, 1], "|", ms=2.5,
+            color="#2471a3", alpha=0.7, label="I")
+    ax.axhline(NE, color="gray", lw=0.6)
+    ax.set_xlim(t0, t_end)
+    ax.set_ylim(-2, N + 1)
+    ax.set_xlabel("time (ms)")
+    ax.set_ylabel("neuron id")
+    ax.legend(loc="upper right", fontsize=8, markerscale=3)
+    rate = len(spk) / (window_ms * 1e-3 * N)
+    ax.set_title(title or f"{data_dir}  (last {window_ms:g} ms, "
+                 f"pop. rate {rate:.1f} Hz)", fontsize=10)
+
+    fig.tight_layout()
+    FIG_DIR.mkdir(parents=True, exist_ok=True)
+    fig.savefig(FIG_DIR / out_name, dpi=160)
+    print(f"saved {FIG_DIR / out_name}")
+    return {"data_dir": str(data_dir), "t_range_ms": (t0, t_end), "rate_all_Hz": rate}
 
 
 # ------------------------------------------------------------------ figure 2
