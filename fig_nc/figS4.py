@@ -56,8 +56,8 @@ for idx, f in enumerate(datafiles):
     # TE histogram
     # mask = np.ones_like(data['hist_conn'], dtype=bool)
     mask = data['hist_conn']>0
-    ax[idx].plot(data['edges'][mask], data['hist_conn'][mask], color=RED, lw=5, label='PDIF with A_{ij}=1')
-    ax[idx].fill_between(data['edges'][mask], 0, data['hist_conn'][mask], color=RED, alpha=0.5)
+    ax[idx].plot(data['edges'][mask], data['hist_conn'][mask], color=ORANGE, lw=5, label='PDIF with A_{ij}=1')
+    ax[idx].fill_between(data['edges'][mask], 0, data['hist_conn'][mask], color=ORANGE, alpha=0.5)
     # mask = np.ones_like(data['hist_disconn'], dtype=bool)
     mask = data['hist_disconn']>0
     ax[idx].plot(data['edges'][mask], data['hist_disconn'][mask], color=GREEN, lw=5, label='PDIF with A_{ij}=0')

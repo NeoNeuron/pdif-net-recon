@@ -3,7 +3,7 @@ root = Path(__file__).resolve().parents[1]
 import matplotlib as mpl
 rc_path = Path(__file__).with_name("matplotlibrc")
 mpl.rcParams.update(mpl.rc_params_from_file(rc_path, use_default_template=False))
-RED, GREEN = '#F49227', '#194955'
+ORANGE, GREEN, PINK = '#F49227', '#194955', '#F26A9D'
 
 import networkx as nx
 import numpy as np
@@ -104,3 +104,40 @@ def create_fig2x4():
                         left=0.05, right=0.98,
                         top=0.95, bottom=0.075),)
     return fig, axes
+
+def plot_conn_matrix(ax, conn, title=None):
+    ax.pcolormesh(conn, cmap='viridis')
+    ax.set_ylabel('From', fontsize=26)
+    ax.set_xlabel('To', fontsize=26)
+    ax.invert_yaxis()
+    ax.set_rasterized(True)
+    if title:
+        ax.set_title(title, fontsize=22, pad=-10)
+
+def plot_spike_train(ax, N, spk, spk_all=None, title=None):
+    ax.plot(spk[:, 0], spk[:, 1], 'k|')
+    if spk_all is not None:
+        spk_diff = spk_all[~np.isin(spk_all[:, 0], spk[:, 0])]
+        ax.plot(spk_diff[:, 0], spk_diff[:, 1], 'r|')
+    ax.set_xlabel('time (ms)', fontsize=26)
+    ax.set_ylabel('neuron ID', fontsize=26)
+    ax.set_ylim(0, N)
+    ax.set_xlim(600,800)
+    if title:
+        ax.set_title(title, fontsize=22, pad=-10)
+
+def plot_pdif_hist(series, ax):
+    real_xlim = []
+    for hist_key, color in zip(('hist_conn', 'hist_disconn'), (ORANGE, GREEN)):
+        edges = series['edges'] + (series['edges'][1] - series['edges'][0])/2
+        counts = series[hist_key]
+        mask = counts > 0
+        real_xlim.append([edges[mask][0], edges[mask][-1]])
+        ax.plot(edges[mask], counts[mask], color=color, lw=5, clip_on=True)
+        ax.fill_between(edges[mask], 0, counts[mask], color=color, alpha=0.5)
+        ax.axvline(series['th_gauss'], ls='-', color=PINK, lw=4)
+        ax.xaxis.set_major_formatter(sci_formatter)
+    ax.set_ylim(0)
+    ax.set_xlim(min(x[0] for x in real_xlim), max(x[-1] for x in real_xlim))
+    ax.set_xlabel('PTD-TE value', fontsize=26)
+    ax.set_ylabel('density', fontsize=26)

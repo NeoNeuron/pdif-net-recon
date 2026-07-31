@@ -53,9 +53,9 @@ for i, (axi, spk_fname) in enumerate(zip(ax[1:], spk_fnames)):
         mask = (data_matched['pre_id'] >= 55)*(data_matched['pre_id'] < 85)*(data_matched['post_id'] >= 55)*(data_matched['post_id'] < 85)
         data_matched = data_matched[mask]
     df_recon, df_fig = reconstruction_analysis_TE(data_matched, nbins=40, hist_range=(-8,-4), algorithm='EM')
-    RED, GREEN = '#F49227', '#194955'
+    ORANGE, GREEN = '#F49227', '#194955'
     tmp = df_fig.loc['TE']
-    for hist_key, color in zip(('hist_conn', 'hist_disconn'), (RED, GREEN)):
+    for hist_key, color in zip(('hist_conn', 'hist_disconn'), (ORANGE, GREEN)):
         edges = tmp['edges'] + (tmp['edges'][1] - tmp['edges'][0])/2
         counts = tmp[hist_key]
         mask = counts > 0

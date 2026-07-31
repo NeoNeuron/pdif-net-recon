@@ -38,9 +38,9 @@ for axi, spk_fname, conn_fname in zip(ax, spk_fnames, conn_fnames):
     if 'PC_DCN' in spk_fname:
         data_matched = data_matched[data_matched['pre_id'].lt(50) * data_matched['post_id'].gt(50)]
     df_recon, df_fig = reconstruction_analysis_TE(data_matched, nbins=60, hist_range=None, algorithm='EM')
-    RED, GREEN = '#F49227', '#194955'
+    ORANGE, GREEN = '#F49227', '#194955'
     tmp = df_fig.loc['TE']
-    for hist_key, color in zip(('hist_conn', 'hist_disconn'), (RED, GREEN)):
+    for hist_key, color in zip(('hist_conn', 'hist_disconn'), (ORANGE, GREEN)):
         edges = tmp['edges'] + (tmp['edges'][1] - tmp['edges'][0])/2
         counts = tmp[hist_key]
         mask = counts > 0

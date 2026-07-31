@@ -10,7 +10,7 @@ from causal4.Causality import CausalityEstimator
 from causal4.utils import match_features, reconstruction_analysis_TE
 import causal4.utils as c4u
 from figrc import *
-RED, GREEN = '#F49227', '#194955'
+ORANGE, GREEN = '#F49227', '#194955'
 
 def get_vfname(fname: str, key:str, sfx:str=None):
     if key == 'Gaussian':

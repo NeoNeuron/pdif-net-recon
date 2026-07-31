@@ -104,9 +104,9 @@ for axti, ax_col, spk_fname, key, dt, T, delay, order, vol_fname, th, Trange in 
     data_matched = match_features(data, N, subfolder/'connect_matrix-p=0.250.dat')
     df_recon, df_fig = reconstruction_analysis_TE(data_matched, nbins=50, algorithm='EM')
     print('acc: %.4f, auc: %.4f'%(df_fig['acc_svm']['TE'], df_fig['auc_svm']['TE']))
-    RED, GREEN = '#F49227', '#194955'
+    ORANGE, GREEN = '#F49227', '#194955'
     tmp = df_fig.loc['TE']
-    for hist_key, color in zip(('hist_conn', 'hist_disconn'), (RED, GREEN)):
+    for hist_key, color in zip(('hist_conn', 'hist_disconn'), (ORANGE, GREEN)):
         edges = tmp['edges'] + (tmp['edges'][1] - tmp['edges'][0])/2
         counts = tmp[hist_key]
         mask = counts > 0
