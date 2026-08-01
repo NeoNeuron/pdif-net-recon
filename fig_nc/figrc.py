@@ -14,6 +14,10 @@ from matplotlib.ticker import FuncFormatter
 def sci_formatter(x, pos):
     return r'$10^{%d}$'%x
 
+from causal4.Causality import CausalityEstimator
+from causal4.utils import match_features, reconstruction_analysis_TE
+from causal4.downsample import downsample, population_synchrony_index
+
 def add_log_minor_ticks(ax, vrange, where='x'):
     ticks_minor = [np.arange(1,10)*10**i for i in range(*vrange)]
     ticks_minor = np.log10(np.asarray(ticks_minor).flatten())
@@ -125,6 +129,59 @@ def plot_spike_train(ax, N, spk, spk_all=None, title=None):
     ax.set_xlim(600,800)
     if title:
         ax.set_title(title, fontsize=22, pad=-10)
+
+def motif_path_counts(conn):
+    """Per-pair counts of second-order motif paths, for each unconnected
+    ordered pair (i,j) in binary adjacency `conn` (W[i,j] = edge i->j):
+    common-driver (confounder) paths -- number of k with k->i and k->j -- and
+    2-step mediator (chain) paths -- number of k with i->k and k->j.
+
+    Returns:
+        (confounder_counts, chain_counts): 1D arrays, one entry per
+        unconnected ordered pair (i,j), i.e. length == number of unconnected
+        ordered pairs in `conn`.
+    """
+    A = (conn > 0).astype(float)
+    off_diag = ~np.eye(A.shape[0], dtype=bool)
+    unconnected = (A == 0) & off_diag
+    confounder_counts = (A.T @ A)[unconnected]
+    chain_counts = (A @ A)[unconnected]
+    return confounder_counts, chain_counts
+
+
+def maybe_downsample(path, fname, ra, do_downsample):
+    """Downsample a spike-train file when `do_downsample` is True, else pass it
+    through unchanged.
+
+    Returns:
+        (spk_fname, raw_fname_or_None): `spk_fname` is the file to run causality
+        estimation on; `raw_fname_or_None` is the pre-downsample file (for
+        highlighting removed spikes via `plot_spike_train`'s `spk_all`), or
+        None if no downsampling was performed.
+    """
+    if do_downsample:
+        ofname = fname.replace('_spike_train.dat', f'_ra={ra:.2f}_spike_train.dat')
+        downsample(fname, ofname, path, ra)
+        return Path(path/ofname), Path(path/fname)
+    return Path(path/fname), None
+
+
+def run_reconstruction_TE(path, spk_fname, N, conn_file, T, dt=0.5, delay=3,
+                           order=(1, 1), n_thread=128, match_kwargs=None, recon_kwargs=None):
+    """Run the CausalityEstimator -> match_features -> reconstruction_analysis_TE
+    pipeline shared by the figR4* reviewer-response scripts.
+
+    Returns:
+        (df_recon, df_fig)
+    """
+    estimator = CausalityEstimator(
+        path, spk_fname, N, delay=delay, T=T, dt=dt,
+        n_thread=n_thread, order=order,
+    )
+    data = estimator.fetch_data(new_run=True)
+    data_matched = match_features(data, N, conn_file, **(match_kwargs or {}))
+    return reconstruction_analysis_TE(data_matched, **(recon_kwargs or {}))
+
 
 def plot_pdif_hist(series, ax):
     real_xlim = []

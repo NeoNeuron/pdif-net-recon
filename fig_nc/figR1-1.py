@@ -2,11 +2,6 @@
 # Author: Kai Chen
 
 #%%
-from causal4.Causality import CausalityEstimator
-from causal4.utils import match_features, reconstruction_analysis_TE
-from causal4.myplot import ReconstructionFigureTE
-import causal4.utils as c4u
-import pickle as pkl
 from figrc import *
 
 def get_vfname(fname: str, key:str, sfx:str=None):

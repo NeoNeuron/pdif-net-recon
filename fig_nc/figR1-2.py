@@ -3,12 +3,6 @@
 from figrc import *
 plt.rcParams['axes.spines.right'] = False
 plt.rcParams['axes.spines.top'] = False
-from causal4.Causality import CausalityEstimator
-from causal4.utils import binarize, match_features, reconstruction_analysis_TE
-from matplotlib.ticker import FuncFormatter
-@FuncFormatter
-def sci_formatter(x, pos):
-    return r'$10^{%d}$'%x
 
 # %%
 def figure_balance_saved(path, pfx, ax, spike_blank_ms=4.0):
@@ -116,20 +110,9 @@ ax[1] = figure_balance_saved(path, 'HHp=0.25s=0.020s=0.020f=0.420u=0.500', ax[1]
 ax[1].set_xlim(1000, 1300)
 ax[1].set_ylim(-100, 100)
 ax[1].set_xlabel('time (ms)', fontsize=26)
-ORANGE, GREEN = '#F49227', '#194955'
 tmp = df_fig.loc['TE']
-for hist_key, color in zip(('hist_conn', 'hist_disconn'), (ORANGE, GREEN)):
-    edges = tmp['edges'] + (tmp['edges'][1] - tmp['edges'][0])/2
-    counts = tmp[hist_key]
-    mask = counts > 0
-    ax[2].plot(edges[mask], counts[mask], color=color, lw=5, clip_on=True)
-    ax[2].fill_between(edges[mask], 0, counts[mask], color=color, alpha=0.5)
-ax[2].axvline(tmp['th_gauss'], ls='-', color='#F26A9D', lw=4)
-ax[2].xaxis.set_major_formatter(sci_formatter)
-ax[2].set_ylim(0)
+plot_pdif_hist(tmp, ax[2])
 ax[2].set_xlim(-10, -4)
-ax[2].set_xlabel('PTD-TE value', fontsize=26)
-ax[2].set_ylabel('density', fontsize=26)
 
 for i, tag in enumerate('ABC'):
     fig.text(0.06+i*0.30, 0.98, tag, fontsize=35, va='top')

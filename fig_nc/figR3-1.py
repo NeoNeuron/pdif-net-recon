@@ -3,16 +3,9 @@
 from figrc import *
 plt.rcParams['axes.spines.right'] = False
 plt.rcParams['axes.spines.top'] = False
-from causal4.Causality import CausalityEstimator
-from causal4.utils import binarize, match_features, reconstruction_analysis_TE
-from matplotlib.ticker import FuncFormatter
-@FuncFormatter
-def sci_formatter(x, pos):
-    return r'$10^{%d}$'%x
 import pickle
 
 from matplotlib.colors import LinearSegmentedColormap
-ORANGE, GREEN = '#F49227', '#194955'
 cmap = LinearSegmentedColormap.from_list('orange_green', [GREEN, ORANGE], N=256)
 
 # %%
