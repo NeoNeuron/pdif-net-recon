@@ -16,8 +16,8 @@ from pathlib import Path
 import warnings
 warnings.filterwarnings('ignore')
 # set True to postprocess the shuffle-ablation results instead of the real-data results
-shuffle_toggle = False
-fig_suffix = "ref=5-gap=250-sfx=0-K=1_5-bin=1.00"
+shuffle_toggle = True
+fig_suffix = "ref=5-gap=250-sfx=0-K=1_5-bin=1.00-delay=0.00"
 if shuffle_toggle:
     fig_suffix += "-shuffle"
 #%%

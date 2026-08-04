@@ -45,7 +45,7 @@ for out_dir in Path('./visualbehavior/').iterdir():
     }
     stimulus_names = np.append(stimulus_names, list(stimulus_group.keys()))
     #%%
-    heter_delay_toggle = True
+    heter_delay_toggle = False
     # further data selection according to refractory periods
     # ! data selection configurationaccording to refractory periods
     t_ref = 5.0    # msecond
