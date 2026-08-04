@@ -15,17 +15,25 @@ order = (1,1)
 
 ratios = np.array([0.2, 0.25, 0.3, 0.5, 0.7, 0.9])
 uu = np.array([0.15, 0.15, 0.15, 0.08, 0.06, 0.04])
-results = []
+results_ds, results = [], []
 for i, (s, u) in enumerate(zip(ratios, uu)):
     ra = 1.0
     _fname = f'HHp={s:.2f}s=0.020f=0.080u={u:.3f}_spike_train.dat'
     spk_fname, _ = maybe_downsample(path, _fname, ra, u < 0.15)
+    spk_fname_all, _ = maybe_downsample(path, _fname, ra, False)
 
     # Compare with ground truth connectivity
-    # ! important note: the 'connect_matrix-p=0.250.npy' file should be a binary adjacency matrix with shape (N, N), with W_{ij} representing the connection from node i to node j.
-    # Reconstruction based on PTE-TE values, using GMM (ie., EM algorithm) to determine the reconstruction threshold
+    # Reconstruction based on PDIF values, using GMM (ie., EM algorithm) to determine the reconstruction threshold
     df_recon, df_fig = run_reconstruction_TE(
         path, spk_fname, N, path/f'connect_matrix-p={s:.3f}.npy', T, dt=dt, delay=delay,
+        order=order, n_thread=128,
+        recon_kwargs=dict(nbins=60, hist_range=(-12, -4), algorithm='EM'),
+    )
+    print(df_fig['auc_svm']['TE'])
+    results_ds.append(df_fig)
+
+    df_recon, df_fig = run_reconstruction_TE(
+        path, spk_fname_all, N, path/f'connect_matrix-p={s:.3f}.npy', T, dt=dt, delay=delay,
         order=order, n_thread=128,
         recon_kwargs=dict(nbins=60, hist_range=(-12, -4), algorithm='EM'),
     )
@@ -37,11 +45,15 @@ for i, (s, u) in enumerate(zip(ratios, uu)):
 fig = plt.figure(figsize=(32, 19))
 gs = fig.add_gridspec(4, 6, wspace=0.55, hspace=0.6)
 ax = np.array([[fig.add_subplot(gs[r, c]) for c in range(6)] for r in range(3)])
-ax_confounder = fig.add_subplot(gs[3, :3])
-ax_chain = fig.add_subplot(gs[3, 3:])
+ax_confounder = fig.add_subplot(gs[3, :2])
+ax_chain = fig.add_subplot(gs[3, 2:4])
+ax_auc = fig.add_subplot(gs[3, 4])
+ax_acc = fig.add_subplot(gs[3, 5])
 
 confounder_counts_list, chain_counts_list = [], []
-for i, (s, u, res, axi) in enumerate(zip(ratios, uu, results, ax.T)):
+auc_list, acc_list = [], []
+auc_list_all, acc_list_all = [], []
+for i, (s, u, res, res_all, axi) in enumerate(zip(ratios, uu, results_ds, results, ax.T)):
     conn = np.load(path/f'connect_matrix-p={s:.3f}.npy')
     plot_conn_matrix(axi[0], conn)
     axi[0].set_title(f'p={s*100:.0f}%', fontsize=22, pad=10)
@@ -57,6 +69,10 @@ for i, (s, u, res, axi) in enumerate(zip(ratios, uu, results, ax.T)):
     else:
         spk_all = None
     spk = np.fromfile(spk_fname, dtype=float, count=10000).reshape(-1, 2)
+    auc_list.append(res['auc_svm']['TE'])
+    acc_list.append(res['acc_gauss']['TE'])
+    auc_list_all.append(res_all['auc_svm']['TE'])
+    acc_list_all.append(res_all['acc_gauss']['TE'])
     plot_spike_train(axi[1], N, spk, spk_all)
     axi[1].set_title(f'mean firing rate: {spk.shape[0] / (spk[:, 0].max() - spk[:, 0].min())*1000/N:.2f} Hz \n' +
                      fr'($\nu$={u:.2f})', fontsize=22, pad=0)
@@ -73,9 +89,9 @@ for pc in parts['bodies']:
     pc.set_alpha(0.6)
 ax_confounder.set_xticks(positions)
 ax_confounder.set_xticklabels(xtick_labels)
-ax_confounder.set_yscale('symlog')
+# ax_confounder.set_yscale('symlog')
 ax_confounder.set_xlabel('connection density', fontsize=26)
-ax_confounder.set_ylabel('# common drivers per\nunconnected pair (confounder)', fontsize=22)
+ax_confounder.set_ylabel('# confounder per\nunconnected pair', fontsize=22)
 
 parts = ax_chain.violinplot(chain_counts_list, positions=positions, showmeans=True, showextrema=True)
 for pc in parts['bodies']:
@@ -83,14 +99,28 @@ for pc in parts['bodies']:
     pc.set_alpha(0.6)
 ax_chain.set_xticks(positions)
 ax_chain.set_xticklabels(xtick_labels)
-ax_chain.set_yscale('symlog')
+# ax_chain.set_yscale('symlog')
 ax_chain.set_xlabel('connection density', fontsize=26)
-ax_chain.set_ylabel('# 2-step mediators per\nunconnected pair (chain)', fontsize=22)
+ax_chain.set_ylabel('# chain per\nunconnected pair', fontsize=22)
+
+ax_auc.plot(ratios*100, auc_list, 'o-', color='C0', clip_on=False, ms=10)
+ax_auc.plot(ratios*100, auc_list_all, 'o-', color='C1', clip_on=False, ms=8)
+ax_auc.set_ylim(0.5, 1.0)
+ax_auc.set_xlabel('connection density (%)', fontsize=26)
+ax_auc.set_ylabel('AUC', fontsize=26)
+
+ax_acc.plot(ratios*100, acc_list, 'o-', color='C0', clip_on=False, ms=10)
+ax_acc.plot(ratios*100, acc_list_all, 'o-', color='C1', clip_on=False, ms=8)
+ax_acc.set_ylim(0.5, 1.0)
+ax_acc.set_xlabel('connection density (%)', fontsize=26)
+ax_acc.set_ylabel('accuracy', fontsize=26)
 
 for tag, axi in zip('ABC', ax[:,0]):
     fig.text(-0.5, 1.18, tag, fontsize=35, va='top', transform=axi.transAxes)
-fig.text(-0.05, 1.18, 'D', fontsize=35, va='top', transform=ax_confounder.transAxes)
-fig.text(-0.05, 1.18, 'E', fontsize=35, va='top', transform=ax_chain.transAxes)
+fig.text(-0.20, 1.18, 'D', fontsize=35, va='top', transform=ax_confounder.transAxes)
+fig.text(-0.20, 1.18, 'E', fontsize=35, va='top', transform=ax_chain.transAxes)
+fig.text(-0.40, 1.18, 'F', fontsize=35, va='top', transform=ax_auc.transAxes)
+fig.text(-0.40, 1.18, 'G', fontsize=35, va='top', transform=ax_acc.transAxes)
 
 fig.savefig(root/'fig_nc/pdf'/'figR4-2.pdf', transparent=True, bbox_inches='tight')
 
@@ -121,11 +151,16 @@ for i, r in enumerate(ratios):
     results_common_Poisson_ra.append(df_fig)
 
 #%%
-fig = plt.figure(figsize=(32, 15))
-gs = fig.add_gridspec(3, len(ratios) + 2, wspace=0.5, hspace=0.5)
-ax = np.array([[fig.add_subplot(gs[r, c]) for c in range(len(ratios))] for r in range(3)])
-ax_auc = fig.add_subplot(gs[:, -2])
-ax_prauc = fig.add_subplot(gs[:, -1])
+fig = plt.figure(figsize=(32, 20))
+gs = fig.add_gridspec(3, len(ratios),
+    left=0.05, right=0.95, top=0.95, bottom=0.35,
+    wspace=0.5, hspace=0.5)
+ax = np.array([fig.add_subplot(g) for g in gs]).reshape(3, len(ratios))
+gs = fig.add_gridspec(1, 2,
+    left=0.05, right=0.95, top=0.25, bottom=0.05,
+    wspace=0.3, hspace=0.5)
+ax_auc = fig.add_subplot(gs[0,0])
+ax_prauc = fig.add_subplot(gs[0,1])
 
 for i, (r, res, res_ra, axi) in enumerate(zip(ratios, results_common_Poisson, results_common_Poisson_ra, ax.T)):
     _fname = f'P{r:.2f}HHp=0.25s=0.020f=0.080u=0.150_spike_train.dat'
@@ -145,19 +180,21 @@ prauc_raw = [res['pr_auc_gt']['TE'] for res in results_common_Poisson]
 prauc_ra = [res['pr_auc_gt']['TE'] for res in results_common_Poisson_ra]
 ax_auc.plot(ratios, auc_raw, 'o-', label='raw')
 ax_auc.plot(ratios, auc_ra, 'o-', label='downsampled')
+ax_auc.set_ylim(0.5,1.0)
 ax_auc.set_xlabel('shared Poisson drive ratio', fontsize=26)
 ax_auc.set_ylabel('ROC-AUC', fontsize=26)
 ax_auc.legend(fontsize=18)
 ax_prauc.plot(ratios, prauc_raw, 'o-', label='raw')
 ax_prauc.plot(ratios, prauc_ra, 'o-', label='downsampled')
+ax_prauc.set_ylim(0.5,1.0)
 ax_prauc.set_xlabel('shared Poisson drive ratio', fontsize=26)
 ax_prauc.set_ylabel('PR-AUC', fontsize=26)
 ax_prauc.legend(fontsize=18)
 
 for tag, axi in zip('ABC', ax[:,0]):
     fig.text(-0.4, 1.18, tag, fontsize=35, va='top', transform=axi.transAxes)
-fig.text(-0.05, 1.18, 'D', fontsize=35, va='top', transform=ax_auc.transAxes)
-fig.text(-0.05, 1.18, 'E', fontsize=35, va='top', transform=ax_prauc.transAxes)
+fig.text(-0.13, 1.18, 'D', fontsize=35, va='top', transform=ax_auc.transAxes)
+fig.text(-0.13, 1.18, 'E', fontsize=35, va='top', transform=ax_prauc.transAxes)
 
 fig.savefig(root/'fig_nc/pdf'/'figR4-3.pdf', transparent=True, bbox_inches='tight')
 
@@ -188,11 +225,11 @@ for s, u in zip(strengths, uu):
     results_vary_strength_ra.append(df_fig)
 
 #%%
-fig = plt.figure(figsize=(26, 15))
-gs = fig.add_gridspec(3, len(strengths) + 2, wspace=0.4, hspace=0.4)
+fig = plt.figure(figsize=(26, 20))
+gs = fig.add_gridspec(4, len(strengths), wspace=0.4, hspace=0.4)
 ax = np.array([[fig.add_subplot(gs[r, c]) for c in range(len(strengths))] for r in range(3)])
-ax_auc = fig.add_subplot(gs[:, -2])
-ax_prauc = fig.add_subplot(gs[:, -1])
+ax_auc = fig.add_subplot(gs[-1, :2])
+ax_prauc = fig.add_subplot(gs[-1, 2:])
 
 for i, (s, u, res, res_ra, axi) in enumerate(zip(strengths, uu, results_vary_strength, results_vary_strength_ra, ax.T)):
     _fname = f'HHp=0.25s={s:.3f}f=0.080u={u:.3f}_spike_train.dat'
@@ -211,21 +248,25 @@ auc_raw = [res['auc_svm']['TE'] for res in results_vary_strength]
 auc_ra = [res['auc_svm']['TE'] for res in results_vary_strength_ra]
 prauc_raw = [res['pr_auc_gt']['TE'] for res in results_vary_strength]
 prauc_ra = [res['pr_auc_gt']['TE'] for res in results_vary_strength_ra]
-ax_auc.plot(strengths, auc_raw, 'o-', label='raw')
-ax_auc.plot(strengths, auc_ra, 'o-', label='downsampled')
-ax_auc.set_xlabel('coupling strength S', fontsize=26)
+ax_auc.plot(strengths, auc_raw, 'o-', label='raw', clip_on=False, ms=10)
+ax_auc.plot(strengths, auc_ra, 'o-', label='downsampled', clip_on=False, ms=8)
+ax_auc.set_ylim(0.4,1.0)
+ax_auc.set_xlabel(r'S $(mS\cdot cm^{-2})$', fontsize=26)
 ax_auc.set_ylabel('ROC-AUC', fontsize=26)
 ax_auc.legend(fontsize=18)
-ax_prauc.plot(strengths, prauc_raw, 'o-', label='raw')
-ax_prauc.plot(strengths, prauc_ra, 'o-', label='downsampled')
-ax_prauc.set_xlabel('coupling strength S', fontsize=26)
+ax_auc.ticklabel_format(style='sci', scilimits=(0,0), axis='x', useMathText=True)
+ax_prauc.plot(strengths, prauc_raw, 'o-', label='raw', clip_on=False, ms=10)
+ax_prauc.plot(strengths, prauc_ra, 'o-', label='downsampled', clip_on=False, ms=8)
+ax_prauc.set_ylim(0.4,1.0)
+ax_prauc.set_xlabel(r'S $(mS\cdot cm^{-2})$', fontsize=26)
 ax_prauc.set_ylabel('PR-AUC', fontsize=26)
 ax_prauc.legend(fontsize=18)
+ax_prauc.ticklabel_format(style='sci', scilimits=(0,0), axis='x', useMathText=True)
 
 for tag, axi in zip('ABC', ax[:,0]):
     fig.text(-0.4, 1.18, tag, fontsize=35, va='top', transform=axi.transAxes)
-fig.text(-0.05, 1.18, 'D', fontsize=35, va='top', transform=ax_auc.transAxes)
-fig.text(-0.05, 1.18, 'E', fontsize=35, va='top', transform=ax_prauc.transAxes)
+fig.text(-0.17, 1.18, 'D', fontsize=35, va='top', transform=ax_auc.transAxes)
+fig.text(-0.17, 1.18, 'E', fontsize=35, va='top', transform=ax_prauc.transAxes)
 
 fig.savefig(root/'fig_nc/pdf'/'figR4-4.pdf', transparent=True, bbox_inches='tight')
 

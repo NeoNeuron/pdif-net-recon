@@ -196,5 +196,5 @@ def plot_pdif_hist(series, ax):
         ax.xaxis.set_major_formatter(sci_formatter)
     ax.set_ylim(0)
     ax.set_xlim(min(x[0] for x in real_xlim), max(x[-1] for x in real_xlim))
-    ax.set_xlabel('PTD-TE value', fontsize=26)
+    ax.set_xlabel('PDIF value', fontsize=26)
     ax.set_ylabel('density', fontsize=26)

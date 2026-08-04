@@ -7,6 +7,7 @@ import pickle
 
 from matplotlib.colors import LinearSegmentedColormap
 cmap = LinearSegmentedColormap.from_list('orange_green', [GREEN, ORANGE], N=256)
+from matplotlib.patches import Rectangle
 
 # %%
 path = root / 'data/Rcon4'
@@ -40,6 +41,8 @@ order = (1,5)
 dt = 3.0
 path = root / 'data/Rcon4'
 recon_Rcon_list = []
+auc_Rcon_list = []
+acc_Rcon_list = []
 for s in ssRcon:
     spk_fname = Path(path/f'Rconp=0.38s={s:.3f}_spike_train.dat')
     estimator = CausalityEstimator(
@@ -58,6 +61,8 @@ for s in ssRcon:
     df_recon, df_fig = reconstruction_analysis_TE(data_matched, nbins=20, hist_range=None, algorithm='EM')
     print(df_fig['auc_svm']['TE'], df_fig['auc_svm']['TE'])
     recon_Rcon_list.append(df_recon)
+    auc_Rcon_list.append(df_fig['auc_svm']['TE'])
+    acc_Rcon_list.append(df_fig.get('acc_svm', {}).get('TE', np.nan))
 
 # %%
 ssLcon = np.array([0, 0.01, 0.05, 0.100, 0.20])
@@ -66,6 +71,8 @@ order = (4,1)
 dt = 0.2
 path = root / 'data/Lcon4'
 recon_Lcon_list = []
+auc_Lcon_list = []
+acc_Lcon_list = []
 for s in ssLcon:
     spk_fname = Path(path/f'Lconp=0.38s={s:.3f}_spike_train.dat')
     estimator = CausalityEstimator(
@@ -84,50 +91,118 @@ for s in ssLcon:
     df_recon, df_fig = reconstruction_analysis_TE(data_matched, nbins=20, hist_range=None, algorithm='EM')
     print(df_fig['auc_svm']['TE'], df_fig['auc_svm']['TE'])
     recon_Lcon_list.append(df_recon)
+    auc_Lcon_list.append(df_fig['auc_svm']['TE'])
+    acc_Lcon_list.append(df_fig.get('acc_svm', {}).get('TE', np.nan))
 
 #%% save results as pickle file
 with open(root/'data/four_node_motif.pkl', 'wb') as f:
     pickle.dump({'ssRcon': ssRcon, 'recon_Rcon_list': recon_Rcon_list,
-                 'ssLcon': ssLcon, 'recon_Lcon_list': recon_Lcon_list }, f)
+                 'auc_Rcon_list': auc_Rcon_list,
+                 'acc_Rcon_list': acc_Rcon_list,
+                 'ssLcon': ssLcon, 'recon_Lcon_list': recon_Lcon_list,
+                 'auc_Lcon_list': auc_Lcon_list,
+                 'acc_Lcon_list': acc_Lcon_list }, f)
 
 #%%
 with open(root/'data/four_node_motif.pkl', 'rb') as f:
     data = pickle.load(f)
     ssRcon = data['ssRcon']
     recon_Rcon_list = data['recon_Rcon_list']
+    auc_Rcon_list = data['auc_Rcon_list']
+    acc_Rcon_list = data['acc_Rcon_list']
     ssLcon = data['ssLcon']
     recon_Lcon_list = data['recon_Lcon_list']
+    auc_Lcon_list = data['auc_Lcon_list']
+    acc_Lcon_list = data['acc_Lcon_list']
 
-fig = plt.figure(figsize=(12,5),)
-ax = fig.subplots(2, len(recon_Rcon_list), 
-    gridspec_kw=dict(wspace=0.4, hspace=0.8,
-                     left=0.05,  right=0.98,
-                     top=0.94,   bottom=0.08))
-    
-# Search of optimal delay parameter
-true_conn = np.zeros((N,N))
-true_conn[df_recon['pre_id'], df_recon['post_id']] = df_recon['connection']
+fig = plt.figure(figsize=(12,8),)
+gs = fig.add_gridspec(2, len(recon_Rcon_list),
+    wspace=0.4, hspace=0.4,
+    left=0.05, right=0.98,
+    top=0.94, bottom=0.38,)
+ax = np.array([
+    fig.add_subplot(g) for g in gs
+]).reshape(2,-1)
+
+gs = fig.add_gridspec(1, 4,
+    wspace=0.6, hspace=0.4,
+    left=0.05, right=0.98,
+    top=0.26, bottom=0.02,)
+ax_auc_R = fig.add_subplot(gs[0, 0])
+ax_acc_R = fig.add_subplot(gs[0, 1])
+ax_auc_L = fig.add_subplot(gs[0, 2])
+ax_acc_L = fig.add_subplot(gs[0, 3])
+
+# load true connectivity matrices for Rcon and Lcon
+true_Rcon = np.fromfile(root/'data/Rcon4'/ 'connect_matrix-p=0.375.dat', dtype=float).reshape(N, N)
+true_Lcon = np.fromfile(root/'data/Lcon4'/ 'connect_matrix-p=0.375.dat', dtype=float).reshape(N, N)
 for i, (recon, axi) in enumerate(zip(recon_Rcon_list, ax[0])):
     recon_conn = np.ones((N,N)) * recon['TE'].min()
     recon_conn[recon['pre_id'], recon['post_id']] = recon['TE']
     axi.imshow(recon_conn, cmap=cmap)
-    axi.set_title(f's={ssRcon[i]:.3f}', fontsize=20, pad=-10)
-    axi.set_xlabel('to', fontsize=20)
-    axi.set_ylabel('from', fontsize=20)
+    # overlay cyan squares for ground truth connections
+    for (pi, pj), val in np.ndenumerate(true_Rcon):
+        if val:
+            # rectangle: x=j, y=i, width=1, height=1
+            rect = Rectangle((pj-0.5, pi-0.5), 1, 1, edgecolor='cyan', facecolor='none', linewidth=2, alpha=0.8, clip_on=False)
+            axi.add_patch(rect)
+    axi.set_title(f's={ssRcon[i]:.3f}', fontsize=26, pad=-10)
+    axi.set_xlabel('to', fontsize=26)
+    axi.set_ylabel('from', fontsize=26)
     axi.set_xticks([])
     axi.set_yticks([])
+    axi.tick_params(axis='both', labelsize=10)
 
 for i, (recon, axi) in enumerate(zip(recon_Lcon_list, ax[1])):
     recon_conn = np.ones((N,N)) * recon['TE'].min()
     recon_conn[recon['pre_id'], recon['post_id']] = recon['TE']
     axi.imshow(recon_conn, cmap=cmap)
-    axi.set_title(f's={ssLcon[i]:.3f}', fontsize=20, pad=-10)
-    axi.set_xlabel('to', fontsize=20)
-    axi.set_ylabel('from', fontsize=20)
+    # overlay cyan squares for ground truth connections
+    for (pi, pj), val in np.ndenumerate(true_Lcon):
+        if val:
+            rect = Rectangle((pj-0.5, pi-0.5), 1, 1, edgecolor='cyan', facecolor='none', linewidth=2, alpha=0.8, clip_on=False)
+            axi.add_patch(rect)
+    axi.set_title(f's={ssLcon[i]:.3f}', fontsize=26, pad=-10)
+    axi.set_xlabel('to', fontsize=26)
+    axi.set_ylabel('from', fontsize=26)
     axi.set_xticks([])
     axi.set_yticks([])
+    axi.tick_params(axis='both', labelsize=20)
+
+ax_auc_R.plot(ssRcon, auc_Rcon_list, marker='o', color=ORANGE, clip_on=False)
+ax_auc_R.set_xlabel('s')
+ax_auc_R.set_ylabel('AUC')
+ax_auc_R.set_ylim(0, 1)
+ax_auc_R.grid(alpha=0.3)
+ax_auc_R.tick_params(axis='both', labelsize=20)
+
+ax_acc_R.plot(ssRcon, acc_Rcon_list, marker='o', color=ORANGE, clip_on=False)
+ax_acc_R.set_xlabel('s')
+ax_acc_R.set_ylabel('accuracy')
+ax_acc_R.set_ylim(0, 1)
+ax_acc_R.grid(alpha=0.3)
+ax_acc_R.tick_params(axis='both', labelsize=20)
+
+ax_auc_L.plot(ssLcon, auc_Lcon_list, marker='o', color=GREEN, clip_on=False)
+ax_auc_L.set_xlabel('s')
+ax_auc_L.set_ylabel('AUC')
+ax_auc_L.set_ylim(0, 1)
+ax_auc_L.grid(alpha=0.3)
+ax_auc_L.tick_params(axis='both', labelsize=20)
+
+ax_acc_L.plot(ssLcon, acc_Lcon_list, marker='o', color=GREEN, clip_on=False)
+ax_acc_L.set_xlabel('s')
+ax_acc_L.set_ylabel('accuracy')
+ax_acc_L.set_ylim(0, 1)
+ax_acc_L.grid(alpha=0.3)
+ax_acc_L.tick_params(axis='both', labelsize=20)
+
 
 for y, tag in enumerate('AB'):
-    fig.text(0.02, 1.000-y*0.5, tag, fontsize=30, va='top')
+    fig.text(0.01, 0.980-y*0.33, tag, fontsize=30, va='top')
+
+for x, tag in enumerate('CDEF'):
+    fig.text(0.01+x*0.25, 0.32, tag, fontsize=30, va='top')
 
 fig.savefig(root/'fig_nc/pdf'/'figR3-1.pdf', transparent=True, bbox_inches='tight')
+# %%

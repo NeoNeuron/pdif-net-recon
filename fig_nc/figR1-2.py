@@ -4,7 +4,6 @@ from figrc import *
 plt.rcParams['axes.spines.right'] = False
 plt.rcParams['axes.spines.top'] = False
 
-# %%
 def figure_balance_saved(path, pfx, ax, spike_blank_ms=4.0):
     """Example-neuron E/I input currents from an EXISTING run_balanced_EINet.py
     output. Pure plotting: only reads .dat files already on disk, never calls
@@ -101,7 +100,7 @@ masks = [(spk_data[:, 0] > 1000) * (spk_data[:, 1] < 320),
 for m, c, label in zip(masks, ("#c0392b", "#2471a3"), ('E', 'I')):
     ax[0].plot(spk_data[m, 0], spk_data[m, 1], '|', lw=0.5, color=c, alpha=0.5, label=label)
 ax[0].set_xlabel('time (ms)', fontsize=26)
-ax[0].set_ylabel('node index', fontsize=26)
+ax[0].set_ylabel('node ID', fontsize=26)
 ax[0].set_xlim(1000, 1300)
 ax[0].set_ylim(0, 400)
 ax[0].legend(loc='upper right', fontsize=20, framealpha=0.9)
