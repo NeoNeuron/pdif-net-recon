@@ -151,5 +151,5 @@ ymax = ax.get_ylim()[1]
 draw_sig(ax, xt[0], ymax - 0.02*(ymax-ax.get_ylim()[0]), significance_label(pv_vc))
 draw_sig(ax, xt[1], ymax - 0.12*(ymax-ax.get_ylim()[0]), significance_label(pv_vb))
 
-fig.savefig(root / 'fig_nc/pdf' / 'figR1-4.pdf')
+fig.savefig(root / 'fig_nc/pdf' / 'figR1-4.pdf', bbox_inches='tight', transparent=True)
 # %%

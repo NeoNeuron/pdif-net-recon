@@ -86,5 +86,5 @@ plot_s_vs_ptdte(
 for i, tag in enumerate('AB'):
     fig.text(0.08+i*0.44, 0.95, tag, fontsize=35, va='top')
 
-fig.savefig(root/'fig_nc/pdf'/'figR1-1.pdf', transparent=True)
+fig.savefig(root/'fig_nc/pdf'/'figR1-1.pdf', bbox_inches='tight', transparent=True)
 #%%
