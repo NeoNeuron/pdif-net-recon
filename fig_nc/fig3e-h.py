@@ -64,8 +64,8 @@ ax[1,1].set_xlim(-8, -2)
 ax[1,1].tick_params(axis='x', which='major', length=8)
 ax[1,1].tick_params(axis='x', which='minor', length=4)
 
-for x, tag in enumerate('efgh'):
-    fig.text(x*0.25, 0.995, tag, fontsize=35, fontweight='bold', va='top')
+for x, tag in enumerate('EFGH'):
+    fig.text(x*0.25, 0.995, tag, fontsize=35, va='top')
 
 fig.savefig(root.parent/'fig_nc/pdf'/'fig3e-h.pdf', transparent=True)
 #%%

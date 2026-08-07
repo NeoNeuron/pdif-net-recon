@@ -87,9 +87,8 @@ for axis, pos in zip([ax[3].xaxis, ax[3].yaxis], [(0.9,0), (-0.1,0)]):
 
 ax[3].set_title(r'$I_{X\to Y} / I_{X\to Z}$')
 
-for i, tag in enumerate('abcd'):
-    fig.text(i*0.25, 0.98, tag,
-             fontsize=35, fontweight='bold', va='top')
+for i, tag in enumerate('ABCD'):
+    fig.text(i*0.25, 0.98, tag, fontsize=35, va='top')
 fig.savefig(root/'fig_nc/pdf'/'fig2a-d.pdf', transparent=True)
 
 #%%

@@ -121,8 +121,8 @@ for i in range(2):
         axi.spines['left'].set_visible(False)
         axi.spines['bottom'].set_visible(False)
 
-fig.text(x=0.02, y=0.99, s='a', ha='center', va='center', fontsize=24, fontweight='bold')
-fig.text(x=0.52, y=0.99, s='b', ha='center', va='center', fontsize=24, fontweight='bold')
+fig.text(x=0.02, y=0.99, s='A', ha='center', va='center', fontsize=24)
+fig.text(x=0.52, y=0.99, s='B', ha='center', va='center', fontsize=24)
 
 noise_levels = [0, 0.1, 0.2, 0.3, 0.4]
 buffer = [] 
@@ -188,8 +188,8 @@ for net_key, ax in zip(net_keys, axs.flatten()):
     ax.tick_params(axis='both', labelsize=16)
 leg = axs[-1,-1].legend(loc=(0.5,-1.4),fontsize=20)
 
-for i, letter in enumerate('cdefghij'):
-    fig.text(x=-0.2, y=1.1, s=letter, ha='center', va='center', fontsize=26, fontweight='bold', transform=axs[i//4, i%4].transAxes)
+for i, letter in enumerate('CDEFGHIJ'):
+    fig.text(x=-0.2, y=1.1, s=letter, ha='center', va='center', fontsize=26, transform=axs[i//4, i%4].transAxes)
 
 
 ax = fig.subplots(1,1, gridspec_kw={
@@ -202,7 +202,7 @@ ax.set_xlabel('', fontsize=24)
 ax.set_yscale('log')
 ax.set_ylim(1e1, 1e6)
 ax.tick_params(axis='y', labelsize=16)
-fig.text(x=-0.041, y=1.1, s='k', ha='center', va='center', fontsize=26, fontweight='bold', transform=ax.transAxes)
+fig.text(x=-0.041, y=1.1, s='K', ha='center', va='center', fontsize=26, transform=ax.transAxes)
 fig.savefig(root_path / 'fig_nc/pdf' / f'fig5.pdf', transparent=True)
 #%%
 # fig, ax = plt.subplots(1,1, gridspec_kw={

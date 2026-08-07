@@ -291,14 +291,14 @@ for axi, key in zip(ax.T, keys):
     axins.set_xlim(-0.8,1.8)
     axins.set_ylim(-0.8,1.8)
 
-for i, tag in enumerate('ef'):
-    fig.text(0.02, 0.48+(1-i)*0.5, tag, fontsize=35, fontweight='bold', va='top')
+for i, tag in enumerate('EF'):
+    fig.text(0.02, 0.48+(1-i)*0.5, tag, fontsize=35, va='top')
 
-for i, tag in enumerate('gh'):
-    fig.text(0.35+i*0.34, 0.98, tag, fontsize=35, fontweight='bold', va='top')
+for i, tag in enumerate('GH'):
+    fig.text(0.35+i*0.34, 0.98, tag, fontsize=35, va='top')
 
-for i, tag in enumerate('ij'):
-    fig.text(0.35+i*0.34, 0.48, tag, fontsize=35, fontweight='bold', va='top')
+for i, tag in enumerate('IJ'):
+    fig.text(0.35+i*0.34, 0.48, tag, fontsize=35, va='top')
 
 fig.savefig(root/'fig_nc/pdf'/'fig2e-j.pdf', transparent=True)
 #%%

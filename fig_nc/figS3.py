@@ -112,7 +112,7 @@ ax[1].plot(xrange, fit_func(xrange, pval[0]), color='r', lw=1.5, label=f'$R^2$={
 ax[1].set_xlim(0)
 ax[1].set_ylim(0)
 
-for axi, letter in zip(ax.flatten(), 'ab'):
-    axi.text(-0.15,1.05,'%s'%letter,fontsize=28,weight='bold', transform=axi.transAxes)
+for axi, letter in zip(ax.flatten(), 'AB'):
+    axi.text(-0.15,1.05,'%s'%letter,fontsize=28, transform=axi.transAxes)
 fig.savefig(root / 'fig_nc/pdf/figS3.pdf', dpi=300, bbox_inches='tight', transparent=True)
 # %%

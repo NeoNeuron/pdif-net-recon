@@ -71,8 +71,8 @@ for i, (axi, spk_fname) in enumerate(zip(ax[1:], spk_fnames)):
     axi.set_xlabel('PDIF value')
     axi.set_ylabel('density')
 
-for x, tag in enumerate('abcd'):
-    fig.text(x*0.25, 0.995, tag, fontsize=35, fontweight='bold', va='top')
+for x, tag in enumerate('ABCD'):
+    fig.text(x*0.25, 0.995, tag, fontsize=35, va='top')
 
 fig.savefig(root/'fig_nc/pdf'/'fig3a-d.pdf', transparent=True)
 #%%

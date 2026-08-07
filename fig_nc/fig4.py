@@ -138,10 +138,10 @@ for axti, ax_col, spk_fname, key, dt, T, delay, order, vol_fname, th, Trange in 
     ax_col[-1].set_ylabel('density', fontsize=26)
 
 xx, yy = np.meshgrid(np.arange(4), np.arange(3), indexing='ij')
-for tag, x in zip(['abc','def','ghi','jkl'], range(4)):
-    fig.text(0.02+x*0.25, 1.00, tag[0], fontsize=35, fontweight='bold', va='top')
-    fig.text(0.02+x*0.25, 0.78, tag[1], fontsize=35, fontweight='bold', va='top')
-    fig.text(0.02+x*0.25, 0.38, tag[2], fontsize=35, fontweight='bold', va='top')
+for tag, x in zip(['ABC','DEF','GHI','JKL'], range(4)):
+    fig.text(0.02+x*0.25, 1.00, tag[0], fontsize=35, va='top')
+    fig.text(0.02+x*0.25, 0.78, tag[1], fontsize=35, va='top')
+    fig.text(0.02+x*0.25, 0.38, tag[2], fontsize=35, va='top')
 
 fig.savefig(root/'fig_nc/pdf'/'fig4.pdf', transparent=True)
 #%%

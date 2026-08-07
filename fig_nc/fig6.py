@@ -84,9 +84,9 @@ for label, axi in zip(df_auc.columns, ax.flatten()):
         axi.set_title(label.replace('_', ' '), fontsize=16)
     else:
         axi.set_title(label+' behavior', fontsize=16)
-ax[0,0].text(-0.08, 2.6, 'a', transform=ax[0,0].transAxes, fontsize=25, va='top', ha='right', weight='bold')
-for label, axi in zip('bcdefg', ax.flatten()):
-    axi.text(-0.08, 1.3, label, transform=axi.transAxes, fontsize=25, va='top', ha='right', weight='bold')
+ax[0,0].text(-0.08, 2.6, 'A', transform=ax[0,0].transAxes, fontsize=25, va='top', ha='right')
+for label, axi in zip('BCDEFG', ax.flatten()):
+    axi.text(-0.08, 1.3, label, transform=axi.transAxes, fontsize=25, va='top', ha='right')
 
 fig.savefig(root_path / 'fig_nc/pdf' / 'fig6.pdf')
 # ax[0].set_xlabel('Min. Consistency')

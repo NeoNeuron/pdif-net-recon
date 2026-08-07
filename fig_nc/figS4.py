@@ -81,9 +81,9 @@ for idx, f in enumerate(datafiles):
 add_log_minor_ticks(ax[0], (-7, -4), where='x')
 add_log_minor_ticks(ax[1], (-8, -4), where='x')
 
-fig.text(0.01, 0.995, 'a', fontsize=35, fontweight='bold', va='top')
-fig.text(0.52, 0.995, 'b', fontsize=35, fontweight='bold', va='top')
-fig.text(0.76, 0.995, 'c', fontsize=35, fontweight='bold', va='top')
+fig.text(0.01, 0.995, 'A', fontsize=35, va='top')
+fig.text(0.52, 0.995, 'B', fontsize=35, va='top')
+fig.text(0.76, 0.995, 'C', fontsize=35, va='top')
 
 fig.savefig(root/'fig_nc/pdf/figS4.pdf', dpi=300, bbox_inches='tight', transparent=True)
 # %%
