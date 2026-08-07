@@ -91,12 +91,22 @@ def linearfit(x, y):
     def func(x, a):
         return a*x
     popt, _ = curve_fit(func, x, y)
+    fit = func(x, *popt)
+    ss_res = np.sum((y - fit) ** 2)
+    ss_tot = np.sum((y - np.mean(y)) ** 2)
+    r_squared = 1 - ss_res / ss_tot if ss_tot != 0 else 1.0
+    print(f"linearfit: slope={popt[0]:.6e}, R^2={r_squared:.3f}")
     return lambda x: func(x, *popt)
 
 def squarefit(x, y):
     def func(x, a):
         return a*x**2
     popt,_ = curve_fit(func, x, y)
+    fit = func(x, *popt)
+    ss_res = np.sum((y - fit) ** 2)
+    ss_tot = np.sum((y - np.mean(y)) ** 2)
+    r_squared = 1 - ss_res / ss_tot if ss_tot != 0 else 1.0
+    print(f"squarefit: A={popt[0]:.6e}, R^2={r_squared:.3f}")
     return lambda x: func(x, *popt)
 
 def create_fig1x4():

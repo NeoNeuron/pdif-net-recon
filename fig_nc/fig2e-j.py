@@ -220,7 +220,13 @@ for axi, key in zip(ax.T, keys):
     ax_TE.ticklabel_format(style='sci', scilimits=(0,0), axis='both', useMathText=True)
 
     pval = np.polyfit(direct, indirect, deg=1)
-    ax_TE.plot(direct, np.polyval(pval, direct), color='#F26A9D', lw=2, zorder=-1)
+    fit = np.polyval(pval, direct)
+    ax_TE.plot(direct, fit, color='#F26A9D', lw=2, zorder=-1)
+
+    ss_res = np.sum((indirect - fit) ** 2)
+    ss_tot = np.sum((indirect - np.mean(indirect)) ** 2)
+    r_squared = 1 - ss_res / ss_tot if ss_tot != 0 else 1.0
+    print(f"{key}, PDIF fit: slope={pval[0]:.6e}, R^2={r_squared:.6f}")
     label_fs = 20
     if key == 'confounder':
         ax_TE.set_xlabel(r'$I_{X\to Y}\cdot I_{X\to Z}$', fontsize=label_fs, usetex=False)
@@ -262,7 +268,13 @@ for axi, key in zip(ax.T, keys):
     axi[1].yaxis.get_offset_text().set_fontsize(24)
 
     pval = np.polyfit(direct, indirect, deg=1)
-    axi[1].plot(direct, np.polyval(pval, direct), color='#F26A9D', lw=3, zorder=-1)
+    fit = np.polyval(pval, direct)
+    axi[1].plot(direct, fit, color='#F26A9D', lw=3, zorder=-1)
+
+    ss_res = np.sum((indirect - fit) ** 2)
+    ss_tot = np.sum((indirect - np.mean(indirect)) ** 2)
+    r_squared = 1 - ss_res / ss_tot if ss_tot != 0 else 1.0
+    print(f"{key}, dp fit: slope={pval[0]:.6e}, R^2={r_squared:.6f}")
     label_fs = 28
     if key == 'confounder':
         axi[1].set_xlabel(r'$\Delta p^{X\to Y}_{0,1}\cdot \Delta p^{X\to Z}_{0,1}$', fontsize=label_fs, usetex=False)
