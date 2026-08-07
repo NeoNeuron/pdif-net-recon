@@ -7,6 +7,7 @@ ORANGE, GREEN, PINK = '#F49227', '#194955', '#F26A9D'
 
 import networkx as nx
 import numpy as np
+np.seterr(all="ignore")
 import matplotlib.pyplot as plt
 import seaborn as sns
 from matplotlib.ticker import FuncFormatter
@@ -17,6 +18,11 @@ def sci_formatter(x, pos):
 from causal4.Causality import CausalityEstimator
 from causal4.utils import match_features, reconstruction_analysis_TE
 from causal4.downsample import downsample, population_synchrony_index
+
+import warnings
+from sklearn.exceptions import ConvergenceWarning
+warnings.filterwarnings("ignore", category=RuntimeWarning)
+warnings.filterwarnings("ignore", category=ConvergenceWarning)
 
 def add_log_minor_ticks(ax, vrange, where='x'):
     ticks_minor = [np.arange(1,10)*10**i for i in range(*vrange)]
