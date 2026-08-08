@@ -9,6 +9,30 @@ from matplotlib.colors import LinearSegmentedColormap
 cmap = LinearSegmentedColormap.from_list('orange_green', [GREEN, ORANGE], N=256)
 from matplotlib.patches import Rectangle
 
+def heatmap(data, ax, vmin=0.5, vmax=1.0, pad=0.005, width=0.01,
+            cbar_label='PDIF value', xlabel='to', y_label='from', cmap=None):
+    fig = ax.get_figure()
+    im = ax.pcolormesh(data, vmin=vmin, vmax=vmax, cmap=cmap)
+    pos = ax.get_position()  # save main axes position BEFORE adding colorbar
+    cax = fig.add_axes([pos.x1 + pad, pos.y0, width, pos.height])
+    cbar = fig.colorbar(im, cax=cax, label=cbar_label)
+    cbar.ax.yaxis.label.set_fontsize(20)
+    # set colorbar tick label size
+    cbar.ax.tick_params(labelsize=18)
+    ax.set_position(pos) 
+    ax.set_xlabel(xlabel, fontsize=26)
+    ax.set_ylabel(y_label, fontsize=26)
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.set_aspect('equal')
+    ax.invert_yaxis()
+    cbar.ax.yaxis.get_major_formatter().set_powerlimits((0, 0))
+    cbar.ax.yaxis.get_major_formatter().set_useMathText(True)
+    cbar.ax.yaxis.set_offset_position('left')
+    cbar.ax.yaxis.offsetText.set_fontsize(18)
+    
+    return ax, cbar
+
 # %%
 path = root / 'data/Rcon4'
 spk_fname = Path(path/'Rconp=0.38s=0.002_spike_train.dat')
@@ -115,11 +139,11 @@ with open(root/'data/four_node_motif.pkl', 'rb') as f:
     auc_Lcon_list = data['auc_Lcon_list']
     acc_Lcon_list = data['acc_Lcon_list']
 
-fig = plt.figure(figsize=(12,8),)
-gs = fig.add_gridspec(2, len(recon_Rcon_list),
-    wspace=0.4, hspace=0.4,
-    left=0.05, right=0.98,
-    top=0.94, bottom=0.38,)
+fig = plt.figure(figsize=(12,10),)
+gs = fig.add_gridspec(2, 3,
+    wspace=0.5, hspace=0.4,
+    left=0.02, right=0.98,
+    top=0.94, bottom=0.32,)
 ax = np.array([
     fig.add_subplot(g) for g in gs
 ]).reshape(2,-1)
@@ -127,7 +151,7 @@ ax = np.array([
 gs = fig.add_gridspec(1, 4,
     wspace=0.6, hspace=0.4,
     left=0.05, right=0.98,
-    top=0.26, bottom=0.02,)
+    top=0.20, bottom=0.02,)
 ax_auc_R = fig.add_subplot(gs[0, 0])
 ax_acc_R = fig.add_subplot(gs[0, 1])
 ax_auc_L = fig.add_subplot(gs[0, 2])
@@ -139,35 +163,25 @@ true_Lcon = np.fromfile(root/'data/Lcon4'/ 'connect_matrix-p=0.375.dat', dtype=f
 for i, (recon, axi) in enumerate(zip(recon_Rcon_list, ax[0])):
     recon_conn = np.ones((N,N)) * recon['TE'].min()
     recon_conn[recon['pre_id'], recon['post_id']] = recon['TE']
-    axi.imshow(recon_conn, cmap=cmap)
+    heatmap(recon_conn, cmap=cmap, ax=axi, vmin=recon['TE'].min(), vmax=recon['TE'].max(), pad=0.003, width=0.02)
     # overlay cyan squares for ground truth connections
     for (pi, pj), val in np.ndenumerate(true_Rcon):
         if val:
             # rectangle: x=j, y=i, width=1, height=1
-            rect = Rectangle((pj-0.5, pi-0.5), 1, 1, edgecolor='cyan', facecolor='none', linewidth=2, alpha=0.8, clip_on=False)
+            rect = Rectangle((pj, pi), 1, 1, edgecolor='cyan', facecolor='none', linewidth=2, alpha=0.8, clip_on=False)
             axi.add_patch(rect)
     axi.set_title(f's={ssRcon[i]:.3f}', fontsize=26, pad=-10)
-    axi.set_xlabel('to', fontsize=26)
-    axi.set_ylabel('from', fontsize=26)
-    axi.set_xticks([])
-    axi.set_yticks([])
-    axi.tick_params(axis='both', labelsize=10)
 
-for i, (recon, axi) in enumerate(zip(recon_Lcon_list, ax[1])):
+for i, (recon, axi) in enumerate(zip(recon_Lcon_list[::2], ax[1])):
     recon_conn = np.ones((N,N)) * recon['TE'].min()
     recon_conn[recon['pre_id'], recon['post_id']] = recon['TE']
-    axi.imshow(recon_conn, cmap=cmap)
+    heatmap(recon_conn, cmap=cmap, ax=axi, vmin=recon['TE'].min(), vmax=recon['TE'].max(), pad=0.003, width=0.02)
     # overlay cyan squares for ground truth connections
     for (pi, pj), val in np.ndenumerate(true_Lcon):
         if val:
-            rect = Rectangle((pj-0.5, pi-0.5), 1, 1, edgecolor='cyan', facecolor='none', linewidth=2, alpha=0.8, clip_on=False)
+            rect = Rectangle((pj, pi), 1, 1, edgecolor='cyan', facecolor='none', linewidth=2, alpha=0.8, clip_on=False)
             axi.add_patch(rect)
-    axi.set_title(f's={ssLcon[i]:.3f}', fontsize=26, pad=-10)
-    axi.set_xlabel('to', fontsize=26)
-    axi.set_ylabel('from', fontsize=26)
-    axi.set_xticks([])
-    axi.set_yticks([])
-    axi.tick_params(axis='both', labelsize=20)
+    axi.set_title(f's={ssLcon[i*2]:.3f}', fontsize=26, pad=-10)
 
 ax_auc_R.plot(ssRcon, auc_Rcon_list, marker='o', color=ORANGE, clip_on=False)
 ax_auc_R.set_xlabel('s')
@@ -199,10 +213,10 @@ ax_acc_L.tick_params(axis='both', labelsize=20)
 
 
 for y, tag in enumerate('AB'):
-    fig.text(0.01, 0.980-y*0.33, tag, fontsize=30, va='top')
+    fig.text(0.01, 0.980-y*0.36, tag, fontsize=30, va='top')
 
 for x, tag in enumerate('CDEF'):
-    fig.text(0.01+x*0.25, 0.32, tag, fontsize=30, va='top')
+    fig.text(0.01+x*0.25, 0.26, tag, fontsize=30, va='top')
 
 fig.savefig(root/'fig_nc/pdf'/'figR3-1.pdf', transparent=True, bbox_inches='tight')
 # %%

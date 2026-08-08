@@ -48,19 +48,20 @@ def figure_balance_saved(path, pfx, ax, spike_blank_ms=4.0):
     I_E, I_I = np.where(mask, I_E, np.nan), np.where(mask, I_I, np.nan)
     net = I_E + I_I
 
-    ax.plot(t, I_E, lw=0.8, color="#c0392b", label=r"$I_E$")
-    ax.plot(t, I_I, lw=0.8, color="#2471a3", label=r"$I_I$")
-    ax.plot(t, net, lw=0.8, color="k", alpha=0.75, label=r"$I_E{+}I_I$")
+    ax.plot(t, I_E, color="#c0392b", label=r"$I_E$")
+    ax.plot(t, I_I, color="#2471a3", label=r"$I_I$")
+    ax.plot(t, net, color="k", alpha=0.75, label=r"$I_E{+}I_I$")
     ax.axhline(np.nanmean(I_E), color="#c0392b", ls="--", lw=0.7)
     ax.axhline(np.nanmean(I_I), color="#2471a3", ls="--", lw=0.7)
-    ax.axhline(0, color="gray", lw=0.5)
+    ax.axhline(np.nanmean(net), color="gray", ls="--", lw=0.7)
+    # ax.axhline(0, color="gray", lw=0.5)
     ax.set_ylabel(r"current ($\mu$A/cm$^2$)")
-    ax.legend(loc="upper right", ncol=1, fontsize=12, framealpha=0.9)
+    ax.legend(loc="upper right", ncol=1, fontsize=14, framealpha=0.9)
     # ax.set_title(f"E neuron #{cell}, from {path} (spikes blanked "
     #              f"+-{spike_blank_ms:g} ms, no leak term -- no voltage.dat "
     #              f"in this run)", fontsize=10)
     return ax
-# %%
+# %
 T = 5e6         # length of time series, unit ms
 N = 400           # total number of nodes in the network
 Ne=320
@@ -83,27 +84,29 @@ estimator = CausalityEstimator(
 # Compare with ground truth connectivity
 data = estimator.fetch_data(delay=1.5, new_run=True)
 data_matched = match_features(data, N=Ne, conn_file=path/'connect_matrix-p=0.250.npy', Ni=Ni)
-#%%
+#%
 # ! important note: the 'connect_matrix-p=0.250.npy' file should be a binary adjacency matrix with shape (N, N), with W_{ij} representing the connection from node i to node j.
 # Reconstruction based on PTE-TE values, using GMM (ie., EM algorithm) to determine the reconstruction threshold
 df_recon, df_fig = reconstruction_analysis_TE(
     data_matched, nbins=60, hist_range=(-10,-4), fit_p0=(0.5, -5.5, -4.6, 1e-1, 1e-1), algorithm='EM')
-print(df_fig['auc_svm']['TE'])
+print(df_fig['auc_svm']['TE'], df_fig['acc_gauss']['TE'])
 
-# %%
+# %
 # Search of optimal delay parameter
 fig, ax = plt.subplots(1,3,figsize=(18,4.5), gridspec_kw={'wspace':0.5})
 
 spk_data = np.fromfile(spk_fname, dtype=float, offset=8*8000, count=10000).reshape(-1, 2)
 masks = [(spk_data[:, 0] > 1000) * (spk_data[:, 1] < 320),
          (spk_data[:, 0] > 1000) * (spk_data[:, 1] >= 320)]
-for m, c, label in zip(masks, ("#c0392b", "#2471a3"), ('E', 'I')):
-    ax[0].plot(spk_data[m, 0], spk_data[m, 1], '|', lw=0.5, color=c, alpha=0.5, label=label)
+for m, c, label in zip(masks, ("#c0392b", "#2471a3"), ('Exc. neuron', 'Inh. neuron')):
+    ax[0].plot(spk_data[m, 0], spk_data[m, 1], '|', color=c)
 ax[0].set_xlabel('time (ms)', fontsize=26)
 ax[0].set_ylabel('node ID', fontsize=26)
 ax[0].set_xlim(1000, 1300)
 ax[0].set_ylim(0, 400)
-ax[0].legend(loc='upper right', fontsize=20, framealpha=0.9)
+for c, label in zip(("#c0392b", "#2471a3"), ('Exc. neuron', 'Inh. neuron')):
+    ax[0].plot([], [], '|', color=c, label=label, mew=3, ms=15)
+ax[0].legend(loc='upper right', fontsize=14, framealpha=0.9)
 
 ax[1] = figure_balance_saved(path, 'HHp=0.25s=0.020s=0.020f=0.420u=0.500', ax[1], spike_blank_ms=4.0)
 ax[1].set_xlim(1000, 1300)

@@ -19,6 +19,7 @@ def heatmap(xx, yy, data, ax, vmin=0.5, vmax=1.0, pad=0.005, width=0.01,
     ax.set_ylabel(y_label, fontsize=26)
     ax.set_xscale(xscale)
     ax.set_xlim(xx[0], xx[-1])
+    cbar.ax.tick_params(labelsize=18)
     return ax, cbar
 
 # %% path for your time series data
@@ -149,14 +150,22 @@ for i, th in enumerate(thresholds):
     except:
         print(1)
 #%%
+u = 0.4
+_fname = f'HHp=0.25s=0.020f=0.080u={u:.3f}_spike_train.dat'
+spk_fname = path/_fname
+buff = np.fromfile(spk_fname, dtype=float, count=10000).reshape(-1, 2)
+plt.plot(buff[:, 0], buff[:, 1], '|', ms=2)
+#%%
 results_scan_u = []
-uu = np.array([0.05, 0.10, 0.2, 0.25, 0.3, 0.35, 0.4])
+uu = np.array([0.05, 0.10, 0.2, 0.25, 0.3])
 TT = np.array([1e5, 5e5, 1e6, 5e6, 1e7])
 mfr = []
 for i, u in enumerate(uu):
     _fname = f'HHp=0.25s=0.020f=0.080u={u:.3f}_spike_train.dat'
-    spk_fname, _ = maybe_downsample(path, _fname, 1.0, False)
-    buff = np.fromfile(spk_fname, dtype=float, count=10000).reshape(-1, 2)
+    spk_fname, raw_fname = maybe_downsample(path, _fname, 1.0, u>0.25)
+    if raw_fname is None:
+        raw_fname = spk_fname
+    buff = np.fromfile(raw_fname, dtype=float, count=10000).reshape(-1, 2)
     mfr.append(buff.shape[0] / (buff[:, 0].max() - buff[:, 0].min())*1000/N)
 
     buff = []
@@ -176,13 +185,13 @@ scan_specs = [
     ('k', kk, results_scan_k, r'$k$'),
     ('l', ll, results_scan_l, r'$l$'),
     ('dt', dtdt, results_scan_dt, r'$\Delta t$ (ms)'),
-    ('delay', delays, results_scan_delay, r'$\tau$ (ms)'),
+    # ('delay', delays, results_scan_delay, r'$\tau$ (ms)'),
     ('delay_l5', delays, results_scan_delay_l5, r'$\tau$ (ms)'),
     ('threshold', thresholds, results_scan_threshold, 'threshold (mV)'),
     ('u', mfr, [item[-1] for item in results_scan_u], 'mean firing rate (Hz)'),
 ]
 
-fig, axes = plt.subplots(3, 3, figsize=(22, 20), gridspec_kw={'wspace':0.7, 'hspace':0.4})
+fig, axes = plt.subplots(2, 4, figsize=(26, 10), gridspec_kw={'wspace':0.7, 'hspace':0.4})
 axes = axes.ravel()
 for ax, (name, params, results, xlabel) in zip(axes, scan_specs):
     auc_vals = np.array([res['auc_svm']['TE'] for res in results])
@@ -227,10 +236,9 @@ ax_acc.set_rasterized(True)
 axes[0].set_xlim(0,15)
 axes[1].set_xlim(0,15)
 axes[3].set_xlim(0,15)
-axes[4].set_xlim(0,15)
-axes[6].set_xlim(0)
+axes[5].set_xlim(0,40)
 
-for tag, axi in zip('ABCEFGHIJ', axes.flatten()):
+for tag, axi in zip('ABCDEFGH', axes.flatten()):
     fig.text(-0.3, 1.18, tag, fontsize=35, va='top', transform=axi.transAxes)
 
 fig.savefig(root/'fig_nc/pdf'/'figR4-5.pdf', transparent=True, bbox_inches='tight')

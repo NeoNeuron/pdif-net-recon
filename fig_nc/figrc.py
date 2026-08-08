@@ -90,23 +90,28 @@ from scipy.optimize import curve_fit
 def linearfit(x, y):
     def func(x, a):
         return a*x
-    popt, _ = curve_fit(func, x, y)
+    popt, pcov = curve_fit(func, x, y)
     fit = func(x, *popt)
     ss_res = np.sum((y - fit) ** 2)
     ss_tot = np.sum((y - np.mean(y)) ** 2)
     r_squared = 1 - ss_res / ss_tot if ss_tot != 0 else 1.0
-    print(f"linearfit: slope={popt[0]:.6e}, R^2={r_squared:.3f}")
+    se = np.sqrt(np.diag(pcov))[0]
+    ci95 = 1.96 * se
+    print(f"linearfit: slope={popt[0]:.2e} ± {ci95:.2e} (95% CI), R^2={r_squared:.3f}")
+    
     return lambda x: func(x, *popt)
 
 def squarefit(x, y):
     def func(x, a):
         return a*x**2
-    popt,_ = curve_fit(func, x, y)
+    popt, pcov = curve_fit(func, x, y)
     fit = func(x, *popt)
     ss_res = np.sum((y - fit) ** 2)
     ss_tot = np.sum((y - np.mean(y)) ** 2)
     r_squared = 1 - ss_res / ss_tot if ss_tot != 0 else 1.0
-    print(f"squarefit: A={popt[0]:.6e}, R^2={r_squared:.3f}")
+    se = np.sqrt(np.diag(pcov))[0]
+    ci95 = 1.96 * se
+    print(f"squarefit: A={popt[0]:.2e} ± {ci95:.2e} (95% CI), R^2={r_squared:.3f}")
     return lambda x: func(x, *popt)
 
 def create_fig1x4():
@@ -199,7 +204,7 @@ def run_reconstruction_TE(path, spk_fname, N, conn_file, T, dt=0.5, delay=3,
     return reconstruction_analysis_TE(data_matched, **(recon_kwargs or {}))
 
 
-def plot_pdif_hist(series, ax):
+def plot_pdif_hist(series, ax, threshold=True):
     real_xlim = []
     for hist_key, color in zip(('hist_conn', 'hist_disconn'), (ORANGE, GREEN)):
         edges = series['edges'] + (series['edges'][1] - series['edges'][0])/2
@@ -208,8 +213,9 @@ def plot_pdif_hist(series, ax):
         real_xlim.append([edges[mask][0], edges[mask][-1]])
         ax.plot(edges[mask], counts[mask], color=color, lw=5, clip_on=True)
         ax.fill_between(edges[mask], 0, counts[mask], color=color, alpha=0.5)
+    if threshold:
         ax.axvline(series['th_gauss'], ls='-', color=PINK, lw=4)
-        ax.xaxis.set_major_formatter(sci_formatter)
+    ax.xaxis.set_major_formatter(sci_formatter)
     ax.set_ylim(0)
     ax.set_xlim(min(x[0] for x in real_xlim), max(x[-1] for x in real_xlim))
     ax.set_xlabel('PDIF value', fontsize=26)

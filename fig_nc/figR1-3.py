@@ -26,7 +26,7 @@ for i, t in enumerate(conn_type):
     df_recon, df_fig = run_reconstruction_TE(
         path, spk_fname, N, path/f'connect_matrix-p=0.250-{t:s}.dat', T, dt=dt, delay=delay,
         order=order, n_thread=128,
-        recon_kwargs=dict(nbins=60, hist_range=(-12, -2), algorithm='EM'),
+        recon_kwargs=dict(nbins=60, hist_range=(-10, -2), algorithm='EM'),
     )
     print(df_fig['auc_svm']['TE'])
     results.append(df_fig)
@@ -44,7 +44,7 @@ for i, (s, res, res_pdif, axi) in enumerate(zip(conn_type, results, results_pdif
     axi[0].xaxis.get_offset_text().set_x(1.15)
     axi[0].set_xlim(0)
     tmp = res.loc['TE']
-    plot_pdif_hist(tmp, axi[1])
+    plot_pdif_hist(tmp, axi[1], False)
     x = res_pdif['weight'].to_numpy()
     y = res_pdif['TE'].to_numpy()
     axi[2].plot(x, y, '.', color='k', alpha=0.5)

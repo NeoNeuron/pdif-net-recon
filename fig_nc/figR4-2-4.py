@@ -16,10 +16,10 @@ order = (1,1)
 ratios = np.array([0.2, 0.25, 0.3, 0.5, 0.7, 0.9])
 uu = np.array([0.15, 0.15, 0.15, 0.08, 0.06, 0.04])
 results_ds, results = [], []
+ra = 1.0
 for i, (s, u) in enumerate(zip(ratios, uu)):
-    ra = 1.0
     _fname = f'HHp={s:.2f}s=0.020f=0.080u={u:.3f}_spike_train.dat'
-    spk_fname, _ = maybe_downsample(path, _fname, ra, u < 0.15)
+    spk_fname, _ = maybe_downsample(path, _fname, ra, True)
     spk_fname_all, _ = maybe_downsample(path, _fname, ra, False)
 
     # Compare with ground truth connectivity
@@ -63,7 +63,7 @@ for i, (s, u, res, res_all, axi) in enumerate(zip(ratios, uu, results_ds, result
 
     ra = 1.0
     _fname = f'HHp={s:.2f}s=0.020f=0.080u={u:.3f}_spike_train.dat'
-    spk_fname, raw_fname = maybe_downsample(path, _fname, ra, u < 0.15)
+    spk_fname, raw_fname = maybe_downsample(path, _fname, ra, True)
     if raw_fname is not None:
         spk_all = np.fromfile(raw_fname, dtype=float, count=20000).reshape(-1, 2)
     else:
