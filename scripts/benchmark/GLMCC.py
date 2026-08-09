@@ -18,6 +18,8 @@ regen=True
 
 def core_function(key, val, shuffle_id:int=None, noise_level=None, T:float=None):
     #! Calculate GLMCC
+    if noise_level is not None and np.abs(noise_level) < 1e-6:
+        noise_level = None  # 0.0 is functionally identical to None (no noise added)
     N = val['N']
     T_in_sec = val['T'] / 1e3 if T is None else T / 1e3 # convert from ms to s
     if noise_level is None:

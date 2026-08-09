@@ -11,6 +11,8 @@ regen = True
 #! Calculate STE
 # for key, val in pm_causal_set.items():
 def core_function(key, val, shuffle_id:int=None, noise_level=None, T:float=None):
+    if noise_level is not None and np.abs(noise_level) < 1e-6:
+        noise_level = None  # 0.0 is functionally identical to None (no noise added)
     vol_fname = val['path'] / get_vfname(val['spk_fname'])
     vol_data = np.load(vol_fname, mmap_mode='r')
     dt = vol_data[1,0]-vol_data[0,0]

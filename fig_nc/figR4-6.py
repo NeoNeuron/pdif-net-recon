@@ -31,8 +31,8 @@ save_path = root_path / 'results'
 save_path.mkdir(parents=True, exist_ok=True)
 
 net_keys = ['HHEE', 'HHEI', 'HHconEE', 'HHconEI', 'Lorenz', 'Logistic', 'Rcon', 'RNN']
-keys = ['PTD-TE', 'STE', 'GLMCC', 'DDC', 'CCM', 'FDCCM', 'SCCM']
-labels = {'PTD-TE':'TE', 'STE': 'ste', 'GLMCC': 'glmcc_abs',
+keys = ['PDIF', 'STE', 'GLMCC', 'DDC', 'CCM', 'FDCCM', 'SCCM']
+labels = {'PDIF':'TE', 'STE': 'ste', 'GLMCC': 'glmcc_abs',
           'DDC': 'ddc_abs', 'CCM': 'ccm', 'FDCCM': 'ccm', 'SCCM': 'ccm'}
 noise_levels = [0, 0.1, 0.2, 0.3, 0.4]
 heatmap_kws = {'cbar': False, 'square': True}
@@ -75,7 +75,7 @@ for net_key in net_keys:
                     f1 = (2 * precision * recall / (precision + recall)
                         if (precision + recall) > 0 else np.nan)
                     buffer.append({
-                        'net': net_key, 'causal_measure': key if key != 'PTD-TE' else 'PDIF',
+                        'net': net_key, 'causal_measure': key,
                         'shuffle_id': shuffle_id, 'noise': noise_level,
                         'accuracy': accuracy, 'precision': precision, 'recall': recall,
                         'false discovery rate': fdr, 'F1 score': f1,

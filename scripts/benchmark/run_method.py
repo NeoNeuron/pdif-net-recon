@@ -1,7 +1,7 @@
 # %%
 """Unified dispatch interface for the benchmark causality-estimation methods.
 
-Each method script (PTD-TE.py, DDC.py, STE.py, GLMCC.py, CCM.py) exposes a
+Each method script (PDIF.py, DDC.py, STE.py, GLMCC.py, CCM.py) exposes a
 core_function(key, val, shuffle_id, noise_level, T) with almost the same
 signature, but can't be `import`ed directly (dash in the filename) and some
 import optional third-party deps (smite, glmcc) at module scope. This module
@@ -23,7 +23,7 @@ if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
 _METHOD_FILES = {
-    'PTD-TE': 'PTD-TE.py',
+    'PDIF': 'PDIF.py',
     'DDC':    'DDC.py',
     'STE':    'STE.py',
     'GLMCC':  'GLMCC.py',
@@ -60,11 +60,11 @@ def run_method(method: str, key: str, val: dict, shuffle_id: int = None,
     """Run one causality-estimation method with the shared benchmark signature.
 
     Args:
-        method: one of 'PTD-TE', 'DDC', 'STE', 'GLMCC', 'CCM', 'FDCCM', 'SCCM'.
+        method: one of 'PDIF', 'DDC', 'STE', 'GLMCC', 'CCM', 'FDCCM', 'SCCM'.
         key: dataset key (e.g. 'HHEE'), matching a key in the loaded config.
         val: that key's config dict (as returned by load_config()[key]).
         shuffle_id: subnetwork shuffle index, or None for the full network.
-        noise_level: measurement-noise level, or None for noise-free.
+        noise_level: measurement-noise level, or None/0.0 for noise-free (both are equivalent).
         T: data duration/length to use for estimation, or None for the full recording.
     """
     if method not in _METHOD_FILES:

@@ -17,8 +17,10 @@ thresholds = binarization_cfg.get('threshold', {})
 #%%
 regen=True
 
-#! Calculate PTD-TE
+#! Calculate PDIF
 def core_function(key, val, shuffle_id:int=None, noise_level=None, T:float=None):
+    if noise_level is not None and np.abs(noise_level) < 1e-6:
+        noise_level = None  # 0.0 is functionally identical to None (no noise added)
     val = dict(val)
     if T is not None:
         val['T'] = T
@@ -54,7 +56,7 @@ def core_function(key, val, shuffle_id:int=None, noise_level=None, T:float=None)
 
     recon_df.attrs['wall_time'] = wall_time
     recon_df.attrs['cpu_time']  = cpu_time
-    save_path = val['path'].parents[2] / 'results' / 'PTD-TE'
+    save_path = val['path'].parents[2] / 'results' / 'PDIF'
     save_path.mkdir(parents=True, exist_ok=True)
     t_tag = '' if T is None else f'_T={T:.2e}'
     if shuffle_id is None:

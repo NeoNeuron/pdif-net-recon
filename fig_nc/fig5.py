@@ -29,8 +29,8 @@ save_path = root_path / 'results'
 save_path.mkdir(parents=True, exist_ok=True)
 
 net_keys = ['HHEE', 'HHEI', 'HHconEE', 'HHconEI', 'Lorenz', 'Logistic', 'Rcon', 'RNN']
-keys = ['PTD-TE', 'STE', 'GLMCC', 'DDC', 'CCM', 'FDCCM', 'SCCM']
-labels = {'PTD-TE':'TE', 'STE': 'ste', 'GLMCC': 'glmcc_abs',
+keys = ['PDIF', 'STE', 'GLMCC', 'DDC', 'CCM', 'FDCCM', 'SCCM']
+labels = {'PDIF':'TE', 'STE': 'ste', 'GLMCC': 'glmcc_abs',
           'DDC': 'ddc_abs', 'CCM': 'ccm', 'FDCCM': 'ccm', 'SCCM': 'ccm'}
 noise_levels = [0, 0.1, 0.2, 0.3, 0.4]
 heatmap_kws = {'cbar': False, 'square': True}
@@ -52,7 +52,7 @@ for net_key in net_keys:
                 recon_df = pd.read_pickle(save_path / key / dfname)
                 recon, fig_data = c4u._reconstruction_analysis(recon_df, labels[key], 'connection',
                                                                algorithm='EM', hist_type='linear')
-                if key == 'PTD-TE' and net_key == 'Lorenz':
+                if key == 'PDIF' and net_key == 'Lorenz':
                     ReconstructionFigureGeneral(fig_data, causal_hist_with_gt=True)
                 buffer.append({
                     'net': net_key, 'causal_measure': key, 'subnet_toggle': subnet_toggle,
@@ -76,7 +76,7 @@ for i in range(2):
     # plot ground truth
     for axi, net in zip(ax[0], net_keys):
         conn_mat = data[data['net'].eq(net)
-                        * data['causal_measure'].eq('PTD-TE')
+                        * data['causal_measure'].eq('PDIF')
                         * data['subnet_toggle'].eq(i)
                         ]['gt'].values[0]
         if i == 1:
@@ -92,7 +92,7 @@ for i in range(2):
     ax[0,0].set_ylabel('ground\ntruth', rotation=0, fontsize=15, ha='center', va='center', labelpad=35)
 
     for ax_row, key in zip(ax[1:], keys):
-        # if key not in ['PTD-TE', 'GLMCC']:
+        # if key not in ['PDIF', 'GLMCC']:
         #     continue
         for axi, net in zip(ax_row, net_keys):
             buff = data[data['net'].eq(net)
@@ -110,7 +110,7 @@ for i in range(2):
             inconsistent_mask = conn_mat != recon_mat  # Find inconsistent blocks
             for y, x in zip(*np.where(inconsistent_mask)):  # Add transparent squares
                 axi.add_patch(plt.Rectangle((x, y), 1, 1, fill=False, edgecolor='#00BAFF', lw=1.5, alpha=1.0))
-        ax_row[0].set_ylabel(key if key != 'PTD-TE' else 'PDIF', rotation=0, fontsize=15, ha='center', va='center', labelpad=35)
+        ax_row[0].set_ylabel(key, rotation=0, fontsize=15, ha='center', va='center', labelpad=35)
         # break
 
     for axi in ax.flatten():
@@ -152,7 +152,7 @@ for net_key in net_keys:
                 try:
                     recon_df = pd.read_pickle(save_path / key / dfname)
                     buffer.append({
-                        'net': net_key, 'causal_measure': key if key != 'PTD-TE' else 'PDIF',
+                        'net': net_key, 'causal_measure': key,
                         'shuffle_id': shuffle_id, 'noise': noise_level,
                         'auc': np.maximum(roc_auc_score(recon_df['connection'], recon_df[labels[key]]), 0.5),
                         'cpu_time': recon_df.attrs['cpu_time'],

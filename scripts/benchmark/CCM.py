@@ -68,6 +68,8 @@ tau_dict = {
 
 
 def core_function(key, val, shuffle_id:int=None, ccm_type:int='CCM', noise_level=None, T:float=None):
+    if noise_level is not None and np.abs(noise_level) < 1e-6:
+        noise_level = None  # 0.0 is functionally identical to None (no noise added)
 
     tau = tau_dict[key]
 
