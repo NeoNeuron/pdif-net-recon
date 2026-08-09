@@ -124,6 +124,65 @@ silently uses a `KeyError`.
 Lorenz}`, `T/1e4` for `{Gaussian, Rcon, Logistic, RNN}` — this reflects each family's native time
 unit, not a bug; matches the `WIN`/`DELTA` bin sizes in `binarization.yaml`'s `dt` entry.
 
+### Default data length per dataset (when `--T` is omitted)
+
+Two different "dt"s are in play here and it's easy to conflate them:
+- `benchmark100.yml`'s `T_step` is the **numerical integration step** the simulator actually
+  advances by — i.e. the true time resolution of the recorded voltage/state trace (every
+  simulated step gets written to the `.npy` file). This is confirmed by `T_Max/T_step` matching
+  `CCM.py`'s hardcoded `L_dict` "total available samples" comments (`CCM.py:45-54`) exactly for
+  every dataset (e.g. `HHconEE`: `1.0e7/0.05 = 2.0e8`, matching that file's `# total 2e8`).
+  `DDC_long`/`STE.py` read this value live off the file itself (`dt = dat[1,0]-dat[0,0]`), never
+  off a config field.
+- `benchmark_causal.yml`'s `dt` is a coarser, *downstream* analysis bin size — the TE bin width
+  PTD-TE's `order`/`delay` are expressed in, and (via `STE.py`'s `stride =
+  int(val['dt']/dt_from_file)`) the stride STE decimates the raw `T_step`-resolution trace to
+  before calling `smite`. It is **not** the recording's sampling interval.
+
+Also note `benchmark_causal.yml`'s `T` field is numerically identical to `benchmark100.yml`'s
+`T_Max` for every dataset in the main sweep — i.e. it already represents that dataset's *full*
+simulated duration, not some smaller default.
+
+| dataset | `T_step` (ms/sample, true recording resolution) | causal-config `dt` (ms, analysis bin only) | `T_Max` = full recorded duration (ms) | total raw samples = `T_Max/T_step` |
+|---|---|---|---|---|
+| `HHEE`     | 0.2  | 0.5 | 1.0×10⁷ ms (10,000 s ≈ 2.8 h)  | 5×10⁷ |
+| `HHEI`     | 0.2  | 0.5 | 1.0×10⁷ ms (10,000 s ≈ 2.8 h)  | 5×10⁷ |
+| `HHconEE`  | 0.05 | 0.5 | 1.0×10⁷ ms (10,000 s ≈ 2.8 h)  | 2×10⁸ |
+| `HHconEI`  | 0.05 | 0.5 | 1.0×10⁷ ms (10,000 s ≈ 2.8 h)  | 2×10⁸ |
+| `Lorenz`   | 0.01 | 0.02| 1.0×10⁶ ms (1000 s ≈ 16.7 min) | 1×10⁸ |
+| `Logistic` | 1    | 1   | 1.0×10⁸ (a.u., discrete map)   | 1×10⁸ |
+| `Rcon`     | 0.01 | 3.0 | 1.0×10⁷ ms (10,000 s ≈ 2.8 h)  | 1×10⁹ |
+| `RNN`      | 1    | 5   | 1.0×10⁸ ms (100,000 s ≈ 27.8 h)| 1×10⁸ |
+
+With `T=None`, **`PTD-TE.py`, `GLMCC.py`, `DDC.py`, and `STE.py` all default to the same full
+duration, `T_Max`** — they just consume it at different resolutions (see below). Only
+`CCM.py`'s three variants default to something much shorter, via their own hardcoded `L_dict`
+(sample count, at `T_step` resolution — **not** scaled by the causal-config `dt`):
+
+| dataset | `CCM`/`SCCM`/`FDCCM` default span = `L_dict × T_step` | % of `T_Max` | `CCM`/`SCCM` points used (`L_dict/tau`, after decimation) | `FDCCM` points used (`L_dict`, full resolution) |
+|---|---|---|---|---|
+| `HHEE`     | 2×10⁵ ms (200 s)   | 2% | 1×10⁵ (τ=10)     | 1×10⁶ |
+| `HHEI`     | 2×10⁵ ms (200 s)   | 2% | 1×10⁵ (τ=10)     | 1×10⁶ |
+| `HHconEE`  | 1×10⁵ ms (100 s)   | 1% | 66,667 (τ=30)    | 2×10⁶ |
+| `HHconEI`  | 1×10⁵ ms (100 s)   | 1% | 66,667 (τ=30)    | 2×10⁶ |
+| `Lorenz`   | 1×10⁴ ms (10 s)    | 1% | 1×10⁵ (τ=10)     | 1×10⁶ |
+| `Logistic` | 1×10⁶ (a.u.)       | 1% | 1×10⁶ (τ=1, no decimation) | 1×10⁶ |
+| `Rcon`     | 1×10⁵ ms (100 s)   | 1% | 1×10⁵ (τ=100)    | 1×10⁷ |
+| `RNN`      | 1×10⁶ ms (1000 s ≈ 16.7 min) | 1% | 5×10⁵ (τ=2) | 1×10⁶ |
+
+Key takeaways:
+- Duration-wise, `PTD-TE`/`GLMCC`/`DDC`/`STE` are all apples-to-apples by default (full `T_Max`);
+  `CCM`/`SCCM`/`FDCCM` are the outlier, seeing only ~1-2% of the recording by default because CCM
+  is far more expensive per point.
+- Point-density is *not* apples-to-apples even among the four full-duration methods: `DDC.py`
+  reads every raw sample (`T_Max/T_step` points, the finest of all five — e.g. 2×10⁸ for
+  `HHconEE`), while `STE.py` strides down to roughly `T_Max`/(causal `dt`) points
+  (`int(causal_dt/T_step)`-step decimation), and PTD-TE bins spikes at the causal-config
+  `order`/`dt` scale rather than working sample-by-sample.
+- Pass `--T` explicitly (same value in ms, converted per-method as described above) if you need a
+  true apples-to-apples data-*length* comparison across methods for a given dataset — it still
+  won't equalize point density, only duration.
+
 ### Unified dispatcher: `run_method.py`
 
 `run_method.py` gives all five method scripts one common call signature, so you don't need to know
