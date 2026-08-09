@@ -1,7 +1,7 @@
 # %%
 import numpy as np
 import pandas as pd
-from causal4.ddc import DDC, c_sensitivity, DDC_long
+from causal4.ddc import c_sensitivity, DDC_long
 import time
 
 import yaml
@@ -15,8 +15,6 @@ def core_function(key, val, shuffle_id:int=None, noise_level=None, T:float=None)
     N = val['N']
     vol_fname = val['path'] / get_vfname(val['spk_fname'])
     vol_data = np.load(vol_fname, mmap_mode='r')
-    dt = vol_data[1,0]-vol_data[0,0]
-    L = None if T is None else int(T/dt)
     conn_fname = val['path'] / val['conn_file']
     conn = np.load(conn_fname.with_suffix('.npy'))
 
@@ -33,10 +31,7 @@ def core_function(key, val, shuffle_id:int=None, noise_level=None, T:float=None)
         
     t0_wall = time.time()
     t0_cpu = time.process_time()
-    if L is None:
-        ddc = DDC_long(vol_fname, N=N, indices=indices, n_blocks=20, preprocess=preprocessing)
-    else:
-        ddc = DDC(preprocessing(vol_data[:L, 1+indices].T), dt)
+    ddc = DDC_long(vol_fname, N=N, indices=indices, n_blocks=20, preprocess=preprocessing, T=T)
     t1_cpu = time.process_time()
     t1_wall = time.time()
     xx, yy = np.meshgrid(indices, indices, indexing='ij')
