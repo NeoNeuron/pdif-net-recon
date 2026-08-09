@@ -11,12 +11,12 @@ rerun=False
 
 #! Calculate DDC
 # for key, val in pm_causal_set.items():
-def core_function(key, val, shuffle_id:int=None, noise_level=None):
+def core_function(key, val, shuffle_id:int=None, noise_level=None, T:float=None):
     N = val['N']
     vol_fname = val['path'] / get_vfname(val['spk_fname'])
     vol_data = np.load(vol_fname, mmap_mode='r')
-    # dt = vol_data[1,0]-vol_data[0,0]
-    # L = int(vol_data.shape[0]/4)
+    dt = vol_data[1,0]-vol_data[0,0]
+    L = None if T is None else int(T/dt)
     conn_fname = val['path'] / val['conn_file']
     conn = np.load(conn_fname.with_suffix('.npy'))
 
@@ -33,8 +33,10 @@ def core_function(key, val, shuffle_id:int=None, noise_level=None):
         
     t0_wall = time.time()
     t0_cpu = time.process_time()
-    # ddc = DDC(vol_data[:,1:].T, dt)
-    ddc = DDC_long(vol_fname, N=N, indices=indices, n_blocks=20, preprocess=preprocessing)
+    if L is None:
+        ddc = DDC_long(vol_fname, N=N, indices=indices, n_blocks=20, preprocess=preprocessing)
+    else:
+        ddc = DDC(preprocessing(vol_data[:L, 1+indices].T), dt)
     t1_cpu = time.process_time()
     t1_wall = time.time()
     xx, yy = np.meshgrid(indices, indices, indexing='ij')
@@ -56,13 +58,14 @@ def core_function(key, val, shuffle_id:int=None, noise_level=None):
     save_path = val['path'].parents[2] / 'results/DDC'
     save_path.mkdir(parents=True, exist_ok=True)
 
+    t_tag = '' if T is None else f'_T={T:.2e}'
     if shuffle_id is None:
-        recon_df.to_pickle(save_path / f'recon_df_noise_0_{key:s}_fullnet.pkl')
+        recon_df.to_pickle(save_path / f'recon_df_noise_0_{key:s}{t_tag:s}_fullnet.pkl')
     else:
         if noise_level is None:
-            recon_df.to_pickle(save_path / f'recon_df_noise_0_{key:s}_{shuffle_id:d}.pkl')
+            recon_df.to_pickle(save_path / f'recon_df_noise_0_{key:s}{t_tag:s}_{shuffle_id:d}.pkl')
         else:
-            recon_df.to_pickle(save_path / f'recon_df_noise_{noise_level:.1f}_{key:s}_{shuffle_id:d}.pkl')
+            recon_df.to_pickle(save_path / f'recon_df_noise_{noise_level:.1f}_{key:s}{t_tag:s}_{shuffle_id:d}.pkl')
 
 # %%
 if __name__ == '__main__':
@@ -71,6 +74,9 @@ if __name__ == '__main__':
     parser.add_argument('--key', type=str)
     parser.add_argument('--idx', type=int, default=None)
     parser.add_argument('--noise_level', type=float, default=None)
+    parser.add_argument('--T', type=float, default=None,
+        help='Duration (same time units as the voltage file, e.g. ms) of data to use for '
+             'DDC estimation. Defaults to the full recorded duration.')
     parser.add_argument('--cfg-file', dest='cfg_file', type=str, default='benchmark_causal.yml')
     args = parser.parse_args()
 
@@ -82,7 +88,7 @@ if __name__ == '__main__':
     for key in pm_causal_set.keys():
         pm_causal_set[key]['path'] = root_path / pm_causal_set[key]['path']
 
-    core_function(args.key, pm_causal_set[args.key], args.idx, args.noise_level)
+    core_function(args.key, pm_causal_set[args.key], args.idx, args.noise_level, args.T)
 #%%
 
 # for noise_level in [0.1, 0.2, 0.3, 0.4]:

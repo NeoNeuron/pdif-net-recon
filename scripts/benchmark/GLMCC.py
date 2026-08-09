@@ -16,9 +16,10 @@ dt = binarization_cfg.get('dt',{})
 
 regen=True
 
-def core_function(key, val, shuffle_id:int=None, noise_level=None):
+def core_function(key, val, shuffle_id:int=None, noise_level=None, T:float=None):
     #! Calculate GLMCC
     N = val['N']
+    T_in_sec = val['T'] / 1e3 if T is None else T / 1e3 # convert from ms to s
     if noise_level is None:
         spk_fname = get_spk_fname(val['spk_fname'])
     else:
@@ -28,28 +29,23 @@ def core_function(key, val, shuffle_id:int=None, noise_level=None):
     conn_fname = val['path'] / val['conn_file']
     conn = np.load(conn_fname)
 
-    if key in ['HHEE', 'HHEI', 'HHconEE', 'HHconEI', 'Lorenz']:
-        T = val['T'] / 1e3
-    elif key in ['Gaussian', 'Rcon', 'Logistic', 'RNN']:
-        T = val['T'] / 1e4
-
     if shuffle_id is None:
         indices = np.arange(N, dtype=int)
-        print(f"[INFO]: Estimating GLMCC for {key} with T={T:.0f} s, noise_level={noise_level} ...")
+        print(f"[INFO]: Estimating GLMCC for {key} with T={T_in_sec:.0f} s, noise_level={noise_level} ...")
     else:
         indices = np.load(val['path'].parent / 'subnet_indices.npy')[shuffle_id]
-        print(f"[INFO]: Estimating GLMCC for {key} with T={T:.0f} s, noise_level={noise_level}, shuffle_id={shuffle_id}...")
+        print(f"[INFO]: Estimating GLMCC for {key} with T={T_in_sec:.0f} s, noise_level={noise_level}, shuffle_id={shuffle_id}...")
 
     W, cpu_time, wall_time = Est_Data(
-        val['path'], spk_fname, N=N, T=T, indices=indices,
+        val['path'], spk_fname, N=N, T=T_in_sec, indices=indices,
         outfile_sfx=None if shuffle_id is None else f'{shuffle_id:d}',
         DELTA=dt[key], WIN=dt[key]*50,
         n_jobs=indices.shape[0])
     try:
         if shuffle_id is None:
-            GLMCC = np.load(val['path'] / f"W_GLM_{T:.0f}-{spk_fname:s}.npy")
+            GLMCC = np.load(val['path'] / f"W_GLM_{T_in_sec:.0f}-{spk_fname:s}.npy")
         else:
-            GLMCC = np.load(val['path'] / f"W_GLM_{T:.0f}-{spk_fname:s}_{shuffle_id:d}.npy")
+            GLMCC = np.load(val['path'] / f"W_GLM_{T_in_sec:.0f}-{spk_fname:s}_{shuffle_id:d}.npy")
         xx, yy = np.meshgrid(indices, indices, indexing='ij')
         GLMCC[GLMCC==0] = 1e-12
         recon_df = pd.DataFrame({
@@ -68,14 +64,15 @@ def core_function(key, val, shuffle_id:int=None, noise_level=None):
 
         save_path = val['path'].parents[2] / 'results' / 'GLMCC'
         save_path.mkdir(parents=True, exist_ok=True)
+        t_tag = '' if T is None else f'_T={T:.2e}'
 
         if shuffle_id is None:
-            recon_df.to_pickle(save_path / f'recon_df_noise_0_{key:s}_T={T:.0f}_fullnet.pkl')
+            recon_df.to_pickle(save_path / f'recon_df_noise_0_{key:s}{t_tag:s}_fullnet.pkl')
         else:
             if noise_level is None:
-                recon_df.to_pickle(save_path / f'recon_df_noise_0_{key:s}_T={T:.0f}_{shuffle_id:d}.pkl')
+                recon_df.to_pickle(save_path / f'recon_df_noise_0_{key:s}{t_tag:s}_{shuffle_id:d}.pkl')
             else:
-                recon_df.to_pickle(save_path / f'recon_df_noise_{noise_level:.1f}_{key:s}_T={T:.0f}_{shuffle_id:d}.pkl')
+                recon_df.to_pickle(save_path / f'recon_df_noise_{noise_level:.1f}_{key:s}{t_tag:s}_{shuffle_id:d}.pkl')
 
     except Exception as e:
         print(e)
@@ -86,6 +83,9 @@ if __name__ == '__main__':
     parser.add_argument('--key', type=str)
     parser.add_argument('--idx', type=int, default=None)
     parser.add_argument('--noise_level', type=float, default=None)
+    parser.add_argument('--T', type=float, default=None,
+        help='Duration (ms, same units as the config T field) of data to use for '
+             'GLMCC estimation. Defaults to the full T from --cfg-file.')
     parser.add_argument('--cfg-file', dest='cfg_file', type=str, default='benchmark_causal.yml')
     args = parser.parse_args()
 
@@ -94,7 +94,7 @@ if __name__ == '__main__':
     for key in pm_causal_set.keys():
         pm_causal_set[key]['path'] = root_path / pm_causal_set[key]['path']
 
-    core_function(args.key, pm_causal_set[args.key], args.idx, args.noise_level)
+    core_function(args.key, pm_causal_set[args.key], args.idx, args.noise_level, args.T)
 #%%
 
 # for noise_level in [0.1, 0.2, 0.3, 0.4]:

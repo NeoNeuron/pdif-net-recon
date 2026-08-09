@@ -67,9 +67,8 @@ tau_dict = {
 }
 
 
-def core_function(key, val, shuffle_id:int=None, ccm_type:int='CCM', noise_level=None):
+def core_function(key, val, shuffle_id:int=None, ccm_type:int='CCM', noise_level=None, T:float=None):
 
-    L = L_dict[key]  # 读取的样本量
     tau = tau_dict[key]
 
     conn_fname = val['path'] / val['conn_file']
@@ -80,7 +79,13 @@ def core_function(key, val, shuffle_id:int=None, ccm_type:int='CCM', noise_level
     else:
         indices = np.load(val['path'].parent / 'subnet_indices.npy')[shuffle_id]
 
-    data = np.load(val['path'] / get_vfname(val['spk_fname']), mmap_mode='r')[:L, 1+indices]
+    vol_data = np.load(val['path'] / get_vfname(val['spk_fname']), mmap_mode='r')
+    if T is None:
+        L = L_dict[key]  # 读取的样本量
+    else:
+        dt = vol_data[1,0] - vol_data[0,0]
+        L = int(T/dt)
+    data = vol_data[:L, 1+indices]
     if noise_level is None:
         preprocessing = lambda x: x
     else:
@@ -106,13 +111,14 @@ def core_function(key, val, shuffle_id:int=None, ccm_type:int='CCM', noise_level
 
     recon_df.attrs['wall_time'] = wall_time
     recon_df.attrs['cpu_time']  = cpu_time
+    t_tag = '' if T is None else f'_T={T:.2e}'
     if shuffle_id is None:
-        recon_df.to_pickle(save_path / f'recon_df_noise_0_{key:s}_fullnet.pkl')
+        recon_df.to_pickle(save_path / f'recon_df_noise_0_{key:s}{t_tag:s}_fullnet.pkl')
     else:
         if noise_level is None:
-            recon_df.to_pickle(save_path / f'recon_df_noise_0_{key:s}_{shuffle_id:d}.pkl')
+            recon_df.to_pickle(save_path / f'recon_df_noise_0_{key:s}{t_tag:s}_{shuffle_id:d}.pkl')
         else:
-            recon_df.to_pickle(save_path / f'recon_df_noise_{noise_level:.1f}_{key:s}_{shuffle_id:d}.pkl')
+            recon_df.to_pickle(save_path / f'recon_df_noise_{noise_level:.1f}_{key:s}{t_tag:s}_{shuffle_id:d}.pkl')
 
 # %%
 if __name__ == '__main__':
@@ -122,6 +128,9 @@ if __name__ == '__main__':
     parser.add_argument('--key', type=str)
     parser.add_argument('--idx', type=int, default=None)
     parser.add_argument('--noise_level', type=float, default=None)
+    parser.add_argument('--T', type=float, default=None,
+        help='Duration (same time units as the voltage file, e.g. ms) of data to use for '
+             'CCM estimation. Defaults to the per-dataset L_dict sample count.')
     parser.add_argument('--cfg-file', dest='cfg_file', type=str, default='benchmark_causal.yml')
     args = parser.parse_args()
 
@@ -133,7 +142,7 @@ if __name__ == '__main__':
     for key in pm_causal_set.keys():
         pm_causal_set[key]['path'] = root_path / pm_causal_set[key]['path']
 
-    core_function(args.key, pm_causal_set[args.key], args.idx, args.ccm, args.noise_level)
+    core_function(args.key, pm_causal_set[args.key], args.idx, args.ccm, args.noise_level, args.T)
 #%%
 
 # ccm_types = ['CCM', 'FDCCM', 'SCCM']

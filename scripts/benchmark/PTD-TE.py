@@ -17,9 +17,11 @@ thresholds = binarization_cfg.get('threshold', {})
 #%%
 regen=True
 
-indices = np.load(root_path / 'benchmark' / 'N100' / 'subnet_indices.npy')
 #! Calculate PTD-TE
-def core_function(key, val, shuffle_id:int=None, noise_level=None):
+def core_function(key, val, shuffle_id:int=None, noise_level=None, T:float=None):
+    val = dict(val)
+    if T is not None:
+        val['T'] = T
     if noise_level is not None:
         noisy_spk_fname = get_spk_fname(
             val['spk_fname'], f'_noisy{noise_level:.1f}', th=thresholds[key], ref=refs[key])
@@ -54,13 +56,14 @@ def core_function(key, val, shuffle_id:int=None, noise_level=None):
     recon_df.attrs['cpu_time']  = cpu_time
     save_path = val['path'].parents[2] / 'results' / 'PTD-TE'
     save_path.mkdir(parents=True, exist_ok=True)
+    t_tag = '' if T is None else f'_T={T:.2e}'
     if shuffle_id is None:
-        recon_df.to_pickle(save_path / f'recon_df_noise_0_{key:s}_fullnet.pkl')
+        recon_df.to_pickle(save_path / f'recon_df_noise_0_{key:s}{t_tag:s}_fullnet.pkl')
     else:
         if noise_level is not None:
-            recon_df.to_pickle(save_path / f'recon_df_noise_{noise_level:.1f}_{key:s}_{shuffle_id:d}.pkl')
+            recon_df.to_pickle(save_path / f'recon_df_noise_{noise_level:.1f}_{key:s}{t_tag:s}_{shuffle_id:d}.pkl')
         else:
-            recon_df.to_pickle(save_path / f'recon_df_noise_0_{key:s}_{shuffle_id:d}.pkl')
+            recon_df.to_pickle(save_path / f'recon_df_noise_0_{key:s}{t_tag:s}_{shuffle_id:d}.pkl')
 
 #%%
 if __name__ == '__main__':
@@ -69,6 +72,9 @@ if __name__ == '__main__':
     parser.add_argument('--key', type=str)
     parser.add_argument('--idx', type=int, default=None)
     parser.add_argument('--noise_level', type=float, default=None)
+    parser.add_argument('--T', type=float, default=None,
+        help='Duration (ms, same units as the config T field) of data to use for '
+             'causality estimation. Defaults to the full T from --cfg-file.')
     parser.add_argument('--cfg-file', dest='cfg_file', type=str, default='benchmark_causal.yml')
     args = parser.parse_args()
 
@@ -77,7 +83,7 @@ if __name__ == '__main__':
     for key in pm_causal_set.keys():
         pm_causal_set[key]['path'] = root_path / pm_causal_set[key]['path']
 
-    core_function(args.key, pm_causal_set[args.key], args.idx, args.noise_level)
+    core_function(args.key, pm_causal_set[args.key], args.idx, args.noise_level, args.T)
 #%%
 
 # for noise_level in [0.1, 0.2, 0.3, 0.4]:
