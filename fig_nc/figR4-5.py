@@ -157,12 +157,12 @@ buff = np.fromfile(spk_fname, dtype=float, count=10000).reshape(-1, 2)
 plt.plot(buff[:, 0], buff[:, 1], '|', ms=2)
 #%%
 results_scan_u = []
-uu = np.array([0.05, 0.10, 0.2, 0.25, 0.3])
-TT = np.array([1e5, 5e5, 1e6, 5e6, 1e7])
+uu = np.asarray([0.03, 0.07, 0.1, 0.2, 0.3, 0.4, 0.5])
+TT = np.logspace(5,7,9,base=10)
 mfr = []
 for i, u in enumerate(uu):
-    _fname = f'HHp=0.25s=0.020f=0.080u={u:.3f}_spike_train.dat'
-    spk_fname, raw_fname = maybe_downsample(path, _fname, 1.0, u>0.25)
+    _fname = f'HHp=0.25s=0.010f=0.120u={u:.3f}_spike_train.dat'
+    spk_fname, raw_fname = maybe_downsample(path, _fname, 1.0, False)
     if raw_fname is None:
         raw_fname = spk_fname
     buff = np.fromfile(raw_fname, dtype=float, count=10000).reshape(-1, 2)
@@ -176,7 +176,7 @@ for i, u in enumerate(uu):
             order=order, n_thread=128,
             recon_kwargs=dict(nbins=60, hist_range=(-12, -4), algorithm='EM'),
         )
-        print(df_fig['auc_svm']['TE'])
+        print(df_fig['auc_svm']['TE'], df_fig['acc_gauss']['TE'])
         buff.append(df_fig)
     results_scan_u.append(buff)
 mfr = np.asarray(mfr)
@@ -228,15 +228,15 @@ for ax, (name, params, results, xlabel) in zip(axes, scan_specs):
     acc_vals = np.array([[res['acc_gauss']['TE'] for res in results] for results in results_scan_u])
 
 ax_auc, ax_acc = axes[-2:]
-_, cbar = heatmap(TT, uu, auc_vals, ax_auc)
-_, cbar = heatmap(TT, uu, acc_vals, ax_acc, cbar_label='accuracy')
+_, cbar = heatmap(TT, mfr, auc_vals, ax_auc, y_label='mean firing rate (Hz)', cbar_label='AUC')
+_, cbar = heatmap(TT, mfr, acc_vals, ax_acc, y_label='mean firing rate (Hz)', cbar_label='accuracy')
 ax_auc.set_rasterized(True)
 ax_acc.set_rasterized(True)
 
 axes[0].set_xlim(0,15)
 axes[1].set_xlim(0,15)
 axes[3].set_xlim(0,15)
-axes[5].set_xlim(0,40)
+axes[5].set_xlim(0,53)
 
 for tag, axi in zip('ABCDEFGH', axes.flatten()):
     fig.text(-0.3, 1.18, tag, fontsize=35, va='top', transform=axi.transAxes)
