@@ -15,10 +15,22 @@ with open(root_path / 'scripts/benchmark' / 'binarization.yaml', 'r') as binariz
 refs = binarization_cfg.get('refractory', {})
 thresholds = binarization_cfg.get('threshold', {})
 #%%
-regen=False
+
+def parse_timing(text:str):
+    """Extract (wall, cpu) seconds from calCausality's '>> total time:' line.
+
+    Returns (nan, nan) when the log carries no timing line -- a reused
+    estimation whose run predates run() saving its log beside the output.
+    """
+    for line in reversed(text.splitlines()):
+        if line.startswith('>> total time:'):
+            fields = line.split()
+            return float(fields[3]), float(fields[7])
+    return float('nan'), float('nan')
 
 #! Calculate PDIF
-def core_function(key, val, shuffle_id:int=None, noise_level=None, T:float=None):
+def core_function(key, val, shuffle_id:int=None, noise_level=None, T:float=None,
+                  regen:bool=False):
     if noise_level is not None and np.abs(noise_level) < 1e-6:
         noise_level = None  # 0.0 is functionally identical to None (no noise added)
     val = dict(val)
@@ -44,8 +56,10 @@ def core_function(key, val, shuffle_id:int=None, noise_level=None, T:float=None)
     if noise_level is not None:
         estimator.spk_fname = noisy_spk_fname
     _, text = estimator._run_estimation(regen=regen, verbose=False, return_log=True)
-    wall_time = float(text.splitlines()[-1].split()[3])
-    cpu_time = float(text.splitlines()[-1].split()[7])
+    wall_time, cpu_time = parse_timing(text)
+    if np.isnan(wall_time):
+        print(key, "WARNING: reused an estimation with no run log; timing unavailable. "
+                   "Re-run with --regen to time it.")
     print(key, f"Elapsed cpu time: {cpu_time:.2f} s")
     print(key, f"Elapsed time: {wall_time:.2f} s")
     data = estimator.fetch_data(new_run=True)
@@ -78,6 +92,10 @@ if __name__ == '__main__':
         help='Duration (ms, same units as the config T field) of data to use for '
              'causality estimation. Defaults to the full T from --cfg-file.')
     parser.add_argument('--cfg-file', dest='cfg_file', type=str, default='benchmark_causal.yml')
+    parser.add_argument('--regen', action='store_true',
+        help='Re-run the causality estimation even if its output file already '
+             'exists. Off by default: an existing estimation is reused, and its '
+             'timing is replayed from the run log saved next to it.')
     args = parser.parse_args()
 
     with open(Path(__file__).resolve().parent / args.cfg_file, 'r') as yamlfile:
@@ -85,7 +103,8 @@ if __name__ == '__main__':
     for key in pm_causal_set.keys():
         pm_causal_set[key]['path'] = root_path / pm_causal_set[key]['path']
 
-    core_function(args.key, pm_causal_set[args.key], args.idx, args.noise_level, args.T)
+    core_function(args.key, pm_causal_set[args.key], args.idx, args.noise_level,
+                  args.T, args.regen)
 #%%
 
 # for noise_level in [0.1, 0.2, 0.3, 0.4]:
