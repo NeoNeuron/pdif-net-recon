@@ -87,17 +87,24 @@ class zoomedAxes(object):
 
 
 from scipy.optimize import curve_fit
-def linearfit(x, y):
-    def func(x, a):
-        return a*x
+def linearfit(x, y, bias=False):
+    if bias:
+        def func(x, a, b):
+            return a*x + b
+    else:
+        def func(x, a):
+            return a*x
     popt, pcov = curve_fit(func, x, y)
     fit = func(x, *popt)
     ss_res = np.sum((y - fit) ** 2)
     ss_tot = np.sum((y - np.mean(y)) ** 2)
     r_squared = 1 - ss_res / ss_tot if ss_tot != 0 else 1.0
-    se = np.sqrt(np.diag(pcov))[0]
+    se = np.sqrt(np.diag(pcov))
     ci95 = 1.96 * se
-    print(f"linearfit: slope={popt[0]:.2e} ± {ci95:.2e} (95% CI), R^2={r_squared:.3f}")
+    if bias:
+        print(f"linearfit: slope={popt[0]:.2e} ± {ci95[0]:.2e} (95% CI), intercept={popt[1]:.2e} ± {ci95[1]:.2e} (95% CI), R^2={r_squared:.3f}")
+    else:
+        print(f"linearfit: slope={popt[0]:.2e} ± {ci95[0]:.2e} (95% CI), R^2={r_squared:.3f}")
     
     return lambda x: func(x, *popt)
 

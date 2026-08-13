@@ -74,25 +74,26 @@ for s in ssRcon:
         n_thread=12, order=order,
     )
     # Search of optimal delay parameter
-    optimal_m = estimator.get_optimal_delay(np.arange(20)*dt, mode=1)
-    print(optimal_m)
+    # optimal_m = estimator.get_optimal_delay(np.arange(20)*dt, mode=1)
+    # print(f"optimal delay: {optimal_m:.2f}")
     data = estimator.fetch_data(new_run=True, delay=9)
 
     # Compare with ground truth connectivity
-    data_matched = match_features(data, N, path/'connect_matrix-p=0.375.dat')
+    data_matched = match_features(data, N, path/'connect_matrix-p=0.375.dat', verbose=False)
     # ! important note: the 'connect_matrix-p=0.250.npy' file should be a binary adjacency matrix with shape (N, N), with W_{ij} representing the connection from node i to node j.
     # Reconstruction based on PTE-TE values, using GMM (ie., EM algorithm) to determine the reconstruction threshold
     df_recon, df_fig = reconstruction_analysis_TE(data_matched, nbins=20, hist_range=None, algorithm='EM')
-    print(df_fig['auc_svm']['TE'], df_fig['auc_svm']['TE'])
+    print(f"Rcon - AUC: {df_fig['auc_svm']['TE']:.3f}, ACC: {df_fig['acc_svm']['TE']:.3f}")
     recon_Rcon_list.append(df_recon)
     auc_Rcon_list.append(df_fig['auc_svm']['TE'])
     acc_Rcon_list.append(df_fig.get('acc_svm', {}).get('TE', np.nan))
 
 # %%
 ssLcon = np.array([0, 0.01, 0.05, 0.100, 0.20])
-delay = 0
-order = (4,1)
+delay = 0.2
+order = (1,1)
 dt = 0.2
+T=1e7
 path = root / 'data/Lcon4'
 recon_Lcon_list = []
 auc_Lcon_list = []
@@ -104,16 +105,16 @@ for s in ssLcon:
         n_thread=12, order=order,
     )
     # Search of optimal delay parameter
-    optimal_m = estimator.get_optimal_delay(np.arange(20)*dt, mode=1)
-    print(optimal_m)
-    data = estimator.fetch_data(new_run=True)
+    # optimal_m = estimator.get_optimal_delay(np.arange(20)*dt, mode=1)
+    # print(f"optimal delay: {optimal_m:.2f}")
+    data = estimator.fetch_data(new_run=True, verbose=False)
 
     # Compare with ground truth connectivity
-    data_matched = match_features(data, N, path/'connect_matrix-p=0.375.dat')
+    data_matched = match_features(data, N, path/'connect_matrix-p=0.375.dat', verbose=False)
     # ! important note: the 'connect_matrix-p=0.250.npy' file should be a binary adjacency matrix with shape (N, N), with W_{ij} representing the connection from node i to node j.
     # Reconstruction based on PTE-TE values, using GMM (ie., EM algorithm) to determine the reconstruction threshold
     df_recon, df_fig = reconstruction_analysis_TE(data_matched, nbins=20, hist_range=None, algorithm='EM')
-    print(df_fig['auc_svm']['TE'], df_fig['auc_svm']['TE'])
+    print(f"Lcon - AUC: {df_fig['auc_svm']['TE']:.3f}, ACC: {df_fig['acc_svm']['TE']:.3f}")
     recon_Lcon_list.append(df_recon)
     auc_Lcon_list.append(df_fig['auc_svm']['TE'])
     acc_Lcon_list.append(df_fig.get('acc_svm', {}).get('TE', np.nan))
@@ -138,7 +139,7 @@ with open(root/'data/four_node_motif.pkl', 'rb') as f:
     recon_Lcon_list = data['recon_Lcon_list']
     auc_Lcon_list = data['auc_Lcon_list']
     acc_Lcon_list = data['acc_Lcon_list']
-
+# %%
 fig = plt.figure(figsize=(12,10),)
 gs = fig.add_gridspec(2, 3,
     wspace=0.5, hspace=0.4,

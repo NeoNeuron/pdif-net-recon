@@ -184,14 +184,14 @@ mfr = np.asarray(mfr)
 scan_specs = [
     ('k', kk, results_scan_k, r'$k$'),
     ('l', ll, results_scan_l, r'$l$'),
-    ('dt', dtdt, results_scan_dt, r'$\Delta t$ (ms)'),
-    # ('delay', delays, results_scan_delay, r'$\tau$ (ms)'),
     ('delay_l5', delays, results_scan_delay_l5, r'$\tau$ (ms)'),
+    # ('delay', delays, results_scan_delay, r'$\tau$ (ms)'),
     ('threshold', thresholds, results_scan_threshold, 'threshold (mV)'),
+    ('dt', dtdt, results_scan_dt, r'$\Delta t$ (ms)'),
     ('u', mfr, [item[-1] for item in results_scan_u], 'mean firing rate (Hz)'),
 ]
 
-fig, axes = plt.subplots(2, 4, figsize=(26, 10), gridspec_kw={'wspace':0.7, 'hspace':0.4})
+fig, axes = plt.subplots(2, 4, figsize=(26, 12), gridspec_kw={'wspace':0.7, 'hspace':0.7})
 axes = axes.ravel()
 for ax, (name, params, results, xlabel) in zip(axes, scan_specs):
     auc_vals = np.array([res['auc_svm']['TE'] for res in results])
@@ -221,7 +221,7 @@ for ax, (name, params, results, xlabel) in zip(axes, scan_specs):
         ax_top.set_xlim(event_rate[0], event_rate[-1])
         # ax_top.set_xticks(params[::2])
         # ax_top.set_xticklabels([f'{er:.2g}' for er in event_rate[::2]], fontsize=14)
-        ax_top.set_xlabel(r'event rate [$p(y_n^{(1)}=1)$]', fontsize=26, y=1.4)
+        ax_top.set_xlabel(r'event rate [$p(y_n=1)$]', fontsize=26, labelpad=10)
         ax_top.tick_params(axis='x', top=True, bottom=False)
 
     auc_vals = np.array([[res['auc_svm']['TE'] for res in results] for results in results_scan_u])
@@ -235,7 +235,7 @@ ax_acc.set_rasterized(True)
 
 axes[0].set_xlim(0,15)
 axes[1].set_xlim(0,15)
-axes[3].set_xlim(0,15)
+axes[2].set_xlim(0,15)
 axes[5].set_xlim(0,53)
 
 for tag, axi in zip('ABCDEFGH', axes.flatten()):

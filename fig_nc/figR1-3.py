@@ -28,7 +28,7 @@ for i, t in enumerate(conn_type):
         order=order, n_thread=128,
         recon_kwargs=dict(nbins=60, hist_range=(-10, -2), algorithm='EM'),
     )
-    print(df_fig['auc_svm']['TE'])
+    print(df_fig['auc_svm']['TE'], df_fig['acc_gauss']['TE'])
     results.append(df_fig)
     results_pdif_val.append(df_recon)
 # %%
@@ -49,19 +49,9 @@ for i, (s, res, res_pdif, axi) in enumerate(zip(conn_type, results, results_pdif
     y = res_pdif['TE'].to_numpy()
     axi[2].plot(x, y, '.', color='k', alpha=0.5)
     
-    # Fit y = a * x^2
-    x2 = x**2
-    denom = np.sum(x2**2)
-    a = np.sum(x2 * y) / denom if denom != 0 else np.nan
-    y_fit = a * x2
-    ss_res = np.sum((y - y_fit)**2)
-    ss_tot = np.sum((y - np.mean(y))**2)
-    r2 = 1 - ss_res / ss_tot if ss_tot != 0 else np.nan
-    
+    ffit = squarefit(x, y)
     x_line = np.linspace(np.min(x), np.max(x), 300)
-    axi[2].plot(x_line, a * x_line**2, color='r', lw=2)
-    print(f"{s}: fit y = a*x^2, a={a:.3e}, R^2={r2:.6f}")
-
+    axi[2].plot(x_line, ffit(x_line), color='r', lw=2)
     axi[2].set_xlim(0)
     axi[2].set_ylim(0)
     axi[2].set_xlabel(r'S $(mS\cdot cm^{-2})$', fontsize=26)

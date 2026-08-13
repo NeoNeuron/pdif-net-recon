@@ -31,7 +31,7 @@ for i, N in enumerate(Nlist):
         order=order, n_thread=128,
         recon_kwargs=dict(nbins=60, hist_range=(-12, -4), algorithm='EM'),
     )
-    print(df_fig['auc_svm']['TE'], df_fig['acc_svm']['TE'])
+    print(df_fig['auc_svm']['TE'], df_fig['acc_gauss']['TE'])
     results.append(df_fig)
 
 # %%

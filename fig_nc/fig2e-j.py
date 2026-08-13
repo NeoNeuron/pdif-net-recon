@@ -32,7 +32,7 @@ def plot_s_vs_ptdte(data_path, ax, spk_fname, ss, dt, order, delay):
         idx = spk_fname.find('s=')
         if idx != -1:
             estimator.spk_fname = spk_fname[:idx+2] + f"{s:.3f}" + spk_fname[idx+7:]
-        data = estimator.fetch_data(new_run=False)
+        data = estimator.fetch_data(new_run=False, verbose=False)
         data01 = data[data['pre_id'].eq(0) * data['post_id'].eq(1)]['TE'].values[0]
         data10 = data[data['pre_id'].eq(1) * data['post_id'].eq(0)]['TE'].values[0]
         data02 = data[data['pre_id'].eq(0) * data['post_id'].eq(2)]['TE'].values[0]
@@ -183,8 +183,8 @@ for axi, key in zip(ax.T, keys):
     ptdte = []
     for o_, d_ in zip(oo.flatten(), dd.flatten()):
         estimator.order = (1,o_)
-        data = estimator.fetch_data(d_, new_run=True)
-        data = match_features(data, N, data_path/subfolder/'connect_matrix-p=0.250.npy')
+        data = estimator.fetch_data(d_, new_run=True, verbose=False)
+        data = match_features(data, N, data_path/subfolder/'connect_matrix-p=0.250.npy', verbose=False)
         data01 = data[data['connection'].eq(1)]['TE'].mean()
         # data10 = data[data['pre_id'].eq(1) * data['post_id'].eq(0)]['TE'].values[0]
         data02 = data[data['connection'].eq(0)]['TE'].mean()
@@ -219,14 +219,10 @@ for axi, key in zip(ax.T, keys):
     ax_TE.scatter(direct, indirect, s=40, c=S, cmap=cmap, vmax=0.03, vmin=0.01, ec='w', lw=0.1)
     ax_TE.ticklabel_format(style='sci', scilimits=(0,0), axis='both', useMathText=True)
 
-    pval = np.polyfit(direct, indirect, deg=1)
-    fit = np.polyval(pval, direct)
-    ax_TE.plot(direct, fit, color='#F26A9D', lw=2, zorder=-1)
+    print(f"[{key}, PDIF fit]",)
+    ffit = linearfit(direct, indirect, bias=True)
+    ax_TE.plot(direct, ffit(direct), color='#F26A9D', lw=2, zorder=-1)
 
-    ss_res = np.sum((indirect - fit) ** 2)
-    ss_tot = np.sum((indirect - np.mean(indirect)) ** 2)
-    r_squared = 1 - ss_res / ss_tot if ss_tot != 0 else 1.0
-    print(f"{key}, PDIF fit: slope={pval[0]:.6e}, R^2={r_squared:.6f}")
     label_fs = 20
     if key == 'confounder':
         ax_TE.set_xlabel(r'$I_{X\to Y}\cdot I_{X\to Z}$', fontsize=label_fs, usetex=False)
@@ -267,14 +263,9 @@ for axi, key in zip(ax.T, keys):
     axi[1].xaxis.get_offset_text().set_fontsize(24)
     axi[1].yaxis.get_offset_text().set_fontsize(24)
 
-    pval = np.polyfit(direct, indirect, deg=1)
-    fit = np.polyval(pval, direct)
-    axi[1].plot(direct, fit, color='#F26A9D', lw=3, zorder=-1)
-
-    ss_res = np.sum((indirect - fit) ** 2)
-    ss_tot = np.sum((indirect - np.mean(indirect)) ** 2)
-    r_squared = 1 - ss_res / ss_tot if ss_tot != 0 else 1.0
-    print(f"{key}, dp fit: slope={pval[0]:.6e}, R^2={r_squared:.6f}")
+    print(f"[{key}, dp fit]",)
+    ffit = linearfit(direct, indirect, bias=True)
+    axi[1].plot(direct, ffit(direct), color='#F26A9D', lw=3, zorder=-1)
     label_fs = 28
     if key == 'confounder':
         axi[1].set_xlabel(r'$\Delta p^{X\to Y}_{0,1}\cdot \Delta p^{X\to Z}_{0,1}$', fontsize=label_fs, usetex=False)
