@@ -15,7 +15,7 @@ with open(root_path / 'scripts/benchmark' / 'binarization.yaml', 'r') as binariz
 refs = binarization_cfg.get('refractory', {})
 thresholds = binarization_cfg.get('threshold', {})
 #%%
-regen=True
+regen=False
 
 #! Calculate PDIF
 def core_function(key, val, shuffle_id:int=None, noise_level=None, T:float=None):
