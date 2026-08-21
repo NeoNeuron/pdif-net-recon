@@ -31,7 +31,7 @@ CPPFLAGS = --std=c++14 -w -I $(DIR_INC) $(OMPFLAGS) $(EIGENFLAGS) $(BOOSTFLAGS)
 LDLIBS = $(BOOSTLIBS) $(OMPLIBS)
 # define variable path
 DIR_INC = include
-DIR_SRC = HH Causality HHcon Lorenz Lcon Rossler Rcon Logistic FN ML 
+DIR_SRC = HH HHcon Lorenz Lcon Rcon Logistic
 DIR_BIN = bin
 
 vpath %.cpp $(DIR_SRC)
@@ -48,7 +48,7 @@ HEADERS_Lorenz := $(notdir $(wildcard Lorenz/*.h))
 HEADERS_Lcon := $(notdir $(wildcard Lcon/*.h))
 HEADERS_Rossler := $(notdir $(wildcard Rossler/*.h))
 HEADERS_Rcon := $(notdir $(wildcard Rcon/*.h))
-BIN := $(DIR_BIN)/calCausality $(DIR_BIN)/simHH $(DIR_BIN)/simHHcon $(DIR_BIN)/simLorenz $(DIR_BIN)/simLcon $(DIR_BIN)/simRossler $(DIR_BIN)/simRcon $(DIR_BIN)/simFN $(DIR_BIN)/simML $(DIR_BIN)/simLogistic
+BIN := $(DIR_BIN)/simHH $(DIR_BIN)/simHHcon $(DIR_BIN)/simLorenz $(DIR_BIN)/simLcon $(DIR_BIN)/simRcon $(DIR_BIN)/simLogistic
 
 .PHONY : all
 all : $(BIN)

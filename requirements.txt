@@ -1,0 +1,17 @@
+causal4 @ git+https://github.com/NeoNeuron/causal4-core.git
+
+joblib
+numpy
+scipy
+matplotlib
+seaborn
+pandas
+networkx
+pyyaml
+scikit-learn
+psutil
+
+# NOT pip-installable from here — install manually before running the
+# corresponding benchmark script, see README "Known gaps":
+#   scripts/benchmark/STE.py   needs `smite`  (smite.symbolic_transfer_entropy_matrix)
+#   scripts/benchmark/GLMCC.py needs `glmcc`  (glmcc.Est_Data.Est_Data)
