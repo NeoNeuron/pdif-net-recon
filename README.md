@@ -51,11 +51,11 @@ make all -j     # builds bin/simHH bin/simHHcon bin/simLorenz bin/simLcon bin/si
 ### 2. Python
 
 ```bash
-conda create -n pdif-network-recon python=3.11 -y
-conda activate pdif-network-recon
+conda create -n pdif-net-recon python=3.11 -y
+conda activate pdif-net-recon
 pip install -r requirements.txt
 ```
-This installs [`causal4-core`](https://github.com/NeoNeuron/causal4-core) (the shared
+This installs [`PDIF`](https://github.com/NeoNeuron/PDIF) (the shared
 causality-estimation package — `pip install`-ing it also builds its `calCausality` binary, no
 separate step needed) plus this repo's own Python dependencies.
 
