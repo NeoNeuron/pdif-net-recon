@@ -5,7 +5,7 @@ import numpy as np
 from pathlib import Path
 root_path = Path(__file__).parents[2] 
 from multiprocessing import Pool
-from causal4.io import chunked_voltage_operation
+from pdif.io import chunked_voltage_operation
 from utils import run_simulation, get_vfname
 #%% [markdown]
 # # Part 1: 10-neuron network

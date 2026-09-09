@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 import struct
 import pickle
-from causal4.figrc import fig_path, data_path
+from pdif.figrc import fig_path, data_path
 from pathlib import Path
 
 from allensdk.brain_observatory.behavior.behavior_project_cache import VisualBehaviorNeuropixelsProjectCache

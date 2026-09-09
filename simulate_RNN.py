@@ -1,6 +1,6 @@
 # %%
 import numpy as np
-from causal4.utils import *
+from pdif.utils import *
 from numba import njit
 from pathlib import Path
 from typing import Union

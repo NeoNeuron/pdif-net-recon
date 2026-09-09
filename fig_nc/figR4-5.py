@@ -4,7 +4,7 @@ from figrc import *
 plt.rcParams['axes.spines.right'] = False
 plt.rcParams['axes.spines.top'] = False
 import pickle
-from causal4.utils import binarize
+from pdif.utils import binarize
 
 def heatmap(xx, yy, data, ax, vmin=0.5, vmax=1.0, pad=0.005, width=0.01,
             cbar_label='AUC', xlabel='time (ms)', y_label=r'$\mu$ (kHz)', xscale='log'):

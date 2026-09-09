@@ -6,11 +6,11 @@ from pathlib import Path
 root = Path(__file__).resolve().parents[1]
 import numpy as np
 import matplotlib.pyplot as plt
-from causal4.Causality import CausalityEstimator
-from causal4.utils import match_features, reconstruction_analysis_TE
-from causal4.myplot import ReconstructionFigureTE
+from pdif.pdif import CausalityEstimator
+from pdif.utils import match_features, reconstruction_analysis_TE
+from pdif.myplot import ReconstructionFigureTE
 import networkx as nx
-import causal4.utils as c4u
+import pdif.utils as c4u
 import pickle as pkl
 from figrc import *
 

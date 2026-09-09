@@ -37,7 +37,7 @@ plt.savefig('PDF_level_0.9.pdf', bbox_inches='tight')
 #%%
 from multiprocessing import Pool
 import gc
-from causal4.utils import binarize
+from pdif.utils import binarize
 with open(root_path / 'scripts/benchmark' / 'binarization.yaml', 'r') as binarization_file:
     binarization_cfg = yaml.load(binarization_file, Loader=yaml.FullLoader)
 refs = binarization_cfg.get('refractory', {})

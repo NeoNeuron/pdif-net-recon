@@ -7,9 +7,9 @@ import matplotlib.pyplot as plt
 plt.rcParams['font.size']=16
 plt.rcParams['axes.labelsize']=16
 
-from causal4.utils import force_refractory, save2bin
-from causal4.Causality import CausalityEstimator
-from causal4.figrc import fig_path, data_path
+from pdif.utils import force_refractory, save2bin
+from pdif.pdif import CausalityEstimator
+from pdif.figrc import fig_path, data_path
 from multiprocessing import Pool
 from pathlib import Path
 

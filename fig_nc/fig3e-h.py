@@ -2,8 +2,8 @@
 # Author: Kai Chen
 
 #%%
-from causal4.Causality import CausalityEstimator
-from causal4.utils import match_features, reconstruction_analysis_TE
+from pdif.pdif import CausalityEstimator
+from pdif.utils import match_features, reconstruction_analysis_TE
 from figrc import *
 
 def get_vfname(fname: str, key:str, sfx:str=None):

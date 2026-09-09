@@ -6,9 +6,9 @@ from pathlib import Path
 root = Path(__file__).resolve().parents[1]
 import numpy as np
 import matplotlib.pyplot as plt
-from causal4.Causality import CausalityEstimator
-from causal4.utils import match_features, reconstruction_analysis_TE
-import causal4.utils as c4u
+from pdif.pdif import CausalityEstimator
+from pdif.utils import match_features, reconstruction_analysis_TE
+import pdif.utils as c4u
 from figrc import *
 ORANGE, GREEN = '#F49227', '#194955'
 

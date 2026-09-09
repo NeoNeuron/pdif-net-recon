@@ -2,8 +2,8 @@
 from figrc import *
 import pandas as pd
 import pickle as pkl
-import causal4.utils as c4u
-from causal4.myplot import ReconstructionFigureGeneral
+import pdif.utils as c4u
+from pdif.myplot import ReconstructionFigureGeneral
 from pathlib import Path
 root_path = Path(__file__).parents[1]
 import yaml

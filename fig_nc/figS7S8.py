@@ -2,9 +2,9 @@
 from figrc import *
 import numpy as np
 import matplotlib.pyplot as plt
-import causal4.utils as c4u
-import causal4.myplot as mplt
-from causal4.Causality import CausalityEstimator
+import pdif.utils as c4u
+import pdif.myplot as mplt
+from pdif.pdif import CausalityEstimator
 data_path = root / 'raw_data'
 #%%
 # for p in np.arange(0.1, 0.91, 0.1):

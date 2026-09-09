@@ -2,8 +2,8 @@
 from pathlib import Path
 root_path = Path(__file__).resolve().parents[2]
 import numpy as np
-from causal4.Causality import CausalityEstimator
-from causal4.utils import match_features
+from pdif.pdif import CausalityEstimator
+from pdif.utils import match_features
 import yaml
 from utils import get_spk_fname
 import multiprocessing

@@ -15,9 +15,9 @@ from matplotlib.ticker import FuncFormatter
 def sci_formatter(x, pos):
     return r'$10^{%d}$'%x
 
-from causal4.Causality import CausalityEstimator
-from causal4.utils import match_features, reconstruction_analysis_TE
-from causal4.downsample import downsample, population_synchrony_index
+from pdif.pdif import CausalityEstimator
+from pdif.utils import match_features, reconstruction_analysis_TE
+from pdif.downsample import downsample, population_synchrony_index
 
 import warnings
 from sklearn.exceptions import ConvergenceWarning

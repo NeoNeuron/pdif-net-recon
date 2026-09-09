@@ -1,5 +1,5 @@
 #%%
-import causal4.utils as c4u
+import pdif.utils as c4u
 import numpy as np
 import matplotlib.pyplot as plt
 

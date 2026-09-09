@@ -2,8 +2,8 @@
 # Author: Kai Chen
 
 #%%
-from causal4.Causality import CausalityEstimator
-from causal4.utils import match_features
+from pdif.pdif import CausalityEstimator
+from pdif.utils import match_features
 from figrc import *
 from matplotlib.ticker import ScalarFormatter
 

@@ -1,4 +1,4 @@
-causal4 @ git+https://github.com/NeoNeuron/PDIF.git
+pdif @ git+https://github.com/NeoNeuron/PDIF.git
 
 joblib
 numpy
@@ -15,3 +15,5 @@ psutil
 # corresponding benchmark script, see README "Known gaps":
 #   scripts/benchmark/STE.py   needs `smite`  (smite.symbolic_transfer_entropy_matrix)
 #   scripts/benchmark/GLMCC.py needs `glmcc`  (glmcc.Est_Data.Est_Data)
+#   scripts/benchmark/DDC.py   needs `ddc`    (ddc.ddc.DDC_long) — local-only for now,
+#                               `pip install -e /path/to/ddc` until it has a git remote

@@ -62,7 +62,7 @@ inhibitory), `Lcon` (continuous Lorenz), `Gaussian` (OU-type Python simulator).
   (no `HHII`/`HHconII`/`Lcon`/`Gaussian`) — this is what "the benchmark" means unless you pass
   `--cfg-file benchmark10_causal.yml` explicitly for a quick N=10 smoke test.
 - `binarization.yaml` — per-key `threshold` / `refractory` / `dt` for converting continuous
-  voltage traces to spike trains (`causal4.utils.binarize`); used by `binarization.py`,
+  voltage traces to spike trains (`pdif.utils.binarize`); used by `binarization.py`,
   `measurement_noise.py`, `GLMCC.py`, `PDIF.py` (noisy-spike variant).
 
 ## Method scripts
@@ -83,7 +83,7 @@ behavior and output filenames). When given, each script converts it to whatever 
 needs:
 - `PDIF.py` / `GLMCC.py`: overrides `val['T']` directly before the C++ estimator / GLMCC's own
   `T/1e3`-or-`/1e4` scaling runs — same unit as the config's `T` field (ms).
-- `DDC.py`: passed straight through to `causal4.ddc.DDC_long(..., T=T)` (native time units, same
+- `DDC.py`: passed straight through to `ddc.ddc.DDC_long(..., T=T)` (native time units, same
   as the voltage file's own `dt`) — see below.
 - `STE.py` / `CCM.py`: converted to a raw sample count `L = int(T/dt)` using the voltage file's
   own native `dt` (read live from the file, not from the causal config), then the array is
@@ -95,13 +95,13 @@ this via its own `T={T:.0f}` tag) so they don't collide with full-length results
 
 | script | measure | output column(s) | extra dependency |
 |---|---|---|---|
-| `PDIF.py` | pointwise transfer entropy (via `bin/calCausality`) | `TE`, `Delta_p` | none (uses `causal4.Causality.CausalityEstimator`) |
-| `DDC.py` | Dynamic Differential Covariance | `ddc`, `ddc_abs`, `log-ddc_abs` | none (`causal4.ddc.DDC_long`) |
+| `PDIF.py` | pointwise transfer entropy (via `bin/calPDIF`) | `TE`, `Delta_p` | none (uses `pdif.pdif.CausalityEstimator`) |
+| `DDC.py` | Dynamic Differential Covariance | `ddc`, `ddc_abs`, `log-ddc_abs` | none (`ddc.ddc.DDC_long`) |
 | `STE.py` | symbolic transfer entropy | `ste`, `log-ste` | **`smite`** package (`smite.symbolic_transfer_entropy_matrix`) — not in `requirements.txt`, install separately |
 | `GLMCC.py` | GLM-based cross-correlogram | `glmcc`, `glmcc_abs`, `log-glmcc_abs` | **`glmcc`** package (`glmcc.Est_Data.Est_Data`) — not in `requirements.txt` |
 | `CCM.py` | convergent cross mapping, 3 variants via `--ccm {CCM,FDCCM,SCCM}` | `ccm`, `log-ccm` | in-repo `crossmap_indices.py` |
 
-`DDC.py` always goes through `causal4.ddc.DDC_long(fname, N, indices, n_blocks=20, preprocess,
+`DDC.py` always goes through `ddc.ddc.DDC_long(fname, N, indices, n_blocks=20, preprocess,
 T=None, max_memory_gb=None, ram_fraction=None)` — it no longer has a separate single-shot
 `DDC()` path for truncated runs; `--T` (any value, including `None`) is passed straight through,
 so full-length and truncated runs both go through the same block-averaged (`n_blocks=20`)
@@ -114,12 +114,12 @@ predate this and are numerically not comparable to new ones.)
   `dt`) of data before splitting into `n_blocks`. `None` (default) uses the full file, bit-identical
   to the pre-`T` behavior.
 - `max_memory_gb:float=None` — `DDC_long` always prints an estimated peak per-block memory
-  (`causal4.ddc.estimate_ddc_block_memory`) so you can judge whether a given `n_blocks` will fit in
+  (`ddc.ddc.estimate_ddc_block_memory`) so you can judge whether a given `n_blocks` will fit in
   RAM before a long run. If set and the estimate for the current `n_blocks` exceeds it, `n_blocks`
-  is auto-increased (`causal4.ddc.suggest_n_blocks`) to fit, with a printed note. `None` (default)
+  is auto-increased (`ddc.ddc.suggest_n_blocks`) to fit, with a printed note. `None` (default)
   is a no-op beyond the info line.
 - `ram_fraction:float=None` — same auto-bump behavior as `max_memory_gb`, but the budget is
-  computed as `ram_fraction * causal4.ddc.get_system_ram_bytes()` (requires `psutil`, now in
+  computed as `ram_fraction * ddc.ddc.get_system_ram_bytes()` (requires `psutil`, now in
   `requirements.txt`) instead of a fixed value, e.g. `ram_fraction=0.1` caps a block at ~10% of the
   machine's total RAM. Mutually exclusive with `max_memory_gb` (raises `ValueError` if both given).
 

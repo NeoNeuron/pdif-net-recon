@@ -1,7 +1,7 @@
 # %%
 import numpy as np
 import pandas as pd
-from causal4.ddc import c_sensitivity, DDC_long
+from ddc.ddc import c_sensitivity, DDC_long
 import time
 
 import yaml

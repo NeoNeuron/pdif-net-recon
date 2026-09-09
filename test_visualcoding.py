@@ -14,10 +14,10 @@ plt.rcParams['axes.labelsize']=16
 plt.rcParams['axes.spines.top'] = False
 plt.rcParams['axes.spines.right'] = False
 
-from causal4.Causality import CausalityEstimator
-import causal4.utils as c4u
-from causal4.utils import match_features, reconstruction_analysis, optimal_delay_estimator
-from causal4.figrc import line_rc, c_inv, fig_path
+from pdif.pdif import CausalityEstimator
+import pdif.utils as c4u
+from pdif.utils import match_features, reconstruction_analysis, optimal_delay_estimator
+from pdif.figrc import line_rc, c_inv, fig_path
 from pathlib import Path
 
 import warnings

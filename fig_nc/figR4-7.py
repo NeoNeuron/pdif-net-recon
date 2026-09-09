@@ -2,7 +2,7 @@
 from figrc import *
 import pandas as pd
 import pickle as pkl
-from causal4.utils import EM
+from pdif.utils import EM
 from pathlib import Path
 root_path = Path(__file__).parents[1]
 import yaml
