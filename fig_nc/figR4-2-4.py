@@ -242,18 +242,36 @@ for s, u in zip(strengths, uu):
     print(df_fig['auc_svm']['TE'])
     results_vary_strength_ra.append(df_fig)
 
+results_vary_ra = []
+ra_list=np.array([2.0, 1.0, 0.5, 0.25, 0.125, 0.0625])
+for s, u in zip(strengths, uu):
+    buffer = []
+    for ra_ in ra_list:
+        _fname = f'HHp=0.25s={s:.3f}f=0.080u={u:.3f}_spike_train.dat'
+        spk_fname_ra, spk_fname = maybe_downsample(path, _fname, ra_, True)
+        df_recon, df_fig = run_reconstruction_TE(
+            path, spk_fname_ra, N, path/f'connect_matrix-p=0.250.npy', T, dt=dt, delay=delay,
+            order=order, n_thread=128,
+            recon_kwargs=dict(nbins=60, hist_range=None, algorithm='EM'),
+        )
+        print(df_fig['auc_svm']['TE'])
+        buffer.append(df_fig)
+    results_vary_ra.append(buffer)
+
+
 #%%
 fig = plt.figure(figsize=(26, 20))
 gs = fig.add_gridspec(3, len(strengths),
     left=0.05, right=0.95, top=0.95, bottom=0.35,
     wspace=0.4, hspace=0.4)
 ax = np.array([[fig.add_subplot(gs[r, c]) for c in range(len(strengths))] for r in range(3)])
-gs = fig.add_gridspec(1, 3,
+gs = fig.add_gridspec(1, 4,
     left=0.05, right=0.95, top=0.25, bottom=0.05,
     wspace=0.4, hspace=0.5)
 ax_auc = fig.add_subplot(gs[0,0])
 ax_prauc = fig.add_subplot(gs[0,1])
 ax_acc = fig.add_subplot(gs[0,2])
+ax_ra = fig.add_subplot(gs[0,3])
 
 for i, (s, u, res, res_ra, axi) in enumerate(zip(strengths, uu, results_vary_strength, results_vary_strength_ra, ax.T)):
     _fname = f'HHp=0.25s={s:.3f}f=0.080u={u:.3f}_spike_train.dat'
@@ -287,10 +305,20 @@ ax_auc.set_ylabel('AUC', fontsize=26)
 ax_prauc.set_ylabel('PR-AUC', fontsize=26)
 ax_acc.set_ylabel('accuracy', fontsize=26)
 
+auc_vary_ra = [[res['auc_svm']['TE'] for res in buff] for buff in results_vary_ra]
+for i, (s, auc_vary_ra) in enumerate(zip(strengths, auc_vary_ra)):
+    ax_ra.plot(1.0/ra_list, auc_vary_ra, 'o-', label=f'{s:.2f}', clip_on=False, ms=15-i)
+ax_ra.set_ylim(0.6, 1.0)
+ax_ra.set_xlabel(r'downsampling level ($\alpha$)', fontsize=26)
+ax_ra.set_ylabel('AUC', fontsize=26)
+# ax_ra.ticklabel_format(style='sci', scilimits=(0,0), axis='x', useMathText=True)
+ax_ra.legend(fontsize=26, loc='lower right', title=r'$S$')
+ax_ra.grid(color='gray', alpha=0.3, linestyle='--')
+
 for tag, axi in zip('ABC', ax[:,0]):
-    fig.text(-0.3, 1.18, tag, fontsize=35, va='top', transform=axi.transAxes)
-for tag, axi in zip('DEF', [ax_auc, ax_prauc, ax_acc]):
-    fig.text(-0.22, 1.14, tag, fontsize=35, va='top', transform=axi.transAxes)
+    fig.text(-0.25, 1.18, tag, fontsize=35, va='top', transform=axi.transAxes)
+for tag, axi in zip('DEFG', [ax_auc, ax_prauc, ax_acc, ax_ra]):
+    fig.text(-0.25, 1.14, tag, fontsize=35, va='top', transform=axi.transAxes)
 
 fig.savefig(root/'fig_nc/pdf'/'figR4-4.pdf', transparent=True, bbox_inches='tight')
 
