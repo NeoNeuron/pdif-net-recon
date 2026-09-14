@@ -32,7 +32,6 @@ net_keys = ['HHEE', 'HHEI', 'HHconEE', 'HHconEI', 'Lorenz', 'Logistic', 'Rcon', 
 keys = ['PDIF', 'STE', 'GLMCC', 'DDC', 'CCM', 'FDCCM', 'SCCM']
 labels = {'PDIF':'TE', 'STE': 'ste', 'GLMCC': 'glmcc_abs',
           'DDC': 'ddc_abs', 'CCM': 'ccm', 'FDCCM': 'ccm', 'SCCM': 'ccm'}
-noise_levels = [0, 0.1, 0.2, 0.3, 0.4]
 heatmap_kws = {'cbar': False, 'square': True}
 buffer = []
 for net_key in net_keys:
@@ -52,8 +51,8 @@ for net_key in net_keys:
                 recon_df = pd.read_pickle(save_path / key / dfname)
                 recon, fig_data = c4u._reconstruction_analysis(recon_df, labels[key], 'connection',
                                                                algorithm='EM', hist_type='linear')
-                if key == 'PDIF' and net_key == 'Lorenz':
-                    ReconstructionFigureGeneral(fig_data, causal_hist_with_gt=True)
+                # if key == 'PDIF' and net_key == 'Lorenz':
+                #     ReconstructionFigureGeneral(fig_data, causal_hist_with_gt=True)
                 buffer.append({
                     'net': net_key, 'causal_measure': key, 'subnet_toggle': subnet_toggle,
                     # 'auc': roc_auc_score(recon_df['connection'], recon_df['log-'+labels[key]]),
@@ -66,7 +65,7 @@ for net_key in net_keys:
             except FileNotFoundError:
                 print(f"File not found: {save_path / key / dfname}")
 data = pd.DataFrame(buffer)
-# %%
+# %
 fig = plt.figure(figsize=(20,24))
 for i in range(2):
     ax = fig.subplots(8,8, gridspec_kw={
@@ -125,30 +124,37 @@ fig.text(x=0.02, y=0.99, s='A', ha='center', va='center', fontsize=24)
 fig.text(x=0.52, y=0.99, s='B', ha='center', va='center', fontsize=24)
 
 noise_levels = [0, 0.1, 0.2, 0.3, 0.4]
+T_length = {
+    'HHEE': 1e7, 'HHEI': 1e7, 'HHconEE': 1e7, 'HHconEI': 1e7,
+    'Lorenz': 1e6, 'Logistic': 1e8,
+    'Rcon': 1e7, 'RNN': 1e8,
+}
+T_length_CCM = {
+    'HHEE': 2e5, 'HHEI': 2e5, 'HHconEE': 1e5, 'HHconEI': 1e5,
+    'Lorenz': 1e4, 'Logistic': 1e6,
+    'Rcon': 1e5, 'RNN': 1e6,
+}
+T_length_GLMCC = {
+    'HHEE': 1e7, 'HHEI': 1e7, 'HHconEE': 1e7, 'HHconEI': 1e7,
+    'Lorenz': 1e6, 'Logistic': 1e7,
+    'Rcon': 1e6, 'RNN': 1e7,
+}
 buffer = [] 
 for net_key in net_keys:
     for key in keys:
         for noise_level in noise_levels:
             for shuffle_id in range(10):
                 dfname = 'recon_df_noise'
-                if noise_level == 0:
-                    if key == 'GLMCC':
-                        if net_key in ['HHEE', 'HHEI', 'HHconEE', 'HHconEI', 'Lorenz']:
-                            T = pm_causal_set[net_key]['T'] / 1e3
-                        else:
-                            T = pm_causal_set[net_key]['T'] / 1e4
-                        dfname += f'_0_{net_key:s}_T={T:.0f}_{shuffle_id:d}.pkl'
-                    else:
-                        dfname += f'_0_{net_key:s}_{shuffle_id:d}.pkl'
+                if key in ['CCM', 'FDCCM', 'SCCM']:
+                    T_length_buffer = T_length_CCM
+                elif key == 'GLMCC':
+                    T_length_buffer = T_length_GLMCC
                 else:
-                    if key == 'GLMCC':
-                        if net_key in ['HHEE', 'HHEI', 'HHconEE', 'HHconEI', 'Lorenz']:
-                            T = pm_causal_set[net_key]['T'] / 1e3
-                        else:
-                            T = pm_causal_set[net_key]['T'] / 1e4
-                        dfname += f'_{noise_level:.1f}_{net_key:s}_T={T:.0f}_{shuffle_id:d}.pkl'
-                    else:
-                        dfname += f'_{noise_level:.1f}_{net_key:s}_{shuffle_id:d}.pkl'
+                    T_length_buffer = T_length
+                if noise_level == 0:
+                    dfname += f'_0_{net_key:s}_T={T_length_buffer[net_key]:.2e}_{shuffle_id:d}.pkl'
+                else:
+                    dfname += f'_{noise_level:.1f}_{net_key:s}_T={T_length_buffer[net_key]:.2e}_{shuffle_id:d}.pkl'
                 try:
                     recon_df = pd.read_pickle(save_path / key / dfname)
                     buffer.append({
@@ -161,7 +167,7 @@ for net_key in net_keys:
                 except FileNotFoundError:
                     print(f"File not found: {save_path / key / dfname}")
 data = pd.DataFrame(buffer)
-#%%
+#%
 axs = fig.subplots(2,4, gridspec_kw={
     'left': 0.06, 'right': 0.98, 'top': 0.50, 'bottom': 0.20,
     'hspace': 0.5, 'wspace': 0.4,
@@ -203,7 +209,7 @@ ax.set_yscale('log')
 ax.set_ylim(1e1, 1e6)
 ax.tick_params(axis='y', labelsize=16)
 fig.text(x=-0.041, y=1.1, s='K', ha='center', va='center', fontsize=26, transform=ax.transAxes)
-fig.savefig(root_path / 'fig_nc/pdf' / f'fig5.pdf', transparent=True)
+fig.savefig(root_path / 'figures' / f'fig5.pdf', transparent=True)
 #%%
 # fig, ax = plt.subplots(1,1, gridspec_kw={
 #     'left': 0.06, 'right': 0.98, 'top': 0.96, 'bottom': 0.10,}, figsize=(18,4))

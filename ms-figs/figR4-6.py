@@ -36,31 +36,37 @@ labels = {'PDIF':'TE', 'STE': 'ste', 'GLMCC': 'glmcc_abs',
           'DDC': 'ddc_abs', 'CCM': 'ccm', 'FDCCM': 'ccm', 'SCCM': 'ccm'}
 noise_levels = [0, 0.1, 0.2, 0.3, 0.4]
 heatmap_kws = {'cbar': False, 'square': True}
-
+T_length = {
+    'HHEE': 1e7, 'HHEI': 1e7, 'HHconEE': 1e7, 'HHconEI': 1e7,
+    'Lorenz': 1e6, 'Logistic': 1e8,
+    'Rcon': 1e7, 'RNN': 1e8,
+}
+T_length_CCM = {
+    'HHEE': 2e5, 'HHEI': 2e5, 'HHconEE': 1e5, 'HHconEI': 1e5,
+    'Lorenz': 1e4, 'Logistic': 1e6,
+    'Rcon': 1e5, 'RNN': 1e6,
+}
+T_length_GLMCC = {
+    'HHEE': 1e7, 'HHEI': 1e7, 'HHconEE': 1e7, 'HHconEI': 1e7,
+    'Lorenz': 1e6, 'Logistic': 1e7,
+    'Rcon': 1e6, 'RNN': 1e7,
+}
 buffer = [] 
 for net_key in net_keys:
     for key in keys:
         for noise_level in noise_levels:
             for shuffle_id in range(10):
                 dfname = 'recon_df_noise'
-                if noise_level == 0:
-                    if key == 'GLMCC':
-                        if net_key in ['HHEE', 'HHEI', 'HHconEE', 'HHconEI', 'Lorenz']:
-                            T = pm_causal_set[net_key]['T'] / 1e3
-                        else:
-                            T = pm_causal_set[net_key]['T'] / 1e4
-                        dfname += f'_0_{net_key:s}_T={T:.0f}_{shuffle_id:d}.pkl'
-                    else:
-                        dfname += f'_0_{net_key:s}_{shuffle_id:d}.pkl'
+                if key in ['CCM', 'FDCCM', 'SCCM']:
+                    T_length_buffer = T_length_CCM
+                elif key == 'GLMCC':
+                    T_length_buffer = T_length_GLMCC
                 else:
-                    if key == 'GLMCC':
-                        if net_key in ['HHEE', 'HHEI', 'HHconEE', 'HHconEI', 'Lorenz']:
-                            T = pm_causal_set[net_key]['T'] / 1e3
-                        else:
-                            T = pm_causal_set[net_key]['T'] / 1e4
-                        dfname += f'_{noise_level:.1f}_{net_key:s}_T={T:.0f}_{shuffle_id:d}.pkl'
-                    else:
-                        dfname += f'_{noise_level:.1f}_{net_key:s}_{shuffle_id:d}.pkl'
+                    T_length_buffer = T_length
+                if noise_level == 0:
+                    dfname += f'_0_{net_key:s}_T={T_length_buffer[net_key]:.2e}_{shuffle_id:d}.pkl'
+                else:
+                    dfname += f'_{noise_level:.1f}_{net_key:s}_T={T_length_buffer[net_key]:.2e}_{shuffle_id:d}.pkl'
                 try:
                     recon_df = pd.read_pickle(save_path / key / dfname)
                     y_true = recon_df['connection'].to_numpy()
@@ -122,7 +128,7 @@ leg = axs[0,0].legend(loc=(2.2,1.25), fontsize=30, ncol=7, title='causal measure
 for axi, letter in zip(axs[:,0], 'ABCDEF'):
     fig.text(x=-0.3, y=1.10, s=letter, ha='center', va='center', fontsize=35, transform=axi.transAxes)
 
-fig.savefig(root_path / 'fig_nc/pdf' / f'figR4-6.pdf', transparent=True)
+fig.savefig(root_path / 'figures' / f'figR4-6.pdf', transparent=True)
 #%%
 # fig, ax = plt.subplots(1,1, gridspec_kw={
 #     'left': 0.06, 'right': 0.98, 'top': 0.96, 'bottom': 0.10,}, figsize=(18,4))
@@ -134,7 +140,7 @@ fig.savefig(root_path / 'fig_nc/pdf' / f'figR4-6.pdf', transparent=True)
 # ax.set_yscale('log')
 # ax.set_ylim(1e0)
 # ax.tick_params(axis='y', labelsize=16)
-# fig.savefig(root_path / 'fig_nc/pdf' / f'figS5.pdf', transparent=True)
+# fig.savefig(root_path / 'figures' / f'figS5.pdf', transparent=True)
 
 
 #%%

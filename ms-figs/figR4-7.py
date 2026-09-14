@@ -78,7 +78,7 @@ for net_key in net_keys:
                 except FileNotFoundError:
                     print(f"File not found: {save_path / key / dfname}")
 data = pd.DataFrame(buffer)
-#%%
+#%
 fig = plt.figure(figsize=(36,33))
 axs = fig.subplots(7,8, gridspec_kw={
     'left': 0.04, 'right': 0.98, 'top': 0.92, 'bottom': 0.08,
@@ -113,7 +113,7 @@ leg = axs[0,0].legend(loc=(2.2,1.25), fontsize=30, ncol=7, title='causal measure
 for axi, letter in zip(axs[:,0], 'ABCDEFG'):
     fig.text(x=-0.3, y=1.10, s=letter, ha='center', va='center', fontsize=35, transform=axi.transAxes)
 
-fig.savefig(root_path / 'fig_nc/pdf' / f'figR4-7.pdf', transparent=True)
+fig.savefig(root_path / 'figures' / f'figR4-7.pdf', transparent=True)
 #%%
 # fig, ax = plt.subplots(1,1, gridspec_kw={
 #     'left': 0.06, 'right': 0.98, 'top': 0.96, 'bottom': 0.10,}, figsize=(18,4))
